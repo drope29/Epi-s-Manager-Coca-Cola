@@ -3,7 +3,7 @@ import AnimacaoCaminhao from '../components/AnimacaoCaminhao.vue';
 </script>
 
 <template>
-    <div class="flex items-center justify-center h-screen bg-gray-100 gap-8">
+    <div class="flex items-center justify-center h-screen gap-8">
 
         <router-link to="/epis" class="
         flex-shrink-0 isolate flex items-center relative overflow-hidden cursor-pointer bg-transparent
