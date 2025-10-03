@@ -5,6 +5,7 @@ import com.epis.services.FuncionarioService;
 import com.epis.utils.UploadFiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,5 +33,14 @@ public class FuncionarioController {
         return ResponseEntity.ok(mensagemRetorno);
 
     }
+
+    @GetMapping("/get-all")
+    public ResponseEntity<List<Funcionario>> getAllFuncionarios(){
+
+        List<Funcionario> funcionarios = service.getAll();
+
+        return ResponseEntity.ok(funcionarios);
+    }
+
 
 }

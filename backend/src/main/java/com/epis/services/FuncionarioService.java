@@ -17,4 +17,9 @@ public class FuncionarioService {
         return repository.saveAll(funcionarios);
     }
 
+    public List<Funcionario> getAll() {
+        return repository.findAll();
+    }
+
+
 }
