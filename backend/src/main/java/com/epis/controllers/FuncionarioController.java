@@ -1,8 +1,11 @@
 package com.epis.controllers;
 
+import com.epis.dtos.FuncionarioCreateDto;
 import com.epis.entities.Funcionario;
+import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.FuncionarioService;
 import com.epis.utils.UploadFiles;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +22,7 @@ public class FuncionarioController {
     private FuncionarioService service;
 
     @PostMapping("/upload-funcionarios")
-    public ResponseEntity<String> uploadFuncionarios(){
+    public ResponseEntity<String> uploadFuncionarios() {
 
         String mensagemRetorno = "Funcionários Importados com Sucesso";
 
@@ -33,16 +36,17 @@ public class FuncionarioController {
 
     }
 
-    @GetMapping("/get-all")
-    public ResponseEntity<List<Funcionario>> getAllFuncionarios(){
+    @GetMapping("/")
+    public ResponseEntity<List<Funcionario>> getAllFuncionarios() {
 
         List<Funcionario> funcionarios = service.getAll();
 
         return ResponseEntity.ok(funcionarios);
+
     }
 
-    @GetMapping("/get/{id}")
-    public ResponseEntity<?> getFuncionarioById(@PathVariable("id") Long id){
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getFuncionarioById(@PathVariable("id") Long id) {
 
         Optional<Funcionario> funcionario = service.getById(id);
 
@@ -53,7 +57,16 @@ public class FuncionarioController {
         }
 
         return ResponseEntity.ok(funcionario);
+
     }
 
+        @PostMapping("/")
+        public ResponseEntity<Funcionario> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
+
+            Funcionario funcionario = FuncionarioMapper.toFuncionario(dto);
+            service.insert(funcionario);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
+        }
 
 }

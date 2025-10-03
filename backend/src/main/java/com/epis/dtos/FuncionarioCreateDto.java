@@ -1,47 +1,25 @@
-package com.epis.entities;
+package com.epis.dtos;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+public class FuncionarioCreateDto {
 
-@Entity
-@Table(name = "tb_funcionarios")
-public class Funcionario {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column
+    @NotBlank(message = "O campo RE é obrigatorio")
     private String RE;
 
-    @Column
+    @NotBlank(message = "O campo nome é obrigatorio")
     private String nome;
 
-    @Column
+    @NotBlank(message = "O campo funcao é obrigatorio")
     private String funcao;
 
-    public Funcionario(){}
+    public FuncionarioCreateDto(){}
 
-    public Funcionario(String RE, String nome, String funcao) {
+    public FuncionarioCreateDto(String RE, String nome, String funcao) {
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
-    }
-
-    public Funcionario(Long id, String RE, String nome, String funcao) {
-        this.id = id;
-        this.RE = RE;
-        this.nome = nome;
-        this.funcao = funcao;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getRE() {
@@ -70,9 +48,8 @@ public class Funcionario {
 
     @Override
     public String toString() {
-        return "Funcionarios{" +
-                "id=" + id +
-                ", RE=" + RE +
+        return "FuncionarioCreateDto{" +
+                "RE='" + RE + '\'' +
                 ", nome='" + nome + '\'' +
                 ", funcao='" + funcao + '\'' +
                 '}';

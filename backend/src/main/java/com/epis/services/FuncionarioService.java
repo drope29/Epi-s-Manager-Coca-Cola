@@ -14,8 +14,8 @@ public class FuncionarioService {
     @Autowired
     private FuncionarioRepository repository;
 
-    public List<Funcionario> uploadFuncionarios(List<Funcionario> funcionarios){
-        return repository.saveAll(funcionarios);
+    public void uploadFuncionarios(List<Funcionario> funcionarios){
+        repository.saveAll(funcionarios);
     }
 
     public List<Funcionario> getAll() {
@@ -26,6 +26,8 @@ public class FuncionarioService {
         return repository.findById(id);
     }
 
-
+    public void insert(Funcionario funcionario) {
+        repository.save(funcionario);
+    }
 
 }
