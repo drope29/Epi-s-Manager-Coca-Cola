@@ -2,20 +2,15 @@ package com.epis.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class FuncionarioCreateDto {
+public class FuncionarioUpdateDto {
 
-    @NotBlank(message = "O campo RE é obrigatorio")
     private String RE;
-
-    @NotBlank(message = "O campo nome é obrigatorio")
     private String nome;
-
-    @NotBlank(message = "O campo funcao é obrigatorio")
     private String funcao;
 
-    public FuncionarioCreateDto(){}
+    public FuncionarioUpdateDto(){}
 
-    public FuncionarioCreateDto(String RE, String nome, String funcao) {
+    public FuncionarioUpdateDto(String RE, String nome, String funcao) {
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
@@ -53,4 +48,5 @@ public class FuncionarioCreateDto {
                 ", funcao='" + funcao + '\'' +
                 '}';
     }
+
 }

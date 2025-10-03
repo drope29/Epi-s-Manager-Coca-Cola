@@ -1,6 +1,7 @@
 package com.epis.controllers;
 
 import com.epis.dtos.FuncionarioCreateDto;
+import com.epis.dtos.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
 import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.FuncionarioService;
@@ -46,27 +47,31 @@ public class FuncionarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getFuncionarioById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> getFuncionarioById(@PathVariable Long id) {
 
-        Optional<Funcionario> funcionario = service.getById(id);
-
-        if (funcionario.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Funcionário não encontrado");
-        }
-
+        Funcionario funcionario = service.getById(id);
         return ResponseEntity.ok(funcionario);
 
     }
 
-        @PostMapping("/")
-        public ResponseEntity<Funcionario> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
+    @PostMapping("/")
+    public ResponseEntity<Funcionario> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
 
-            Funcionario funcionario = FuncionarioMapper.toFuncionario(dto);
-            service.insert(funcionario);
+        Funcionario funcionario = FuncionarioMapper.toFuncionario(dto);
+        service.insert(funcionario);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
+
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Funcionario> updateFuncionario(@PathVariable Long id, @RequestBody FuncionarioUpdateDto dto) {
+
+        Funcionario funcionario = FuncionarioMapper.toFuncionario(dto);
+        Funcionario funcionarioUpd = service.update(id, funcionario);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(funcionarioUpd);
+
+    }
 
 }
