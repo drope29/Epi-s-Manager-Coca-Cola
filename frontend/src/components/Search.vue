@@ -1,6 +1,6 @@
 <template>
-  <div class="flex items-center h-[150px] w-full">
-    <form class="px-4 w-full w-full">
+  <div class="flex items-center h-24 sm:h-[150px] w-full">
+    <form class="px-4 w-full">
       <label class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white" for="default-search">Search</label>
       <div class="relative">
         <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">

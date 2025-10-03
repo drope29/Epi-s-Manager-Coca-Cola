@@ -1,7 +1,8 @@
 <template>
     <div class="fixed bottom-4 right-4">
         <div class="flex items-center justify-center">
-            <div class="relative flex h-[100px] w-[200px] flex-col items-center justify-end overflow-x-hidden">
+            <div
+                class="relative flex h-[100px] w-[200px] flex-col items-center justify-end overflow-x-hidden origin-bottom-right scale-75 sm:scale-100">
                 <div class="animacao-movimento mb-[12px] h-fit w-[130px]">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 198 93">
                         <path stroke-width="3" stroke="#282828" fill="#F83D3D"
@@ -34,8 +35,8 @@
                     </svg>
                 </div>
                 <div class="relative h-[1.5px] w-full self-end rounded-[3px] bg-[#282828]
-                 before:absolute before:right-[-50%] before:h-full before:w-[20px] before:rounded-[3px] before:border-l-[10px] before:border-solid before:border-white before:bg-[#282828] before:content-['']
-                 after:absolute after:right-[-65%] after:h-full after:w-[10px] after:rounded-[3px] after:border-l-[4px] after:border-solid after:border-white after:bg-[#282828] after:content-['']"
+              before:absolute before:right-[-50%] before:h-full before:w-[20px] before:rounded-[3px] before:border-l-[10px] before:border-solid before:border-white before:bg-[#282828] before:content-['']
+              after:absolute after:right-[-65%] after:h-full after:w-[10px] after:rounded-[3px] after:border-l-[4px] after:border-solid after:border-white after:bg-[#282828] after:content-['']"
                     id="estrada"></div>
                 <svg xml:space="preserve" viewBox="0 0 453.459 453.459"
                     class="animacao-estrada absolute bottom-0 right-[-90%] h-[90px]">

@@ -40,7 +40,7 @@ function registrarColaborador() {
     errors.unidade = "Campo Obrigatório";
     formValido = false;
   }
-  if (!form.re) { 
+  if (!form.re) {
     errors.re = "Campo Obrigatório";
     formValido = false;
   }
@@ -59,8 +59,6 @@ function registrarColaborador() {
 
   if (formValido) {
     console.log("Formulário válido, registrando colaborador:", form);
-    // Aqui viria a sua lógica de API para salvar os dados
-    // emit('close');
   } else {
     console.log("Formulário inválido.");
   }
@@ -68,23 +66,28 @@ function registrarColaborador() {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-40">
-    <div class="mx-auto w-[800px] h-[900px] bg-white rounded-xl shadow-lg drop-shadow-md flex flex-col">
-      <div class="px-6 py-4 flex justify-between">
-        <h2 class="flex font-bold items-center text-4xl">Adicionar Colaborador</h2>
+
+  <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-40 p-4">
+
+    <div
+      class="mx-auto w-full max-w-4xl h-full sm:h-auto sm:max-h-[90vh] bg-white rounded-xl shadow-lg drop-shadow-md flex flex-col">
+
+      <div class="px-6 py-4 flex justify-between items-center border-b">
+
+        <h2 class="flex font-bold items-center text-2xl sm:text-4xl">Adicionar Colaborador</h2>
         <div @click="emit('close')" style="cursor: pointer" class="text-gray-600">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </div>
       </div>
-      <hr class="bg-gray-600" />
 
-      <form @submit.prevent="registrarColaborador" class="px-6 pt-3 pb-6 flex-grow flex flex-col justify-between">
-        <div class="flex-grow flex items-center">
+      <form @submit.prevent="registrarColaborador" class="flex-grow flex flex-col justify-between overflow-y-auto">
+
+        <div class="p-6">
+
           <div class="w-full max-w-2xl mx-auto space-y-6">
-
-            <div class="flex space-x-4">
+            <div class="flex flex-col sm:flex-row gap-4">
               <div class="flex-1">
                 <input type="text" placeholder="Nome" v-model="form.nome"
                   class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100 focus:placeholder-gray-500" />
@@ -96,7 +99,6 @@ function registrarColaborador() {
                 <p v-if="errors.sobrenome" class="text-red-500 text-sm mt-1">{{ errors.sobrenome }}</p>
               </div>
             </div>
-
             <div>
               <select v-model="form.unidade"
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100">
@@ -106,19 +108,16 @@ function registrarColaborador() {
               </select>
               <p v-if="errors.unidade" class="text-red-500 text-sm mt-1">{{ errors.unidade }}</p>
             </div>
-
             <div>
               <input type="number" placeholder="RE" v-model="form.re"
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100" />
               <p v-if="errors.re" class="text-red-500 text-sm mt-1">{{ errors.re }}</p>
             </div>
-
             <div>
               <input type="text" placeholder="Cargo" v-model="form.cargo"
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100" />
               <p v-if="errors.cargo" class="text-red-500 text-sm mt-1">{{ errors.cargo }}</p>
             </div>
-
             <div>
               <select v-model="form.turno"
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100">
@@ -129,7 +128,6 @@ function registrarColaborador() {
               </select>
               <p v-if="errors.turno" class="text-red-500 text-sm mt-1">{{ errors.turno }}</p>
             </div>
-
             <div>
               <div class="text-gray-600 text-base">Gênero</div>
               <div class="mt-2 flex space-x-4">
@@ -146,22 +144,19 @@ function registrarColaborador() {
               </div>
               <p v-if="errors.genero" class="text-red-500 text-sm mt-1">{{ errors.genero }}</p>
             </div>
-
           </div>
         </div>
-
-        <div class="text-center pt-6">
+        <div class="text-center p-6 border-t">
           <button type="submit" class="
             font-bold text-white text-xl
-            px-20 py-3 rounded-md 
+            px-12 sm:px-20 py-3 rounded-md 
             bg-gradient-to-r from-green-500 to-emerald-500
             bg-[length:200%_auto] bg-[position:0%_0%] hover:bg-[position:100%_0%]
             transition-all duration-500 ease-out
             hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/40">
             Registrar
-          </button>
-        </div>
-      </form>
-    </div>
+        </button>
+      </div>
+    </form>
   </div>
-</template>
+</div></template>
