@@ -48,6 +48,13 @@ public class FuncionarioService {
         }
 
         return repository.save(entity);
+
+    }
+
+    public void delete(Long id) {
+        Funcionario funcionario = getById(id);
+
+        repository.delete(funcionario);
     }
 
 

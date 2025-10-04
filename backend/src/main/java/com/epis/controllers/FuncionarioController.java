@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/funcionarios")
@@ -73,5 +72,14 @@ public class FuncionarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(funcionarioUpd);
 
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteFuncionario(@PathVariable Long id) {
+
+        service.delete(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Funcionario Deletado com Sucesso");
+    }
+
 
 }
