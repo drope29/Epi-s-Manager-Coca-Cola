@@ -16,6 +16,7 @@ public class CorsConfig {
                 registry.addMapping("/**")  // para todos os endpoints
                         .allowedOrigins("http://localhost:5173")  // front-end local
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
