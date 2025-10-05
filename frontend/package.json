@@ -10,6 +10,12 @@
   },
   "dependencies": {
     "@types/vue": "^1.0.31",
+    "datatables.net": "^2.3.4",
+    "datatables.net-buttons-dt": "^3.2.5",
+    "datatables.net-dt": "^2.3.4",
+    "datatables.net-responsive-dt": "^3.0.7",
+    "datatables.net-vue3": "^3.0.4",
+    "jquery": "^3.7.1",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },
