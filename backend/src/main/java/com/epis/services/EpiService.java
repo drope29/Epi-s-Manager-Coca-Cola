@@ -18,4 +18,7 @@ public class EpiService {
         repository.saveAll(epi);
     }
 
+    public List<Epi> getAll() {
+        return repository.findAll();
+    }
 }
