@@ -1,5 +1,6 @@
 package com.epis.utils;
 
+import com.epis.entities.Epi;
 import com.epis.entities.Funcionario;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -41,6 +42,35 @@ public class UploadFiles {
         return funcionariosses;
     }
 
+    public static List<Epi> lerEpis() {
+        List<Epi> epis = new ArrayList<>();
+
+        try (InputStream arquivo = UploadFiles.class.getResourceAsStream("/base-epis.xlsx");
+             Workbook workbook = new XSSFWorkbook(arquivo)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            boolean primeiraLinha = true;
+
+            for (Row row : sheet) {
+                if (primeiraLinha) {
+                    primeiraLinha = false;
+                    continue;
+                }
+
+                String codigo = getCellValueAsString(row.getCell(0));            // Coluna A
+                String descricaoCompleta = getCellValueAsString(row.getCell(1)); // Coluna B
+
+                Epi epi = new Epi(codigo, descricaoCompleta);
+                epis.add(epi);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return epis;
+    }
+
     private static String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
         switch (cell.getCellType()) {
@@ -64,8 +94,12 @@ public class UploadFiles {
     }
 
     public static void main(String[] args) {
-        List<Funcionario> lista = lerFuncionarios();
-        lista.forEach(System.out::println);
-    }
+        //List<Funcionario> listaFunc = lerFuncionarios();
+        //listaFunc.forEach(System.out::println);
 
+        System.out.println("\n--- EPIS ---\n");
+
+        List<Epi> listaEpi = lerEpis();
+        listaEpi.forEach(System.out::println);
+    }
 }

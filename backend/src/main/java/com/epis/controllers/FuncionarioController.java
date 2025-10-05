@@ -21,7 +21,7 @@ public class FuncionarioController {
     @Autowired
     private FuncionarioService service;
 
-    @PostMapping("/upload-funcionarios")
+    @PostMapping("/upload")
     public ResponseEntity<String> uploadFuncionarios() {
 
         String mensagemRetorno = "Funcionários Importados com Sucesso";
