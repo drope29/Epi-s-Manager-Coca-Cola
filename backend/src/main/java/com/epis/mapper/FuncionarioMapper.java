@@ -12,6 +12,9 @@ public class FuncionarioMapper {
         funcionario.setNome(dto.getNome());
         funcionario.setFuncao(dto.getFuncao());
         funcionario.setRE(dto.getRE());
+        funcionario.setUnidade(dto.getUnidade());
+        funcionario.setTurno(dto.getTurno());
+        funcionario.setGenero(dto.getGenero());
 
         return funcionario;
     }
@@ -22,6 +25,9 @@ public class FuncionarioMapper {
         funcionario.setNome(dto.getNome());
         funcionario.setFuncao(dto.getFuncao());
         funcionario.setRE(dto.getRE());
+        funcionario.setUnidade(dto.getUnidade());
+        funcionario.setTurno(dto.getTurno());
+        funcionario.setGenero(dto.getGenero());
 
         return funcionario;
     }

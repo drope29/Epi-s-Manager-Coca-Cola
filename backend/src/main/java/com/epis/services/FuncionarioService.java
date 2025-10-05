@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FuncionarioService {
@@ -35,17 +36,12 @@ public class FuncionarioService {
     public Funcionario update(Long id, Funcionario funcionario) {
         Funcionario entity = getById(id);
 
-        if (funcionario.getNome() != null) {
-            entity.setNome(funcionario.getNome());
-        }
-
-        if (funcionario.getRE() != null) {
-            entity.setRE(funcionario.getRE());
-        }
-
-        if (funcionario.getFuncao() != null) {
-            entity.setFuncao(funcionario.getFuncao());
-        }
+        Optional.ofNullable(funcionario.getNome()).ifPresent(entity::setNome);
+        Optional.ofNullable(funcionario.getRE()).ifPresent(entity::setRE);
+        Optional.ofNullable(funcionario.getFuncao()).ifPresent(entity::setFuncao);
+        Optional.ofNullable(funcionario.getUnidade()).ifPresent(entity::setUnidade);
+        Optional.ofNullable(funcionario.getTurno()).ifPresent(entity::setTurno);
+        Optional.ofNullable(funcionario.getGenero()).ifPresent(entity::setGenero);
 
         return repository.save(entity);
 
