@@ -3,19 +3,20 @@ import { ref, onMounted, nextTick } from 'vue';
 import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net-dt';
 
-// Importar a FUNCIONALIDADE e o CSS das extensões
 import Responsive from 'datatables.net-responsive-dt';
 import Buttons from 'datatables.net-buttons-dt';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
 import ButtonAdd from './buttonAdd.vue';
 
-// Registra o DataTables e as extensões
+// --- CORREÇÃO 1: Defina o evento que este componente vai emitir ---
+const emit = defineEmits(['open-epi-modal']);
+
 DataTable.use(DataTablesCore);
 DataTable.use(Responsive);
 DataTable.use(Buttons);
 
 const globalSearch = ref('');
-const dtRef = ref(null); // Removido <any>
+const dtRef = ref(null);
 
 const columns = [
   {
@@ -26,10 +27,10 @@ const columns = [
       return data == 0 ? "Não Informado" : data;
     }
   },
-  { 
-    data: 'descricao', 
-    title: 'Descrição', 
-    className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap text-center w-1/2' 
+  {
+    data: 'descricao',
+    title: 'Descrição',
+    className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap text-center w-1/2'
   },
 ];
 
@@ -117,7 +118,7 @@ const applySearch = () => {
           ></path>
         </svg>
       </div>
-      <ButtonAdd />
+      <ButtonAdd @add-clicked="$emit('open-epi-modal')" />
     </header>
 
     <main class="p-4 sm:p-8">

@@ -66,7 +66,6 @@ function registrarColaborador() {
 </script>
 
 <template>
-
   <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-40 p-4">
 
     <div
@@ -155,8 +154,9 @@ function registrarColaborador() {
             transition-all duration-500 ease-out
             hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/40">
             Registrar
-        </button>
-      </div>
-    </form>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</div></template>
+</template>

@@ -5,11 +5,14 @@ import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import Buttons from 'datatables.net-buttons-dt';
 
-// ✅ Importação correta dos estilos para Vite
+// Importação dos estilos
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
 
 import ButtonAdd from './buttonAdd.vue';
+
+// ✅ Linha adicionada para definir o evento que este componente emite
+const emit = defineEmits(['open-add-modal']);
 
 // Inicializa o DataTables e suas extensões
 DataTable.use(DataTablesCore);
@@ -24,7 +27,7 @@ const columns = [
     data: 're',
     title: 'RE',
     className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap',
-    render: function(data) {
+    render: function (data) {
       return data === 0 ? "Não Informado" : data;
     }
   },
@@ -34,7 +37,7 @@ const columns = [
     data: null,
     title: 'Turno',
     className: 'px-6 py-4',
-    render: function(_data, _type, row) {
+    render: function (_data, _type, row) {
       return row.turno || "Não Informado";
     }
   },
@@ -42,7 +45,7 @@ const columns = [
 
 const options = {
   responsive: true,
-  searching: false, // ✅ Usamos nossa própria busca
+  searching: false,
   paging: true,
   info: true,
   lengthChange: true,
@@ -100,40 +103,22 @@ const applySearch = () => {
   <div>
     <header class="bg-gray-800 text-white p-4 flex items-center space-x-4">
       <div class="relative w-full">
-        <input
-          type="text"
-          placeholder="Procurar por nome, RE, cargo..."
+        <input type="text" placeholder="Procurar por nome, RE, cargo..."
           class="bg-gray-700 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-          v-model="globalSearch"
-          @input="applySearch"
-        />
-        <svg
-          class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
+          v-model="globalSearch" @input="applySearch" />
+        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none"
+          stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
       </div>
-      <ButtonAdd />
+      <ButtonAdd @add-clicked="$emit('open-add-modal')" />
     </header>
 
     <main class="p-4 sm:p-8">
       <div class="bg-white shadow-md sm:rounded-lg overflow-hidden">
-        <DataTable
-          :columns="columns"
-          :data="colaboradores"
-          :options="options"
-          ref="dtRef"
-          class="w-full text-sm text-left text-gray-500"
-        >
+        <DataTable :columns="columns" :data="colaboradores" :options="options" ref="dtRef"
+          class="w-full text-sm text-left text-gray-500">
           <thead>
             <tr>
               <th scope="col" class="px-6 py-3">RE</th>
@@ -153,23 +138,19 @@ const applySearch = () => {
 </template>
 
 <style scoped>
-/* === Estilos gerais do wrapper === */
 :deep(.dataTables_wrapper) {
   padding: 0 !important;
 }
 
-/* Esconde o campo de busca padrão do DataTables */
 :deep(.dataTables_filter) {
   display: none;
 }
 
-/* Cabeçalho personalizado */
 :deep(.datatable-header) {
   padding: 1rem;
   border-bottom: 1px solid rgb(229, 231, 235);
 }
 
-/* Rodapé com paginação e info */
 :deep(.datatable-footer) {
   display: flex;
   align-items: center;
@@ -178,7 +159,6 @@ const applySearch = () => {
   border-top: 1px solid rgb(229, 231, 235);
 }
 
-/* Estilos do cabeçalho da tabela */
 :deep(table.dataTable thead th) {
   font-weight: 600 !important;
   color: rgb(55, 65, 81) !important;
@@ -186,12 +166,10 @@ const applySearch = () => {
   background-color: transparent !important;
 }
 
-/* Remove borda inferior do último item */
 :deep(table.dataTable tbody tr:last-child) {
   border-bottom: none !important;
 }
 
-/* Seletor "Mostrar X entradas" */
 :deep(div.dataTables_wrapper div.dataTables_length label) {
   font-weight: 500;
   color: rgb(55, 65, 81);
@@ -222,13 +200,11 @@ const applySearch = () => {
   border-color: #3b82f6;
 }
 
-/* Informações de paginação */
 :deep(div.dataTables_wrapper div.dataTables_info) {
   color: rgb(75, 85, 99);
   font-size: 0.875rem;
 }
 
-/* === ✅ ESTILOS MELHORADOS DA PAGINAÇÃO === */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button) {
   display: inline-flex;
   align-items: center;
@@ -279,9 +255,9 @@ const applySearch = () => {
 }
 
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.first,
-      div.dataTables_wrapper div.dataTables_paginate .paginate_button.last,
-      div.dataTables_wrapper div.dataTables_paginate .paginate_button.previous,
-      div.dataTables_wrapper div.dataTables_paginate .paginate_button.next) {
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button.last,
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button.previous,
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button.next) {
   min-width: auto;
   padding: 0.5rem 0.75rem;
   font-weight: 500;
@@ -293,7 +269,6 @@ const applySearch = () => {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* Remove ícones de ordenação padrão */
 :deep(table.dataTable thead .sorting),
 :deep(table.dataTable thead .sorting_asc),
 :deep(table.dataTable thead .sorting_desc) {
