@@ -19,25 +19,20 @@ const dtRef = ref(null); // Removido <any>
 
 const columns = [
   {
-    data: 're',
-    title: 'RE',
-    className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap',
-    // Corrigido: o parâmetro 'data' já é o valor de 're'
+    data: 'codigo',
+    title: 'CA',
+    className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap text-center w-1/2',
     render: function(data, type, row) {
       return data == 0 ? "Não Informado" : data;
     }
   },
-  { data: 'nome', title: 'Nome', className: 'px-6 py-4' },
-  { data: 'funcao', title: 'Cargo', className: 'px-6 py-4' },
-  {
-    data: null,
-    title: 'Turno',
-    className: 'px-6 py-4',
-    render: function(data, type, row) {
-      return row.turno || "Não Informado";
-    }
+  { 
+    data: 'descricao', 
+    title: 'Descrição', 
+    className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap text-center w-1/2' 
   },
 ];
+
 
 const options = {
   responsive: true,
@@ -62,16 +57,16 @@ const options = {
   },
 };
 
-const colaboradores = ref([]);
+const epis = ref([]);
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8080/api/funcionarios/');
+    const response = await fetch('http://localhost:8080/api/epis/');
     if (!response.ok) {
       throw new Error('Erro ao buscar colaboradores');
     }
     const data = await response.json();
-    colaboradores.value = data;
+    epis.value = data;
 
     await nextTick();
     if (dtRef.value && globalSearch.value) {
@@ -82,7 +77,7 @@ onMounted(async () => {
     }
 
   } catch (error) {
-    console.error('Erro ao carregar colaboradores:', error);
+    console.error('Erro ao carregar epis:', error);
   }
 });
 
@@ -129,23 +124,21 @@ const applySearch = () => {
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
         <DataTable
           :columns="columns"
-          :data="colaboradores"
+          :data="epis"
           :options="options"
           ref="dtRef"
           class="w-full text-sm text-left text-gray-500"
         >
           <thead class="text-xs text-gray-700 uppercase bg-gray-100">
             <tr>
-              <th scope="col" class="px-6 py-3">RE</th>
-              <th scope="col" class="px-6 py-3">Nome</th>
-              <th scope="col" class="px-6 py-3">Cargo</th>
-              <th scope="col" class="px-6 py-3">Turno</th>
+              <th scope="col" class="px-6 py-3">CA</th>
+              <th scope="col" class="px-6 py-3">Descrição</th>
             </tr>
           </thead>
           </DataTable>
         
-        <div v-if="colaboradores.length === 0" class="text-center py-4 text-gray-500">
-          Nenhum colaborador cadastrado.
+        <div v-if="epis.length === 0" class="text-center py-4 text-gray-500">
+          Nenhum epi cadastrado.
         </div>
       </div>
     </main>
