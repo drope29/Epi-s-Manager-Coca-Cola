@@ -1,52 +1,28 @@
-package com.epis.entities;
+package com.epis.dtos;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.Date;
 
-@Entity
-@Table(name = "tb_epi")
-public class Epi {
+public class EpiCreateDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column
+    @NotBlank(message = "O campo código compra é obrigatório")
     private String codigoCompra;
 
-    @Column
     private String codigoAutenticacao;
 
-    @Column
+    @NotBlank(message = "O campo descrição é obrigatório")
     private String descricao;
 
-    @Column
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataValidade;
 
-    public Epi(){}
+    public EpiCreateDto(){}
 
-    public Epi(String codigoCompra, String descricao) {
-        this.codigoCompra = codigoCompra;
-        this.descricao = descricao;
-    }
-
-    public Epi(Long id, String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
-        this.id = id;
+    public EpiCreateDto(String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
         this.codigoCompra = codigoCompra;
         this.codigoAutenticacao = codigoAutenticacao;
         this.descricao = descricao;
         this.dataValidade = dataValidade;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getCodigoCompra() {
@@ -83,9 +59,8 @@ public class Epi {
 
     @Override
     public String toString() {
-        return "Epi{" +
-                "id=" + id +
-                ", codigoCompra='" + codigoCompra + '\'' +
+        return "EpiCreateDto{" +
+                "codigoCompra='" + codigoCompra + '\'' +
                 ", codigoAutenticacao='" + codigoAutenticacao + '\'' +
                 ", descricao='" + descricao + '\'' +
                 ", dataValidade=" + dataValidade +

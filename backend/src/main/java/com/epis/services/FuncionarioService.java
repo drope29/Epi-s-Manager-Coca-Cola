@@ -24,16 +24,16 @@ public class FuncionarioService {
     }
 
     public Funcionario getById(Long id) {
+
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Funcionário não encontrado com id " + id));
+
     }
 
-
-    public void insert(Funcionario funcionario) {
-        repository.save(funcionario);
-    }
+    public Funcionario insert(Funcionario funcionario) { return repository.save(funcionario); }
 
     public Funcionario update(Long id, Funcionario funcionario) {
+
         Funcionario entity = getById(id);
 
         Optional.ofNullable(funcionario.getNome()).ifPresent(entity::setNome);
@@ -48,10 +48,11 @@ public class FuncionarioService {
     }
 
     public void delete(Long id) {
+
         Funcionario funcionario = getById(id);
 
         repository.delete(funcionario);
-    }
 
+    }
 
 }

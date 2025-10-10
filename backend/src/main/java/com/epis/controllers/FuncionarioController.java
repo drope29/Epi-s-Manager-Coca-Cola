@@ -49,6 +49,7 @@ public class FuncionarioController {
     public ResponseEntity<?> getFuncionarioById(@PathVariable Long id) {
 
         Funcionario funcionario = service.getById(id);
+
         return ResponseEntity.ok(funcionario);
 
     }
@@ -56,8 +57,7 @@ public class FuncionarioController {
     @PostMapping("/")
     public ResponseEntity<Funcionario> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
 
-        Funcionario funcionario = FuncionarioMapper.toFuncionario(dto);
-        service.insert(funcionario);
+        Funcionario funcionario = service.insert(FuncionarioMapper.toFuncionario(dto));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
 
@@ -66,8 +66,7 @@ public class FuncionarioController {
     @PutMapping("/{id}")
     public ResponseEntity<Funcionario> updateFuncionario(@PathVariable Long id, @RequestBody FuncionarioUpdateDto dto) {
 
-        Funcionario funcionario = FuncionarioMapper.toFuncionario(dto);
-        Funcionario funcionarioUpd = service.update(id, funcionario);
+        Funcionario funcionarioUpd = service.update(id, FuncionarioMapper.toFuncionario(dto));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(funcionarioUpd);
 
@@ -79,7 +78,7 @@ public class FuncionarioController {
         service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Funcionario Deletado com Sucesso");
-    }
 
+    }
 
 }
