@@ -2,6 +2,9 @@ package com.epis.entities;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "tb_funcionarios")
 public class Funcionario {
@@ -27,6 +30,9 @@ public class Funcionario {
 
     @Column
     private String genero;
+
+    @OneToMany(mappedBy = "funcionario")
+    private List<Movimentacao> FuncionarioEpi = new ArrayList<>();
 
     public Funcionario(){}
 

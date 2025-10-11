@@ -3,7 +3,9 @@ package com.epis.entities;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_epi")
@@ -25,6 +27,9 @@ public class Epi {
     @Column
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataValidade;
+
+    @OneToMany(mappedBy = "epi")
+    private List<Movimentacao> FuncionarioEpi = new ArrayList<>();
 
     public Epi(){}
 
