@@ -5,16 +5,12 @@ import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import Buttons from 'datatables.net-buttons-dt';
 
-// Importação dos estilos
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
-
 import ButtonAdd from './buttonAdd.vue';
 
-// ✅ Linha adicionada para definir o evento que este componente emite
 const emit = defineEmits(['open-add-modal']);
 
-// Inicializa o DataTables e suas extensões
 DataTable.use(DataTablesCore);
 DataTable.use(Responsive);
 DataTable.use(Buttons);
@@ -23,29 +19,16 @@ const globalSearch = ref('');
 const dtRef = ref(null);
 
 const columns = [
-  {
-    data: 're',
-    title: 'RE',
-    className: 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap',
-    render: function (data) {
-      return data === 0 ? "Não Informado" : data;
-    }
-  },
-  { data: 'nome', title: 'Nome', className: 'px-6 py-4' },
-  { data: 'funcao', title: 'Cargo', className: 'px-6 py-4' },
-  {
-    data: null,
-    title: 'Turno',
-    className: 'px-6 py-4',
-    render: function (_data, _type, row) {
-      return row.turno || "Não Informado";
-    }
-  },
+  { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
+  { data: 'nome', title: 'Nome', className: 'text-center' },
+  { data: 'funcao', title: 'Cargo', className: 'text-center' },
+  { data: null, title: 'Turno', className: 'text-center', render: (_d, _t, row) => row.turno || "Não Informado" }
 ];
 
 const options = {
-  responsive: true,
-  searching: false,
+  responsive: true,       // Ativa responsividade
+  autoWidth: false,       // Ajusta colunas automaticamente
+  searching: true,
   paging: true,
   info: true,
   lengthChange: true,
@@ -57,12 +40,7 @@ const options = {
     info: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
     infoEmpty: "Mostrando 0 registros",
     infoFiltered: "(filtrado de _MAX_ registros)",
-    paginate: {
-      first: "Primeiro",
-      last: "Último",
-      next: "Próximo",
-      previous: "Anterior"
-    }
+    paginate: { first: "Primeiro", last: "Último", next: "Próximo", previous: "Anterior" }
   },
 };
 
@@ -71,32 +49,14 @@ const colaboradores = ref([]);
 onMounted(async () => {
   try {
     const response = await fetch('http://localhost:8080/api/funcionarios/');
-    if (!response.ok) {
-      throw new Error('Erro ao buscar colaboradores');
-    }
-    const data = await response.json();
-    colaboradores.value = data;
-
+    if (!response.ok) throw new Error('Erro ao buscar colaboradores');
+    colaboradores.value = await response.json();
     await nextTick();
-    if (dtRef.value && globalSearch.value) {
-      const dt = dtRef.value.dt;
-      if (dt) {
-        dt.search(globalSearch.value).draw();
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao carregar colaboradores:', error);
-  }
+    if (dtRef.value && globalSearch.value) dtRef.value.dt.search(globalSearch.value).draw();
+  } catch (error) { console.error(error); }
 });
 
-const applySearch = () => {
-  if (dtRef.value) {
-    const dt = dtRef.value.dt;
-    if (dt) {
-      dt.search(globalSearch.value).draw();
-    }
-  }
-};
+const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.value).draw(); }
 </script>
 
 <template>
@@ -107,7 +67,7 @@ const applySearch = () => {
           class="bg-gray-700 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           v-model="globalSearch" @input="applySearch" />
         <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none"
-          stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
@@ -116,19 +76,9 @@ const applySearch = () => {
     </header>
 
     <main class="p-4 sm:p-8">
-      <div class="bg-white shadow-md sm:rounded-lg overflow-hidden">
+      <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
         <DataTable :columns="columns" :data="colaboradores" :options="options" ref="dtRef"
-          class="w-full text-sm text-left text-gray-500">
-          <thead>
-            <tr>
-              <th scope="col" class="px-6 py-3">RE</th>
-              <th scope="col" class="px-6 py-3">Nome</th>
-              <th scope="col" class="px-6 py-3">Cargo</th>
-              <th scope="col" class="px-6 py-3">Turno</th>
-            </tr>
-          </thead>
-        </DataTable>
-
+          class="w-full text-sm text-gray-700" />
         <div v-if="colaboradores.length === 0" class="text-center py-10 text-gray-500">
           Nenhum colaborador cadastrado.
         </div>
@@ -138,73 +88,61 @@ const applySearch = () => {
 </template>
 
 <style scoped>
+/* Wrapper */
 :deep(.dataTables_wrapper) {
+  width: 100%;
   padding: 0 !important;
 }
 
+/* Esconde filtro padrão */
 :deep(.dataTables_filter) {
   display: none;
 }
 
-:deep(.datatable-header) {
-  padding: 1rem;
-  border-bottom: 1px solid rgb(229, 231, 235);
-}
-
+/* Header e Footer */
+:deep(.datatable-header),
 :deep(.datatable-footer) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 1rem;
-  border-top: 1px solid rgb(229, 231, 235);
-}
-
-:deep(table.dataTable thead th) {
-  font-weight: 600 !important;
-  color: rgb(55, 65, 81) !important;
-  border-bottom: 1px solid rgb(229, 231, 235) !important;
-  background-color: transparent !important;
-}
-
-:deep(table.dataTable tbody tr:last-child) {
-  border-bottom: none !important;
-}
-
-:deep(div.dataTables_wrapper div.dataTables_length label) {
-  font-weight: 500;
-  color: rgb(55, 65, 81);
+  border-color: rgb(229, 231, 235);
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_length select) {
-  width: 5rem;
-  margin-left: 0.5rem;
-  padding: 0.375rem 2.5rem 0.375rem 0.5rem;
-  border: 1px solid rgb(209, 213, 219);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  background-color: white;
-  background-repeat: no-repeat;
-  -webkit-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-size: 1.5em 1.5em;
+/* Cabeçalho e células */
+:deep(table.dataTable thead th),
+:deep(table.dataTable tbody td) {
+  padding: 0.75rem 1rem !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-weight: 500 !important;
+  color: rgb(55, 65, 81) !important;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_length select:focus) {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  border-color: #3b82f6;
+/* Cabeçalho */
+:deep(table.dataTable thead th) {
+  border-bottom: 2px solid rgb(229, 231, 235) !important;
+  background-color: rgb(243, 244, 246) !important;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_info) {
-  color: rgb(75, 85, 99);
-  font-size: 0.875rem;
+/* Linhas */
+:deep(table.dataTable tbody tr) {
+  border-bottom: 1px solid rgb(229, 231, 235) !important;
+  transition: background-color 0.2s ease-in-out;
 }
 
+/* Zebra stripes */
+:deep(table.dataTable tbody tr:nth-child(even)) {
+  background-color: rgb(249, 250, 251);
+}
+
+/* Hover linhas */
+:deep(table.dataTable tbody tr:hover) {
+  background-color: rgb(219, 234, 254);
+  cursor: pointer;
+}
+
+/* Paginação */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button) {
   display: inline-flex;
   align-items: center;
@@ -215,63 +153,44 @@ const applySearch = () => {
   color: rgb(55, 65, 81);
   border: 1px solid rgb(229, 231, 235);
   background-color: white;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  font-size: 0.875rem;
-  min-width: 2.5rem;
-  text-align: center;
-  white-space: nowrap;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+  font-weight: 500;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button:not(.disabled):hover) {
-  background-color: rgb(243, 244, 246);
-  color: rgb(31, 41, 55);
-  border-color: rgb(209, 213, 219);
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+/* Hover botões */
+:deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover) {
+  background-color: rgb(229, 231, 235);
+  border-color: rgb(203, 213, 225);
+  color: rgb(30, 41, 59);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Botão ativo */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current) {
   background-color: #2563eb;
   color: white;
   border-color: #2563eb;
   font-weight: 600;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Hover ativo */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover) {
-  background-color: #1d4ed8;
-  border-color: #1d4ed8;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  background-color: #1e40af;
+  border-color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.disabled) {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-  transform: none;
-}
-
-:deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.first,
-  div.dataTables_wrapper div.dataTables_paginate .paginate_button.last,
-  div.dataTables_wrapper div.dataTables_paginate .paginate_button.previous,
-  div.dataTables_wrapper div.dataTables_paginate .paginate_button.next) {
-  min-width: auto;
-  padding: 0.5rem 0.75rem;
+/* Botões especiais */
+:deep(div.dataTables_wrapper div.dataTables_paginate .first,
+  div.dataTables_wrapper div.dataTables_paginate .last,
+  div.dataTables_wrapper div.dataTables_paginate .previous,
+  div.dataTables_wrapper div.dataTables_paginate .next) {
   font-weight: 500;
-  letter-spacing: 0.025em;
-}
-
-:deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button:not(.disabled):active) {
-  transform: translateY(0px);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-:deep(table.dataTable thead .sorting),
-:deep(table.dataTable thead .sorting_asc),
-:deep(table.dataTable thead .sorting_desc) {
-  background-image: none !important;
+  cursor: pointer;
 }
 </style>
