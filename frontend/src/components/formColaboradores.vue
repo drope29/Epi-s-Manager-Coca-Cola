@@ -1,9 +1,9 @@
 <script setup>
 import { reactive } from 'vue';
 import axios from 'axios';
-const backUrl = import.meta.env.VITE_BACKEND_URL;
 
 const emit = defineEmits(['close', 'colaboradorAdicionado']);
+const backUrl = import.meta.env.VITE_BACKEND_URL;
 
 const form = reactive({
   nome: '',

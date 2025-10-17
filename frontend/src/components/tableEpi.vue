@@ -9,6 +9,7 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
 import ButtonAdd from './buttonAdd.vue';
 
+const backUrl = import.meta.env.VITE_BACKEND_URL;
 const emit = defineEmits(['open-epi-modal']);
 
 DataTable.use(DataTablesCore);
@@ -54,7 +55,7 @@ const epis = ref([]);
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8080/api/epis/');
+    const response = await fetch(`${backUrl}/api/epis/`);
     if (!response.ok) throw new Error('Erro ao buscar EPI');
     epis.value = await response.json();
     await nextTick();
