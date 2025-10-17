@@ -1,7 +1,9 @@
 <script setup>
 import { reactive } from 'vue';
+import axios from 'axios';
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'colaboradorAdicionado']);
+const backUrl = import.meta.env.VITE_BACKEND_URL;
 
 const form = reactive({
   nome: '',
@@ -23,7 +25,7 @@ const errors = reactive({
   genero: null,
 });
 
-function registrarColaborador() {
+async function registrarColaborador() {
   Object.keys(errors).forEach(key => errors[key] = null);
 
   let formValido = true;
@@ -58,7 +60,24 @@ function registrarColaborador() {
   }
 
   if (formValido) {
-    console.log("Formulário válido, registrando colaborador:", form);
+    try {
+      console.log(form)
+      const response = await axios.post(`${backUrl}/api/funcionarios/`, {
+        nome: `${form.nome} ${form.sobrenome}`,
+        funcao: form.cargo,
+        re: form.re,
+        unidade: form.unidade,
+        turno: form.turno,
+        genero: form.genero,
+      });
+
+      if (response.status === 201) {
+        emit('colaboradorAdicionado');
+        emit('close');
+      }
+    } catch (error) {
+      console.error("Erro ao registrar colaborador:", error);
+    }
   } else {
     console.log("Formulário inválido.");
   }
