@@ -1,6 +1,7 @@
 <script setup>
 import { reactive } from 'vue';
 import axios from 'axios';
+const backUrl = import.meta.env.VITE_BACKEND_URL;
 
 const emit = defineEmits(['close', 'colaboradorAdicionado']);
 
@@ -60,10 +61,11 @@ async function registrarColaborador() {
 
   if (formValido) {
     try {
-      const response = await axios.post('/api/funcionarios/', {
-        RE: form.re,
+      console.log(form)
+      const response = await axios.post(`${backUrl}/api/funcionarios/`, {
         nome: `${form.nome} ${form.sobrenome}`,
         funcao: form.cargo,
+        re: form.re,
         unidade: form.unidade,
         turno: form.turno,
         genero: form.genero,
