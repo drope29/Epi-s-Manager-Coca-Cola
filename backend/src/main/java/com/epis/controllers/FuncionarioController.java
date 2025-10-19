@@ -68,7 +68,7 @@ public class FuncionarioController {
 
         Funcionario funcionarioUpd = service.update(id, FuncionarioMapper.toFuncionario(dto));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(funcionarioUpd);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(funcionarioUpd);
 
     }
 

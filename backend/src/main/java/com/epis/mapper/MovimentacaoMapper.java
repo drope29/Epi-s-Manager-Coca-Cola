@@ -38,22 +38,31 @@ public class MovimentacaoMapper {
         return movimentacao;
     }
 
-    public Movimentacao toMovimentacao(MovimentacaoUpdateDto dto){
-        Movimentacao movimentacao = new Movimentacao();
+    public void toMovimentacao(MovimentacaoUpdateDto dto, Movimentacao entity){
+        if (dto.getFuncionario() != null) {
+            Funcionario funcionario = funcionarioRepository.findById(dto.getFuncionario())
+                    .orElseThrow(() -> new RuntimeException("Funcionario não Encontrado"));
+            entity.setFuncionario(funcionario);
+        }
 
-        Funcionario funcionario = funcionarioRepository.findById(dto.getFuncionario())
-                .orElseThrow(() -> new RuntimeException("Funcionario não Encontrado"));
+        if (dto.getEpi() != null) {
+            Epi epi = epiRepository.findById(dto.getEpi())
+                    .orElseThrow(() -> new RuntimeException("Epi não Encontrado"));
+            entity.setEpi(epi);
+        }
 
-        Epi epi = epiRepository.findById(dto.getEpi())
-                .orElseThrow(() -> new RuntimeException("Epi não Encontrado"));
+        if (dto.getDataEntrega() != null) {
+            entity.setDataEntrega(dto.getDataEntrega());
+        }
 
-        movimentacao.setFuncionario(funcionario);
-        movimentacao.setEpi(epi);
-        movimentacao.setDataEntrega(dto.getDataEntrega());
-        movimentacao.setDataProximaEntrega(dto.getDataProximaEntrega());
-        movimentacao.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
+        if (dto.getDataProximaEntrega() != null) {
+            entity.setDataProximaEntrega(dto.getDataProximaEntrega());
+        }
 
-        return movimentacao;
+        if (dto.getStatus() != null) {
+            entity.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
+        }
+
     }
 
 }

@@ -53,9 +53,9 @@ public class MovimentacaoController {
     @PutMapping("/{id}")
     public ResponseEntity<Movimentacao> updateMovimentacao(@PathVariable Long id, @RequestBody MovimentacaoUpdateDto dto) {
 
-        Movimentacao movimentacaoUpd = service.update(id, mapper.toMovimentacao(dto));
+        Movimentacao movimentacaoUpd = service.update(id, dto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(movimentacaoUpd);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(movimentacaoUpd);
 
     }
 

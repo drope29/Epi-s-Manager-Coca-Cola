@@ -1,5 +1,7 @@
 package com.epis.entities;
 
+import com.epis.enums.GeneroEnum;
+import com.epis.enums.TurnoEnum;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -26,10 +28,12 @@ public class Funcionario {
     private String unidade;
 
     @Column
-    private String turno;
+    @Enumerated(EnumType.STRING)
+    private TurnoEnum turno;
 
     @Column
-    private String genero;
+    @Enumerated(EnumType.STRING)
+    private GeneroEnum genero;
 
     @OneToMany(mappedBy = "funcionario")
     private List<Movimentacao> FuncionarioEpi = new ArrayList<>();
@@ -42,7 +46,7 @@ public class Funcionario {
         this.funcao = funcao;
     }
 
-    public Funcionario(Long id, String RE, String nome, String funcao, String unidade, String turno, String genero) {
+    public Funcionario(Long id, String RE, String nome, String funcao, String unidade, TurnoEnum turno, GeneroEnum genero) {
         this.id = id;
         this.RE = RE;
         this.nome = nome;
@@ -92,19 +96,19 @@ public class Funcionario {
         this.unidade = unidade;
     }
 
-    public String getTurno() {
+    public TurnoEnum getTurno() {
         return turno;
     }
 
-    public void setTurno(String turno) {
+    public void setTurno(TurnoEnum turno) {
         this.turno = turno;
     }
 
-    public String getGenero() {
+    public GeneroEnum getGenero() {
         return genero;
     }
 
-    public void setGenero(String genero) {
+    public void setGenero(GeneroEnum genero) {
         this.genero = genero;
     }
 

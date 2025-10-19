@@ -68,7 +68,7 @@ public class EpiController {
 
         Epi epiUpd = service.update(id, EpiMapper.toEpi(dto));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(epiUpd);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(epiUpd);
 
     }
 

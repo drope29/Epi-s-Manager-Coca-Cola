@@ -1,19 +1,23 @@
 package com.epis.services;
 
+import com.epis.dtos.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
+import com.epis.mapper.MovimentacaoMapper;
 import com.epis.repositories.MovimentacaoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MovimentacaoService {
 
     @Autowired
     private MovimentacaoRepository repository;
+
+    @Autowired
+    private MovimentacaoMapper mapper;
 
 
     public Movimentacao insert(Movimentacao movimentacao) { return repository.save(movimentacao); }
@@ -28,18 +32,12 @@ public class MovimentacaoService {
                 .orElseThrow(() -> new EntityNotFoundException("Movimentação não encontrada com id " + id));
     }
 
-    public Movimentacao update(Long id, Movimentacao movimentacao) {
-
+    public Movimentacao update(Long id, MovimentacaoUpdateDto dto) {
         Movimentacao entity = getById(id);
 
-        Optional.ofNullable(movimentacao.getFuncionario()).ifPresent(entity::setFuncionario);
-        Optional.ofNullable(movimentacao.getEpi()).ifPresent(entity::setEpi);
-        Optional.ofNullable(movimentacao.getDataEntrega()).ifPresent(entity::setDataEntrega);
-        Optional.ofNullable(movimentacao.getDataProximaEntrega()).ifPresent(entity::setDataProximaEntrega);
-        Optional.ofNullable(movimentacao.getStatus()).ifPresent(entity::setStatus);
+        mapper.toMovimentacao(dto, entity);
 
         return repository.save(entity);
-
     }
 
     public void delete(Long id) {
