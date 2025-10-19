@@ -4,13 +4,15 @@ import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import Buttons from 'datatables.net-buttons-dt';
+import Swal from 'sweetalert2';
 
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
+import 'sweetalert2/dist/sweetalert2.min.css';
 import ButtonAdd from './buttonAdd.vue';
 
 const backUrl = import.meta.env.VITE_BACKEND_URL;
-const emit = defineEmits(['open-add-modal']);
+const emit = defineEmits(['open-add-modal', 'open-edit-modal']);
 
 DataTable.use(DataTablesCore);
 DataTable.use(Responsive);
@@ -23,12 +25,43 @@ const columns = [
   { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
   { data: 'nome', title: 'Nome', className: 'text-center' },
   { data: 'funcao', title: 'Cargo', className: 'text-center' },
-  { data: null, title: 'Turno', className: 'text-center', render: (_d, _t, row) => row.turno || "Não Informado" }
+  { data: 'unidade', title: 'Unidade', className: 'text-center', render: (_d, _t, row) => row.unidade || "Não Informado" },
+  { data: 'genero', title: 'Gênero', className: 'text-center', render: (_d, _t, row) => row.genero || "Não Informado" },
+  { data: null, title: 'Turno', className: 'text-center', render: (_d, _t, row) => row.turno || "Não Informado" },
+  {
+    data: null,
+    title: 'Ações',
+    orderable: false,
+    searchable: false, 
+    className: 'text-center',
+    render: (_d, _t, row) => {
+
+      const editBtn = `
+        <button
+          data-action="edit"
+          data-id="${row.id}" 
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+          title="Editar">
+          Editar
+        </button>`;
+
+      const deleteBtn = `
+        <button
+          data-action="delete"
+          data-id="${row.id}"
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+          title="Excluir">
+          Excluir
+        </button>`;
+
+      return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
+    }
+  }
 ];
 
 const options = {
-  responsive: true,       // Ativa responsividade
-  autoWidth: false,       // Ajusta colunas automaticamente
+  responsive: true,
+  autoWidth: false,
   searching: true,
   paging: true,
   info: true,
@@ -58,6 +91,69 @@ onMounted(async () => {
 });
 
 const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.value).draw(); }
+
+const handleTableClick = (event) => {
+  const target = event.target.closest('button[data-action]');
+  if (!target) return;
+
+  const action = target.dataset.action;
+  const id = target.dataset.id;
+  const colaborador = colaboradores.value.find(c => c.id.toString() === id);
+
+  if (!colaborador) return; 
+
+  if (action === 'edit') {
+    handleEdit(colaborador);
+  } else if (action === 'delete') {
+    handleDelete(colaborador);
+  }
+};
+
+const handleEdit = (colaborador) => {
+  console.log('EDITAR:', colaborador);
+  emit('open-edit-modal', colaborador);
+};
+
+const handleDelete = (colaborador) => {
+  Swal.fire({
+    title: 'Você tem certeza?',
+    text: `Deseja realmente excluir ${colaborador.nome} (RE: ${colaborador.re})? Esta ação não pode ser desfeita.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6', 
+    confirmButtonText: 'Sim, excluir!',
+    cancelButtonText: 'Cancelar'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${backUrl}/api/funcionarios/${colaborador.id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao excluir colaborador');
+        }
+
+        colaboradores.value = colaboradores.value.filter(c => c.id !== colaborador.id);
+
+        Swal.fire(
+          'Excluído!',
+          `${colaborador.nome} foi excluído com sucesso.`,
+          'success'
+        );
+
+      } catch (error) {
+        console.error('Erro ao excluir:', error);
+        Swal.fire(
+          'Erro!',
+          'Não foi possível excluir o colaborador. Tente novamente.',
+          'error'
+        );
+      }
+    }
+  });
+};
 </script>
 
 <template>
@@ -78,8 +174,14 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
 
     <main class="p-4 sm:p-8">
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
-        <DataTable :columns="columns" :data="colaboradores" :options="options" ref="dtRef"
-          class="w-full text-sm text-gray-700" />
+        <DataTable
+          :columns="columns"
+          :data="colaboradores"
+          :options="options"
+          ref="dtRef"
+          class="w-full text-sm text-gray-700"
+          @click="handleTableClick"
+        />
         <div v-if="colaboradores.length === 0" class="text-center py-10 text-gray-500">
           Nenhum colaborador cadastrado.
         </div>
@@ -89,18 +191,15 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
 </template>
 
 <style scoped>
-/* Wrapper */
 :deep(.dataTables_wrapper) {
   width: 100%;
   padding: 0 !important;
 }
 
-/* Esconde filtro padrão */
 :deep(.dataTables_filter) {
   display: none;
 }
 
-/* Header e Footer */
 :deep(.datatable-header),
 :deep(.datatable-footer) {
   padding: 1rem;
@@ -110,7 +209,6 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
   align-items: center;
 }
 
-/* Cabeçalho e células */
 :deep(table.dataTable thead th),
 :deep(table.dataTable tbody td) {
   padding: 0.75rem 1rem !important;
@@ -120,30 +218,29 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
   color: rgb(55, 65, 81) !important;
 }
 
-/* Cabeçalho */
 :deep(table.dataTable thead th) {
   border-bottom: 2px solid rgb(229, 231, 235) !important;
   background-color: rgb(243, 244, 246) !important;
 }
 
-/* Linhas */
 :deep(table.dataTable tbody tr) {
   border-bottom: 1px solid rgb(229, 231, 235) !important;
   transition: background-color 0.2s ease-in-out;
 }
 
-/* Zebra stripes */
 :deep(table.dataTable tbody tr:nth-child(even)) {
   background-color: rgb(249, 250, 251);
 }
 
-/* Hover linhas */
 :deep(table.dataTable tbody tr:hover) {
   background-color: rgb(219, 234, 254);
+}
+
+:deep(table.dataTable tbody tr button) {
   cursor: pointer;
 }
 
-/* Paginação */
+
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button) {
   display: inline-flex;
   align-items: center;
@@ -159,7 +256,6 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
   font-weight: 500;
 }
 
-/* Hover botões */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover) {
   background-color: rgb(229, 231, 235);
   border-color: rgb(203, 213, 225);
@@ -168,7 +264,6 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Botão ativo */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current) {
   background-color: #2563eb;
   color: white;
@@ -177,7 +272,6 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Hover ativo */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover) {
   background-color: #1e40af;
   border-color: #1e40af;
@@ -186,7 +280,6 @@ const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.
   cursor: pointer;
 }
 
-/* Botões especiais */
 :deep(div.dataTables_wrapper div.dataTables_paginate .first,
   div.dataTables_wrapper div.dataTables_paginate .last,
   div.dataTables_wrapper div.dataTables_paginate .previous,

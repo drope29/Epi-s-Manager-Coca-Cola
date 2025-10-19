@@ -4,13 +4,15 @@ import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import Buttons from 'datatables.net-buttons-dt';
+import Swal from 'sweetalert2'; 
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
 import ButtonAdd from './buttonAdd.vue';
 
 const backUrl = import.meta.env.VITE_BACKEND_URL;
-const emit = defineEmits(['open-epi-modal']);
+const emit = defineEmits(['open-epi-modal', 'open-edit-epi-modal']);
 
 DataTable.use(DataTablesCore);
 DataTable.use(Responsive);
@@ -21,15 +23,56 @@ const dtRef = ref(null);
 
 const columns = [
   {
-    data: 'codigoCompra',
+    data: 'codigoAutenticacao',
     title: 'CA',
     className: 'text-center',
-    render: (data) => data == 0 ? "Não Informado" : data
+    render: (data) => data || "Não Informado"
   },
   {
     data: 'descricao',
     title: 'Descrição',
     className: 'text-center'
+  },
+
+  {
+    data: 'codigoCompra',
+    title: 'Cod. Compra',
+    className: 'text-center',
+    render: (data) => data == 0 ? "Não Informado" : data 
+  },
+  {
+    data: 'dataValidade',
+    title: 'Validade',
+    className: 'text-center',
+    render: (data) => data == null ? "Não Informado" : data 
+  },
+  {
+    data: null,
+    title: 'Ações',
+    orderable: false,
+    searchable: false,
+    className: 'text-center',
+    render: (_d, _t, row) => {
+      const editBtn = `
+        <button
+          data-action="edit"
+          data-id="${row.id}"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+          title="Editar">
+          Editar
+        </button>`;
+
+      const deleteBtn = `
+        <button
+          data-action="delete"
+          data-id="${row.id}"
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+          title="Excluir">
+          Excluir
+        </button>`;
+        
+      return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
+    }
   }
 ];
 
@@ -57,7 +100,13 @@ onMounted(async () => {
   try {
     const response = await fetch(`${backUrl}/api/epis/`);
     if (!response.ok) throw new Error('Erro ao buscar EPI');
-    epis.value = await response.json();
+    const data = await response.json();
+    epis.value = data;
+
+    if (data.length > 0) {
+      console.log('Dados do primeiro EPI (da API):', data[0]);
+    }
+
     await nextTick();
     if (dtRef.value && globalSearch.value) dtRef.value.dt.search(globalSearch.value).draw();
   } catch (error) {
@@ -68,14 +117,77 @@ onMounted(async () => {
 const applySearch = () => {
   if (dtRef.value) dtRef.value.dt.search(globalSearch.value).draw();
 }
+
+const handleTableClick = (event) => {
+  const target = event.target.closest('button[data-action]');
+  if (!target) return;
+
+  const action = target.dataset.action;
+  const id = target.dataset.id;
+  const epi = epis.value.find(e => e.id.toString() === id);
+
+  if (!epi) return; 
+
+  if (action === 'edit') {
+    handleEdit(epi);
+  } else if (action === 'delete') {
+    handleDelete(epi);
+  }
+};
+
+const handleEdit = (epi) => {
+  console.log('EDITAR EPI:', epi);
+  emit('open-edit-epi-modal', epi);
+};
+
+const handleDelete = (epi) => {
+
+  Swal.fire({
+    title: 'Você tem certeza?',
+    text: `Deseja realmente excluir o EPI "${epi.descricao}" (CA: ${epi.codigoCompra})?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6', 
+    confirmButtonText: 'Sim, excluir!',
+    cancelButtonText: 'Cancelar'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${backUrl}/api/epis/${epi.id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao excluir EPI');
+        }
+
+        epis.value = epis.value.filter(e => e.id !== epi.id);
+
+        Swal.fire(
+          'Excluído!',
+          'O EPI foi excluído com sucesso.',
+          'success'
+        );
+
+      } catch (error) {
+        console.error('Erro ao excluir EPI:', error);
+        Swal.fire(
+          'Erro!',
+          'Não foi possível excluir o EPI. Tente novamente.',
+          'error'
+        );
+      }
+    }
+  });
+};
 </script>
 
 <template>
   <div>
-    <!-- Header com busca e botão -->
     <header class="bg-gray-800 text-white p-4 flex items-center space-x-4">
       <div class="relative w-full">
-        <input type="text" placeholder="Procurar"
+        <input type="text" placeholder="Procurar por CA ou Descrição..."
           class="bg-gray-700 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           v-model="globalSearch" @input="applySearch" />
         <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none"
@@ -87,17 +199,17 @@ const applySearch = () => {
       <ButtonAdd @add-clicked="$emit('open-epi-modal')" />
     </header>
 
-    <!-- Tabela -->
     <main class="p-4 sm:p-8">
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
-        <DataTable :columns="columns" :data="epis" :options="options" ref="dtRef" class="w-full text-sm text-gray-700">
-          <thead>
-            <tr>
-              <th>CA</th>
-              <th>Descrição</th>
-            </tr>
-          </thead>
-        </DataTable>
+        <DataTable 
+          :columns="columns" 
+          :data="epis" 
+          :options="options" 
+          ref="dtRef" 
+          class="w-full text-sm text-gray-700"
+          @click="handleTableClick"
+        >
+          </DataTable>
 
         <div v-if="epis.length === 0" class="text-center py-10 text-gray-500">
           Nenhum EPI cadastrado.
@@ -108,18 +220,15 @@ const applySearch = () => {
 </template>
 
 <style scoped>
-/* Ajuste geral do DataTable */
 :deep(.dataTables_wrapper) {
   width: 100%;
   padding: 0 !important;
 }
 
-/* Esconde o filtro padrão */
 :deep(.dataTables_filter) {
   display: none;
 }
 
-/* Header e Footer */
 :deep(.datatable-header),
 :deep(.datatable-footer) {
   padding: 1rem;
@@ -129,7 +238,6 @@ const applySearch = () => {
   align-items: center;
 }
 
-/* Cabeçalho e células da tabela */
 :deep(table.dataTable thead th),
 :deep(table.dataTable tbody td) {
   padding: 0.75rem 1rem !important;
@@ -139,31 +247,28 @@ const applySearch = () => {
   color: rgb(55, 65, 81) !important;
 }
 
-/* Cabeçalho */
 :deep(table.dataTable thead th) {
   border-bottom: 2px solid rgb(229, 231, 235) !important;
   background-color: rgb(243, 244, 246) !important;
 }
 
-/* Linhas da tabela */
 :deep(table.dataTable tbody tr) {
   border-bottom: 1px solid rgb(229, 231, 235) !important;
   transition: background-color 0.2s ease-in-out;
 }
 
-/* Zebra stripes */
 :deep(table.dataTable tbody tr:nth-child(even)) {
   background-color: rgb(249, 250, 251);
 }
 
-/* Hover nas linhas */
 :deep(table.dataTable tbody tr:hover) {
   background-color: rgb(219, 234, 254);
-  /* azul claro */
+}
+
+:deep(table.dataTable tbody tr button) {
   cursor: pointer;
 }
 
-/* Paginação estilizada */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button) {
   display: inline-flex;
   align-items: center;
@@ -179,7 +284,6 @@ const applySearch = () => {
   font-weight: 500;
 }
 
-/* Hover de todos os botões */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover) {
   background-color: rgb(229, 231, 235);
   border-color: rgb(203, 213, 225);
@@ -189,7 +293,6 @@ const applySearch = () => {
   cursor: pointer;
 }
 
-/* Botão ativo (número da página atual) */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current) {
   background-color: #2563eb;
   /* azul */
@@ -200,17 +303,14 @@ const applySearch = () => {
   cursor: pointer;
 }
 
-/* Hover no botão ativo */
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover) {
   background-color: #1e40af;
-  /* azul mais escuro */
   border-color: #1e40af;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
 }
 
-/* Espaçamento adicional para botões especiais (Primeiro, Último, Anterior, Próximo) */
 :deep(div.dataTables_wrapper div.dataTables_paginate .first,
   div.dataTables_wrapper div.dataTables_paginate .last,
   div.dataTables_wrapper div.dataTables_paginate .previous,

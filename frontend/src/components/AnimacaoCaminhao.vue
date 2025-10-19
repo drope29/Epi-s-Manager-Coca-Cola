@@ -50,7 +50,6 @@
 </template>
 
 <style>
-/* Keyframes da animação */
 @keyframes movimento {
 
     0%,
@@ -73,7 +72,6 @@
     }
 }
 
-/* Classes para aplicar as animações */
 .animacao-movimento {
     animation: movimento 1s linear infinite;
 }

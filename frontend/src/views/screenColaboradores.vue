@@ -7,23 +7,45 @@ import TableColaboradores from '../components/tableColaboradores.vue';
 const isModalVisible = ref(false);
 const tableKey = ref(0);
 
-function openModal() {
-    isModalVisible.value = true;
+const colaboradorParaEditar = ref(null);
+
+function openAddModal() {
+  colaboradorParaEditar.value = null; 
+  isModalVisible.value = true;
 }
+
+function openEditModal(colaborador) {
+  colaboradorParaEditar.value = { ...colaborador }; 
+  isModalVisible.value = true;
+}
+
 function closeModal() {
-    isModalVisible.value = false;
+  isModalVisible.value = false;
+  colaboradorParaEditar.value = null; 
 }
+
 function refreshTable() {
-    tableKey.value++;
+  tableKey.value++;
+  closeModal();
 }
 </script>
 
 <template>
-    <AnimacaoCaminhao />
+  <AnimacaoCaminhao />
 
-    <FormularioModal v-if="isModalVisible" @close="closeModal" @colaboradorAdicionado="refreshTable" />
+  <FormularioModal 
+    v-if="isModalVisible" 
+    :colaborador="colaboradorParaEditar"
+    @close="closeModal" 
+    @colaboradorAdicionado="refreshTable"
+    @colaboradorAtualizado="refreshTable" 
+  />
 
-    <TableColaboradores :key="tableKey" @open-add-modal="openModal" />
+  <TableColaboradores 
+    :key="tableKey" 
+    @open-add-modal="openAddModal" 
+    @open-edit-modal="openEditModal" 
+  />
 </template>
 
 <style scoped></style>
