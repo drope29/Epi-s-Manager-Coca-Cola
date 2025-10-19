@@ -1,6 +1,7 @@
 package com.epis.mapper;
 
 import com.epis.dtos.MovimentacaoCreateDto;
+import com.epis.dtos.MovimentacaoUpdateDto;
 import com.epis.entities.Epi;
 import com.epis.entities.Funcionario;
 import com.epis.entities.Movimentacao;
@@ -20,6 +21,24 @@ public class MovimentacaoMapper {
     private EpiRepository epiRepository;
 
     public Movimentacao toMovimentacao(MovimentacaoCreateDto dto){
+        Movimentacao movimentacao = new Movimentacao();
+
+        Funcionario funcionario = funcionarioRepository.findById(dto.getFuncionario())
+                .orElseThrow(() -> new RuntimeException("Funcionario não Encontrado"));
+
+        Epi epi = epiRepository.findById(dto.getEpi())
+                .orElseThrow(() -> new RuntimeException("Epi não Encontrado"));
+
+        movimentacao.setFuncionario(funcionario);
+        movimentacao.setEpi(epi);
+        movimentacao.setDataEntrega(dto.getDataEntrega());
+        movimentacao.setDataProximaEntrega(dto.getDataProximaEntrega());
+        movimentacao.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
+
+        return movimentacao;
+    }
+
+    public Movimentacao toMovimentacao(MovimentacaoUpdateDto dto){
         Movimentacao movimentacao = new Movimentacao();
 
         Funcionario funcionario = funcionarioRepository.findById(dto.getFuncionario())

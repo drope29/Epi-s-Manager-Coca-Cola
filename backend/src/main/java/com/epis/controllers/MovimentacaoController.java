@@ -1,6 +1,7 @@
 package com.epis.controllers;
 
 import com.epis.dtos.MovimentacaoCreateDto;
+import com.epis.dtos.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
 import com.epis.mapper.MovimentacaoMapper;
 import com.epis.services.MovimentacaoService;
@@ -30,12 +31,40 @@ public class MovimentacaoController {
 
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getEpiById(@PathVariable Long id) {
+
+        Movimentacao movimentacao = service.getById(id);
+
+        return ResponseEntity.ok(movimentacao);
+
+    }
+
+
     @PostMapping("/")
     public ResponseEntity<Movimentacao> insertMovimentacao(@RequestBody MovimentacaoCreateDto dto) {
 
         Movimentacao movimentecao = service.insert(mapper.toMovimentacao(dto));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(movimentecao);
+
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Movimentacao> updateMovimentacao(@PathVariable Long id, @RequestBody MovimentacaoUpdateDto dto) {
+
+        Movimentacao movimentacaoUpd = service.update(id, mapper.toMovimentacao(dto));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(movimentacaoUpd);
+
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteMovimentacao(@PathVariable Long id) {
+
+        service.delete(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Movimentacao Deletada com Sucesso");
 
     }
 }
