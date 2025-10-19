@@ -14,7 +14,6 @@ public class EpiCreateDto {
     @NotBlank(message = "O campo descrição é obrigatório")
     private String descricao;
 
-    @NotBlank(message = "O campo data validade é obrigatório")
     private Date dataValidade;
 
     public EpiCreateDto(){}
