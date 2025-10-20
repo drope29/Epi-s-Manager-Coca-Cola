@@ -1,6 +1,7 @@
 package com.epis.utils;
 
 import com.epis.entities.Epi;
+import com.epis.entities.Funcao;
 import com.epis.entities.Funcionario;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -8,7 +9,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class UploadFiles {
 
@@ -70,6 +73,41 @@ public class UploadFiles {
 
         return epis;
     }
+
+    public static List<Funcao> lerFuncoes() {
+        Set<String> nomesFuncoes = new HashSet<>();
+        List<Funcao> funcoes = new ArrayList<>();
+
+        try (InputStream arquivo = UploadFiles.class.getResourceAsStream("/base-funcionarios.xlsx");
+             Workbook workbook = new XSSFWorkbook(arquivo)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            boolean primeiraLinha = true;
+
+            for (Row row : sheet) {
+                if (primeiraLinha) {
+                    primeiraLinha = false;
+                    continue;
+                }
+
+                String funcaoImportada = getCellValueAsString(row.getCell(2));
+
+                if (funcaoImportada == null || funcaoImportada.trim().isEmpty()) {
+                    continue;
+                }
+
+                if (nomesFuncoes.add(funcaoImportada.trim())) {
+                    funcoes.add(new Funcao(funcaoImportada.trim()));
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return funcoes;
+    }
+
 
     private static String getCellValueAsString(Cell cell) {
         if (cell == null) return "";

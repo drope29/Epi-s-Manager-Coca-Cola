@@ -3,7 +3,6 @@ package com.epis.services;
 import com.epis.entities.Funcionario;
 import com.epis.repositories.FuncionarioRepository;
 import com.epis.services.exception.FuncionarioNaoEncontradoException;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

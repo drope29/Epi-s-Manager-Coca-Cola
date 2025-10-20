@@ -1,6 +1,7 @@
 package com.epis.exception;
 
 import com.epis.services.exception.EpiNaoEncontradoException;
+import com.epis.services.exception.FuncaoNaoEncontradaException;
 import com.epis.services.exception.FuncionarioNaoEncontradoException;
 import com.epis.services.exception.MovimentacaoNaoEncontradaException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,18 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MovimentacaoNaoEncontradaException.class)
     public ResponseEntity<ErrorMessage> handleMovimentacaoNaoEncontradaException(MovimentacaoNaoEncontradaException ex, HttpServletRequest request){
+        ErrorMessage error = new ErrorMessage(
+                request.getRequestURI(),
+                request.getMethod(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(FuncaoNaoEncontradaException.class)
+    public ResponseEntity<ErrorMessage> handleFuncaoNaoEncontradaException(FuncaoNaoEncontradaException ex, HttpServletRequest request){
         ErrorMessage error = new ErrorMessage(
                 request.getRequestURI(),
                 request.getMethod(),
