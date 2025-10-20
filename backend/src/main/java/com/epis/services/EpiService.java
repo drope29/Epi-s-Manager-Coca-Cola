@@ -3,6 +3,7 @@ package com.epis.services;
 import com.epis.entities.Epi;
 import com.epis.entities.Funcionario;
 import com.epis.repositories.EpiRepository;
+import com.epis.services.exception.EpiNaoEncontradoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class EpiService {
     public Epi getById(Long id) {
 
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Epi não encontrado com id " + id));
+                .orElseThrow(() -> new EpiNaoEncontradoException("Epi não encontrado com id " + id));
 
     }
 

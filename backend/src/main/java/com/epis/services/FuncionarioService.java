@@ -2,6 +2,7 @@ package com.epis.services;
 
 import com.epis.entities.Funcionario;
 import com.epis.repositories.FuncionarioRepository;
+import com.epis.services.exception.FuncionarioNaoEncontradoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class FuncionarioService {
     public Funcionario getById(Long id) {
 
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Funcionário não encontrado com id " + id));
+                .orElseThrow(() -> new FuncionarioNaoEncontradoException("Funcionário não encontrado com id " + id));
 
     }
 
