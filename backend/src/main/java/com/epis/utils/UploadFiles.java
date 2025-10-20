@@ -8,10 +8,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class UploadFiles {
 
@@ -46,6 +43,7 @@ public class UploadFiles {
     }
 
     public static List<Epi> lerEpis() {
+        Set<String> codigosEpis = new LinkedHashSet<>();
         List<Epi> epis = new ArrayList<>();
 
         try (InputStream arquivo = UploadFiles.class.getResourceAsStream("/base-epis.xlsx");
@@ -60,11 +58,16 @@ public class UploadFiles {
                     continue;
                 }
 
-                String codigo = getCellValueAsString(row.getCell(0));            // Coluna A
-                String descricaoCompleta = getCellValueAsString(row.getCell(1)); // Coluna B
+                String codigo = getCellValueAsString(row.getCell(0));
+                String descricaoCompleta = getCellValueAsString(row.getCell(1));
 
-                Epi epi = new Epi(codigo, descricaoCompleta);
-                epis.add(epi);
+                if (codigo == null || codigo.trim().isEmpty()) {
+                    continue;
+                }
+
+                if (codigosEpis.add(codigo.trim())) {
+                    epis.add(new Epi(codigo.trim(), descricaoCompleta != null ? descricaoCompleta.trim() : ""));
+                }
             }
 
         } catch (IOException e) {
