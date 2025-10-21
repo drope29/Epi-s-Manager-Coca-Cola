@@ -73,11 +73,11 @@ public class FuncionarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteFuncionario(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFuncionario(@PathVariable Long id) {
 
         service.delete(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Funcionario Deletado com Sucesso");
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
     }
 

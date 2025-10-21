@@ -36,7 +36,7 @@ public class Funcionario {
     private GeneroEnum genero;
 
     @OneToMany(mappedBy = "funcionario")
-    private List<Movimentacao> FuncionarioEpi = new ArrayList<>();
+    private List<Movimentacao> FuncionarioMovimentacao = new ArrayList<>();
 
     public Funcionario(){}
 

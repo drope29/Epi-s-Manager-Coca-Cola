@@ -2,6 +2,9 @@ package com.epis.entities;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "tb_funcao")
 public class Funcao {
@@ -10,7 +13,11 @@ public class Funcao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
     private String nome;
+
+    @OneToMany(mappedBy = "funcao")
+    private List<Uniforme> FuncaoUniforme = new ArrayList<>();
 
     public Funcao(){}
 

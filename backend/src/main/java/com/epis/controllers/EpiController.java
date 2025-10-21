@@ -77,7 +77,7 @@ public class EpiController {
 
         service.delete(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Epi Deletado com Sucesso");
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
     }
 

@@ -29,7 +29,10 @@ public class Epi {
     private Date dataValidade;
 
     @OneToMany(mappedBy = "epi")
-    private List<Movimentacao> FuncionarioEpi = new ArrayList<>();
+    private List<Movimentacao> EpiMovimentacao = new ArrayList<>();
+
+    @OneToMany(mappedBy = "epi")
+    private List<Uniforme> EpiUniforme = new ArrayList<>();
 
     public Epi(){}
 

@@ -31,9 +31,11 @@ public class MovimentacaoService {
 
         return repository.findById(id)
                 .orElseThrow(() -> new MovimentacaoNaoEncontradaException("Movimentação não encontrada com id " + id));
+
     }
 
     public Movimentacao update(Long id, MovimentacaoUpdateDto dto) {
+
         Movimentacao entity = getById(id);
 
         mapper.toMovimentacao(dto, entity);

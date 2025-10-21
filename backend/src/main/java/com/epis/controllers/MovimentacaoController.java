@@ -60,11 +60,11 @@ public class MovimentacaoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteMovimentacao(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMovimentacao(@PathVariable Long id) {
 
         service.delete(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Movimentacao Deletada com Sucesso");
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
     }
 }

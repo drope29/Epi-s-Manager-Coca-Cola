@@ -1,9 +1,6 @@
 package com.epis.exception;
 
-import com.epis.services.exception.EpiNaoEncontradoException;
-import com.epis.services.exception.FuncaoNaoEncontradaException;
-import com.epis.services.exception.FuncionarioNaoEncontradoException;
-import com.epis.services.exception.MovimentacaoNaoEncontradaException;
+import com.epis.services.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +48,18 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(FuncaoNaoEncontradaException.class)
     public ResponseEntity<ErrorMessage> handleFuncaoNaoEncontradaException(FuncaoNaoEncontradaException ex, HttpServletRequest request){
+        ErrorMessage error = new ErrorMessage(
+                request.getRequestURI(),
+                request.getMethod(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(UniformeNaoEncontradoException.class)
+    public ResponseEntity<ErrorMessage> handleUniformeNaoEncontradoException(UniformeNaoEncontradoException ex, HttpServletRequest request){
         ErrorMessage error = new ErrorMessage(
                 request.getRequestURI(),
                 request.getMethod(),

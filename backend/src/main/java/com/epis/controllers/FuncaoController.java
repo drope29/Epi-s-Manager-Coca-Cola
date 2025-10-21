@@ -74,7 +74,7 @@ public class FuncaoController {
 
         service.delete(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Funcao Deletada com Sucesso");
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
     }
     
