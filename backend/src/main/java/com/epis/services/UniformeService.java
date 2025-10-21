@@ -1,5 +1,6 @@
 package com.epis.services;
 
+import com.epis.dtos.UniformeCreateDto;
 import com.epis.dtos.UniformeUpdateDto;
 import com.epis.entities.Uniforme;
 import com.epis.mapper.UniformeMapper;
@@ -30,7 +31,10 @@ public class UniformeService {
 
     }
 
-    public Uniforme insert(Uniforme uniforme) {
+    public Uniforme insert(UniformeCreateDto dto) {
+
+        Uniforme uniforme = mapper.toUniforme(dto);
+
         return repoitory.save(uniforme);
     }
 

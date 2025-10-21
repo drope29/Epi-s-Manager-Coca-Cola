@@ -3,10 +3,12 @@ package com.epis.mapper;
 import com.epis.dtos.EpiCreateDto;
 import com.epis.dtos.EpiUpdateDto;
 import com.epis.entities.Epi;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EpiMapper {
 
-    public static Epi toEpi(EpiCreateDto dto) {
+    public Epi toEpi(EpiCreateDto dto) {
         Epi epi = new Epi();
 
         epi.setCodigoAutenticacao(dto.getCodigoAutenticacao());
@@ -17,14 +19,23 @@ public class EpiMapper {
         return epi;
     }
 
-    public static Epi toEpi(EpiUpdateDto dto) {
-        Epi epi = new Epi();
+    public void toEpi(EpiUpdateDto dto, Epi epi) {
 
-        epi.setCodigoAutenticacao(dto.getCodigoAutenticacao());
-        epi.setCodigoCompra(dto.getCodigoCompra());
-        epi.setDescricao(dto.getDescricao());
-        epi.setDataValidade(dto.getDataValidade());
+        if (dto.getCodigoAutenticacao() != null) {
+            epi.setCodigoAutenticacao(dto.getCodigoAutenticacao());
+        }
 
-        return epi;
+        if (dto.getCodigoCompra() != null) {
+            epi.setCodigoCompra(dto.getCodigoCompra());
+        }
+
+        if (dto.getDescricao() != null) {
+            epi.setDescricao(dto.getDescricao());
+        }
+
+        if (dto.getDataValidade() != null) {
+            epi.setDataValidade(dto.getDataValidade());
+        }
+
     }
 }

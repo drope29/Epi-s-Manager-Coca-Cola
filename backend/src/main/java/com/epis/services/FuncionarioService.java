@@ -1,19 +1,24 @@
 package com.epis.services;
 
+import com.epis.dtos.FuncionarioCreateDto;
+import com.epis.dtos.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
+import com.epis.mapper.FuncionarioMapper;
 import com.epis.repositories.FuncionarioRepository;
 import com.epis.services.exception.FuncionarioNaoEncontradoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FuncionarioService {
 
     @Autowired
     private FuncionarioRepository repository;
+
+    @Autowired
+    private FuncionarioMapper mapper;
 
     public void uploadFuncionarios(List<Funcionario> funcionarios){
         repository.saveAll(funcionarios);
@@ -30,18 +35,19 @@ public class FuncionarioService {
 
     }
 
-    public Funcionario insert(Funcionario funcionario) { return repository.save(funcionario); }
+    public Funcionario insert(FuncionarioCreateDto dto) {
 
-    public Funcionario update(Long id, Funcionario funcionario) {
+        Funcionario funcionario = mapper.toFuncionario(dto);
+
+        return repository.save(funcionario);
+
+    }
+
+    public Funcionario update(Long id, FuncionarioUpdateDto dto) {
 
         Funcionario entity = getById(id);
 
-        Optional.ofNullable(funcionario.getNome()).ifPresent(entity::setNome);
-        Optional.ofNullable(funcionario.getRE()).ifPresent(entity::setRE);
-        Optional.ofNullable(funcionario.getFuncao()).ifPresent(entity::setFuncao);
-        Optional.ofNullable(funcionario.getUnidade()).ifPresent(entity::setUnidade);
-        Optional.ofNullable(funcionario.getTurno()).ifPresent(entity::setTurno);
-        Optional.ofNullable(funcionario.getGenero()).ifPresent(entity::setGenero);
+        mapper.toFuncionario(dto, entity);
 
         return repository.save(entity);
 

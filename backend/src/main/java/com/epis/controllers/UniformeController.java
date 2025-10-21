@@ -3,7 +3,6 @@ package com.epis.controllers;
 import com.epis.dtos.UniformeCreateDto;
 import com.epis.dtos.UniformeUpdateDto;
 import com.epis.entities.Uniforme;
-import com.epis.mapper.UniformeMapper;
 import com.epis.services.UniformeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,9 +17,6 @@ public class UniformeController {
 
     @Autowired
     private UniformeService service;
-
-    @Autowired
-    private UniformeMapper mapper;
 
     @GetMapping("/")
     public ResponseEntity<List<Uniforme>> getAllUniformes(){
@@ -44,9 +40,10 @@ public class UniformeController {
     @PostMapping("/")
     public ResponseEntity<Uniforme> insertUniforme(@RequestBody UniformeCreateDto dto) {
 
-        Uniforme uniforme = service.insert(mapper.toUniforme(dto));
+        Uniforme uniforme = service.insert(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(uniforme);
+
     }
 
     @PutMapping("/{id}")
@@ -55,6 +52,7 @@ public class UniformeController {
         Uniforme uniforme = service.update(id, dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(uniforme);
+
     }
 
     @DeleteMapping("/{id}")

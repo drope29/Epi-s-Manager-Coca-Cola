@@ -3,7 +3,6 @@ package com.epis.controllers;
 import com.epis.dtos.MovimentacaoCreateDto;
 import com.epis.dtos.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
-import com.epis.mapper.MovimentacaoMapper;
 import com.epis.services.MovimentacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,9 +17,6 @@ public class MovimentacaoController {
 
     @Autowired
     private MovimentacaoService service;
-
-    @Autowired
-    private MovimentacaoMapper mapper;
 
     @GetMapping("/")
     public ResponseEntity<List<Movimentacao>> getAll() {
@@ -44,7 +40,7 @@ public class MovimentacaoController {
     @PostMapping("/")
     public ResponseEntity<Movimentacao> insertMovimentacao(@RequestBody MovimentacaoCreateDto dto) {
 
-        Movimentacao movimentecao = service.insert(mapper.toMovimentacao(dto));
+        Movimentacao movimentecao = service.insert(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(movimentecao);
 

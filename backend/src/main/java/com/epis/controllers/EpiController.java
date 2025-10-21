@@ -3,7 +3,6 @@ package com.epis.controllers;
 import com.epis.dtos.EpiCreateDto;
 import com.epis.dtos.EpiUpdateDto;
 import com.epis.entities.Epi;
-import com.epis.mapper.EpiMapper;
 import com.epis.services.EpiService;
 import com.epis.utils.UploadFiles;
 import jakarta.validation.Valid;
@@ -46,7 +45,7 @@ public class EpiController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getEpiById(@PathVariable Long id) {
+    public ResponseEntity<Epi> getEpiById(@PathVariable Long id) {
 
         Epi epi = service.getById(id);
 
@@ -57,7 +56,7 @@ public class EpiController {
     @PostMapping("/")
     public ResponseEntity<Epi> insertEpi(@Valid @RequestBody EpiCreateDto dto) {
 
-        Epi epi = service.insert(EpiMapper.toEpi(dto));
+        Epi epi = service.insert(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(epi);
 
@@ -66,7 +65,7 @@ public class EpiController {
     @PutMapping("/{id}")
     public ResponseEntity<Epi> updateEpi(@PathVariable Long id, @RequestBody EpiUpdateDto dto) {
 
-        Epi epiUpd = service.update(id, EpiMapper.toEpi(dto));
+        Epi epiUpd = service.update(id, dto);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(epiUpd);
 

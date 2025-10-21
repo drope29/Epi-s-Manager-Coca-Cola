@@ -1,21 +1,24 @@
 package com.epis.services;
 
+import com.epis.dtos.EpiCreateDto;
+import com.epis.dtos.EpiUpdateDto;
 import com.epis.entities.Epi;
-import com.epis.entities.Funcionario;
+import com.epis.mapper.EpiMapper;
 import com.epis.repositories.EpiRepository;
 import com.epis.services.exception.EpiNaoEncontradoException;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EpiService {
 
     @Autowired
     private EpiRepository repository;
+
+    @Autowired
+    private EpiMapper mapper;
 
     public void uploadEpi(List<Epi> epi){
         repository.saveAll(epi);
@@ -32,20 +35,19 @@ public class EpiService {
 
     }
 
-    public Epi insert(Epi epi) {
+    public Epi insert(EpiCreateDto dto) {
+
+        Epi epi = mapper.toEpi(dto);
 
         return repository.save(epi);
 
     }
 
-    public Epi update(Long id, Epi epi) {
+    public Epi update(Long id, EpiUpdateDto dto) {
 
         Epi entity = getById(id);
 
-        Optional.ofNullable(epi.getCodigoAutenticacao()).ifPresent(entity::setCodigoAutenticacao);
-        Optional.ofNullable(epi.getCodigoCompra()).ifPresent(entity::setCodigoCompra);
-        Optional.ofNullable(epi.getDescricao()).ifPresent(entity::setDescricao);
-        Optional.ofNullable(epi.getDataValidade()).ifPresent(entity::setDataValidade);
+        mapper.toEpi(dto, entity);
 
         return repository.save(entity);
 

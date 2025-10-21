@@ -3,7 +3,6 @@ package com.epis.controllers;
 import com.epis.dtos.FuncionarioCreateDto;
 import com.epis.dtos.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
-import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.FuncionarioService;
 import com.epis.utils.UploadFiles;
 import jakarta.validation.Valid;
@@ -57,7 +56,7 @@ public class FuncionarioController {
     @PostMapping("/")
     public ResponseEntity<Funcionario> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
 
-        Funcionario funcionario = service.insert(FuncionarioMapper.toFuncionario(dto));
+        Funcionario funcionario = service.insert(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
 
@@ -66,7 +65,7 @@ public class FuncionarioController {
     @PutMapping("/{id}")
     public ResponseEntity<Funcionario> updateFuncionario(@PathVariable Long id, @RequestBody FuncionarioUpdateDto dto) {
 
-        Funcionario funcionarioUpd = service.update(id, FuncionarioMapper.toFuncionario(dto));
+        Funcionario funcionarioUpd = service.update(id, dto);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(funcionarioUpd);
 
