@@ -1,6 +1,7 @@
 package com.epis.controllers;
 
 import com.epis.dtos.UniformeCreateDto;
+import com.epis.dtos.UniformePorFuncaoDto;
 import com.epis.dtos.UniformeUpdateDto;
 import com.epis.entities.Uniforme;
 import com.epis.services.UniformeService;
@@ -61,6 +62,15 @@ public class UniformeController {
         service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+    }
+
+    @GetMapping("/buscaUniforme/{funcao_id}")
+    public ResponseEntity<UniformePorFuncaoDto> getUniformesPorFuncao(@PathVariable("funcao_id") Long funcaoId) {
+
+        UniformePorFuncaoDto dto = service.getUniformesPorFuncao(funcaoId);
+
+        return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
 
     }
 }
