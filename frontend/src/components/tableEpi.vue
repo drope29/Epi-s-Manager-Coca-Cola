@@ -4,7 +4,7 @@ import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
 import Buttons from 'datatables.net-buttons-dt';
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
@@ -38,13 +38,13 @@ const columns = [
     data: 'codigoCompra',
     title: 'Cod. Compra',
     className: 'text-center',
-    render: (data) => data == 0 ? "Não Informado" : data 
+    render: (data) => data == 0 ? "Não Informado" : data
   },
   {
     data: 'dataValidade',
     title: 'Validade',
     className: 'text-center',
-    render: (data) => data == null ? "Não Informado" : data 
+    render: (data) => data == null ? "Não Informado" : data
   },
   {
     data: null,
@@ -70,7 +70,7 @@ const columns = [
           title="Excluir">
           Excluir
         </button>`;
-        
+
       return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
     }
   }
@@ -90,7 +90,8 @@ const options = {
     info: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
     infoEmpty: "Mostrando 0 registros",
     infoFiltered: "(filtrado de _MAX_ registros)",
-    paginate: { first: "Primeiro", last: "Último", next: "Próximo", previous: "Anterior" }
+    paginate: { first: "Primeiro", last: "Último", next: "Próximo", previous: "Anterior" },
+    emptyTable: "Nenhum Epi Cadastrado"
   },
 };
 
@@ -126,7 +127,7 @@ const handleTableClick = (event) => {
   const id = target.dataset.id;
   const epi = epis.value.find(e => e.id.toString() === id);
 
-  if (!epi) return; 
+  if (!epi) return;
 
   if (action === 'edit') {
     handleEdit(epi);
@@ -148,7 +149,7 @@ const handleDelete = (epi) => {
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6', 
+    cancelButtonColor: '#3085d6',
     confirmButtonText: 'Sim, excluir!',
     cancelButtonText: 'Cancelar'
   }).then(async (result) => {
@@ -201,19 +202,9 @@ const handleDelete = (epi) => {
 
     <main class="p-4 sm:p-8">
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
-        <DataTable 
-          :columns="columns" 
-          :data="epis" 
-          :options="options" 
-          ref="dtRef" 
-          class="w-full text-sm text-gray-700"
-          @click="handleTableClick"
-        >
-          </DataTable>
-
-        <div v-if="epis.length === 0" class="text-center py-10 text-gray-500">
-          Nenhum EPI cadastrado.
-        </div>
+        <DataTable :columns="columns" :data="epis" :options="options" ref="dtRef" class="w-full text-sm text-gray-700"
+          @click="handleTableClick">
+        </DataTable>
       </div>
     </main>
   </div>

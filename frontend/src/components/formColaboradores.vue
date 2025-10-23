@@ -106,11 +106,18 @@ async function atualizarColaborador() {
       genero: form.genero,
     });
 
-    if (response.status === 200) {
+    if (response.status === 204) {
       Swal.fire(
         'Atualizado!',
         'O colaborador foi atualizado com sucesso.',
         'success'
+      );
+      emit('colaboradorAtualizado'); 
+    } else {
+      Swal.fire(
+        'Ops!',
+        'Houve um problema ao atualizar o colaborador, tente novamente mais tarde.',
+        'warning'
       );
       emit('colaboradorAtualizado'); 
     }

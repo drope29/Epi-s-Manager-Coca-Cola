@@ -101,6 +101,13 @@ async function atualizarEPI() {
     if (response.status >= 200 && response.status < 300) {
       Swal.fire('Atualizado!', 'O EPI foi atualizado com sucesso.', 'success');
       emit('epiAtualizado');
+    } else {
+      Swal.fire(
+        'Ops!',
+        'Houve um problema ao atualizar o colaborador, tente novamente mais tarde.',
+        'warning'
+      );
+      emit('colaboradorAtualizado'); 
     }
   } catch (error) {
     console.error("Erro ao atualizar EPI:", error);

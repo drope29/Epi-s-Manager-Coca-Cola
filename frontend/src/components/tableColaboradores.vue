@@ -32,7 +32,7 @@ const columns = [
     data: null,
     title: 'Ações',
     orderable: false,
-    searchable: false, 
+    searchable: false,
     className: 'text-center',
     render: (_d, _t, row) => {
 
@@ -74,7 +74,8 @@ const options = {
     info: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
     infoEmpty: "Mostrando 0 registros",
     infoFiltered: "(filtrado de _MAX_ registros)",
-    paginate: { first: "Primeiro", last: "Último", next: "Próximo", previous: "Anterior" }
+    paginate: { first: "Primeiro", last: "Último", next: "Próximo", previous: "Anterior" },
+    emptyTable: "Nenhum Colaborador Cadastrado"
   },
 };
 
@@ -100,7 +101,7 @@ const handleTableClick = (event) => {
   const id = target.dataset.id;
   const colaborador = colaboradores.value.find(c => c.id.toString() === id);
 
-  if (!colaborador) return; 
+  if (!colaborador) return;
 
   if (action === 'edit') {
     handleEdit(colaborador);
@@ -121,7 +122,7 @@ const handleDelete = (colaborador) => {
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6', 
+    cancelButtonColor: '#3085d6',
     confirmButtonText: 'Sim, excluir!',
     cancelButtonText: 'Cancelar'
   }).then(async (result) => {
@@ -173,18 +174,9 @@ const handleDelete = (colaborador) => {
     </header>
 
     <main class="p-4 sm:p-8">
-      <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
-        <DataTable
-          :columns="columns"
-          :data="colaboradores"
-          :options="options"
-          ref="dtRef"
-          class="w-full text-sm text-gray-700"
-          @click="handleTableClick"
-        />
-        <div v-if="colaboradores.length === 0" class="text-center py-10 text-gray-500">
-          Nenhum colaborador cadastrado.
-        </div>
+      <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white" @click="handleTableClick">
+        <DataTable :columns="columns" :data="colaboradores" :options="options" ref="dtRef"
+          class="w-full text-sm text-gray-700" />
       </div>
     </main>
   </div>
