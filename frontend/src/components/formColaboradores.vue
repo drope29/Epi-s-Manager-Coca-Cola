@@ -209,12 +209,12 @@ async function handleSubmit() {
                 <label for="male"
                   class="flex-1 flex justify-between items-center rounded-md px-4 py-3 border border-gray-400 cursor-pointer">
                   <span class="text-lg">Homem</span>
-                  <input type="radio" id="male" v-model="form.genero" value="homem" name="gender" class="h-5 w-5" />
+                  <input type="radio" id="male" v-model="form.genero" value="MASCULINO" name="gender" class="h-5 w-5" />
                 </label>
                 <label for="female"
                   class="flex-1 flex justify-between items-center rounded-md px-4 py-3 border border-gray-400 cursor-pointer">
                   <span class="text-lg">Mulher</span>
-                  <input type="radio" id="female" v-model="form.genero" value="mulher" name="gender" class="h-5 w-5" />
+                  <input type="radio" id="female" v-model="form.genero" value="FEMININO" name="gender" class="h-5 w-5" />
                 </label>
               </div>
               <p v-if="errors.genero" class="text-red-500 text-sm mt-1">{{ errors.genero }}</p>
