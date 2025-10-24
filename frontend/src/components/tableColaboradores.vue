@@ -12,7 +12,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import ButtonAdd from './buttonAdd.vue';
 
 const backUrl = import.meta.env.VITE_BACKEND_URL;
-const emit = defineEmits(['open-add-modal', 'open-edit-modal']);
+// ATUALIZADO: Adicionado 'open-movimentacoes-modal'
+const emit = defineEmits(['open-add-modal', 'open-edit-modal', 'open-movimentacoes-modal']);
 
 DataTable.use(DataTablesCore);
 DataTable.use(Responsive);
@@ -37,22 +38,22 @@ const columns = [
     render: (_d, _t, row) => {
 
       const editBtn = `
-        <button
-          data-action="edit"
-          data-id="${row.id}" 
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
-          title="Editar">
-          Editar
-        </button>`;
+        <button
+          data-action="edit"
+          data-id="${row.id}" 
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+          title="Editar">
+          Editar
+        </button>`;
 
       const deleteBtn = `
-        <button
-          data-action="delete"
-          data-id="${row.id}"
-          class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
-          title="Excluir">
-          Excluir
-        </button>`;
+        <button
+          data-action="delete"
+          data-id="${row.id}"
+          class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+          title="Excluir">
+          Excluir
+        </button>`;
 
       return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
     }
@@ -93,20 +94,41 @@ onMounted(async () => {
 
 const applySearch = () => { if (dtRef.value) dtRef.value.dt.search(globalSearch.value).draw(); }
 
+// ATUALIZADO: Função handleTableClick inteira
 const handleTableClick = (event) => {
-  const target = event.target.closest('button[data-action]');
-  if (!target) return;
+  const target = event.target;
 
-  const action = target.dataset.action;
-  const id = target.dataset.id;
-  const colaborador = colaboradores.value.find(c => c.id.toString() === id);
+  // 1. Verifica clique em BOTÃO (lógica existente)
+  const button = target.closest('button[data-action]');
+  if (button) {
+    const action = button.dataset.action;
+    const id = button.dataset.id;
+    const colaborador = colaboradores.value.find(c => c.id.toString() === id);
 
-  if (!colaborador) return;
+    if (!colaborador) return;
 
-  if (action === 'edit') {
-    handleEdit(colaborador);
-  } else if (action === 'delete') {
-    handleDelete(colaborador);
+    if (action === 'edit') {
+      handleEdit(colaborador);
+    } else if (action === 'delete') {
+      handleDelete(colaborador);
+    }
+    return; // Ação de botão encontrada, para a execução
+  }
+
+  // 2. NOVO: Verifica clique na LINHA (se não for um botão)
+  const row = target.closest('tbody tr');
+  if (row && dtRef.value) {
+    try {
+      // Usa a API do DataTables para pegar os dados da linha clicada
+      const rowData = dtRef.value.dt.row(row).data();
+      if (rowData) {
+        // Emite o novo evento com os dados do colaborador
+        emit('open-movimentacoes-modal', rowData);
+      }
+    } catch (e) {
+      // Ignora erros (pode acontecer se a tabela estiver redesenhando)
+      console.warn("Não foi possível obter dados da linha.", e);
+    }
   }
 };
 
@@ -224,8 +246,11 @@ const handleDelete = (colaborador) => {
   background-color: rgb(249, 250, 251);
 }
 
+/* ATUALIZADO: Adiciona cursor-pointer e hover state mais pronunciado */
 :deep(table.dataTable tbody tr:hover) {
-  background-color: rgb(219, 234, 254);
+  background-color: rgb(219, 234, 254) !important;
+  /* Azul mais forte */
+  cursor: pointer;
 }
 
 :deep(table.dataTable tbody tr button) {
