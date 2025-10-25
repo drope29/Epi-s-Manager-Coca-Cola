@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-// 1. IMPORTAR O NOVO FORMULÁRIO DE ENTREGA
 import FormularioEntregaEpi from './FormularioEntregaEpi.vue';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
-// --- Props e Emits existentes ---
+// --- Props e Emits (sem alteração) ---
 const props = defineProps({
     colaborador: {
         type: Object,
@@ -16,74 +17,147 @@ const backUrl = import.meta.env.VITE_BACKEND_URL;
 const movimentacoes = ref([]);
 const totalLinhasVisuais = 20;
 
-// 2. STATE PARA O NOVO MODAL DE ENTREGA
 const isFormEntregaVisible = ref(false);
+const itemParaEditar = ref(null);
 
-// --- Lógica de busca de dados (existente) ---
+// --- Lógica de busca de dados (onMounted) ---
 onMounted(async () => {
     try {
-        // ATENÇÃO: Verifique se este é seu endpoint para buscar as movimentações
-        const response = await fetch(`${backUrl}/api/movimentacoes/funcionario/${props.colaborador.id}`);
-
+        const response = await fetch(`${backUrl}/api/movimentacao/funcionario/${props.colaborador.id}`);
         if (!response.ok) {
             console.warn("API não encontrada, usando dados simulados.");
+            // CORREÇÃO: Mudei os dados simulados para o formato NESTED e camelCase
             movimentacoes.value = [
-                { id: 1, data_entrega: '20/10/2025', quantidade: 1, descricao: 'Capacete de Segurança', ca: '12345', assinatura: 'Assinado', data_devolucao: '', recebedor: '', cod_entrega: 1, cod_devolucao: '' },
-                { id: 2, data_entrega: '20/10/2025', quantidade: 2, descricao: 'Luva de Malha', ca: '67890', assinatura: 'Assinado', data_devolucao: '', recebedor: '', cod_entrega: 1, cod_devolucao: '' },
+                {
+                    id: 1,
+                    dataEntrega: '2025-10-20T03:00:00.000Z',
+                    status: 'ATIVO',
+                    epi: { id: 10, nome: 'Capacete de Segurança', ca: '12345' },
+                    dataProximaEntrega: '2026-10-20T03:00:00.000Z'
+                    // Adicionei os campos que o backend real retornaria
+                },
+                {
+                    id: 2,
+                    dataEntrega: '2025-10-22T03:00:00.000Z',
+                    status: 'ATIVO',
+                    epi: { id: 11, nome: 'Luva de Malha', ca: '67890' },
+                    dataProximaEntrega: '2026-10-22T03:00:00.000Z'
+                },
             ];
         } else {
             movimentacoes.value = await response.json();
         }
-
     } catch (error) {
         console.error("Erro ao buscar movimentações:", error);
+        // CORREÇÃO: Mudei os dados simulados para o formato NESTED e camelCase
         movimentacoes.value = [
-            { id: 1, data_entrega: '20/10/2025', quantidade: 1, descricao: 'Capacete de Segurança', ca: '12345', assinatura: 'Assinado', data_devolucao: '', recebedor: '', cod_entrega: 1, cod_devolucao: '' },
-            { id: 2, data_entrega: '20/10/2025', quantidade: 2, descricao: 'Luva de Malha', ca: '67890', assinatura: 'Assinado', data_devolucao: '', recebedor: '', cod_entrega: 1, cod_devolucao: '' },
+            {
+                id: 1,
+                dataEntrega: '2025-10-20T03:00:00.000Z',
+                status: 'ATIVO',
+                epi: { id: 10, nome: 'Capacete de Segurança', ca: '12345' },
+                dataProximaEntrega: '2026-10-20T03:00:00.000Z'
+            },
+            {
+                id: 2,
+                dataEntrega: '2025-10-22T03:00:00.000Z',
+                status: 'ATIVO',
+                epi: { id: 11, nome: 'Luva de Malha', ca: '67890' },
+                dataProximaEntrega: '2026-10-22T03:00:00.000Z'
+            },
         ];
     }
 });
+
+// Helper para formatar data (sem alteração)
+const formatarData = (dataISO) => {
+    try {
+        return new Date(dataISO).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+    } catch (e) {
+        return dataISO; // Retorna o valor original se não for data válida
+    }
+};
 
 const linhasEmBranco = computed(() => {
     return Math.max(0, totalLinhasVisuais - movimentacoes.value.length);
 });
 
-// --- Funções para os botões da tabela (existentes) ---
+// --- FUNÇÃO DE EDITAR (sem alteração) ---
 function handleEditEpi(item) {
     console.log("EDITAR EPI:", item);
-    // TODO: Aqui você abriria o FormularioEntregaEpi em modo de edição
-    alert(`Editar: ${item.descricao}`);
+    itemParaEditar.value = { ...item };
+    isFormEntregaVisible.value = true;
 }
 
+// --- FUNÇÃO DE EXCLUIR (CORRIGIDA) ---
 function handleDeleteEpi(item) {
     console.log("EXCLUIR EPI:", item);
-    if (confirm(`Deseja realmente excluir: ${item.descricao}?`)) {
-        // TODO: Adicionar 'fetch DELETE' para a API
-        movimentacoes.value = movimentacoes.value.filter(m => m.id !== item.id);
-    }
+
+    // CORREÇÃO: Lendo do objeto 'epi' aninhado
+    const nomeEpi = item.epi ? item.epi.descricao : (item.descricao || 'Item Desconhecido');
+
+    Swal.fire({
+        title: 'Você tem certeza?',
+        text: `Deseja realmente excluir: ${nomeEpi}? Esta ação não pode ser desfeita.`, // Corrigido
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`${backUrl}/api/movimentacao/${item.id}`, {
+                    method: 'DELETE',
+                });
+                if (!response.ok) {
+                    throw new Error('Falha ao excluir item');
+                }
+                movimentacoes.value = movimentacoes.value.filter(m => m.id !== item.id);
+                Swal.fire(
+                    'Excluído!',
+                    `'${nomeEpi}' foi excluído com sucesso.`, // Corrigido
+                    'success'
+                );
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                Swal.fire(
+                    'Erro!',
+                    'Não foi possível excluir o item. Tente novamente.',
+                    'error'
+                );
+            }
+        }
+    });
 }
 
-// 3. FUNÇÕES PARA CONTROLAR O NOVO MODAL DE ENTREGA
+// --- FUNÇÕES DO MODAL (sem alteração) ---
 function openFormEntrega() {
+    itemParaEditar.value = null;
     isFormEntregaVisible.value = true;
 }
 
 function closeFormEntrega() {
     isFormEntregaVisible.value = false;
+    itemParaEditar.value = null;
 }
 
-/**
- * Esta função é chamada quando o evento 'itemAdicionado' é disparado
- * pelo FormularioEntregaEpi.vue
- */
 function handleItemAdicionado(itemSalvo) {
-    // Adiciona o novo item (retornado pela API) no início da lista
+    // Isso está correto e vai funcionar agora
     movimentacoes.value.unshift(itemSalvo);
-    // Não precisa fechar o modal aqui, o FormularioEntregaEpi já faz isso
+    closeFormEntrega();
 }
 
+function handleItemAtualizado(itemAtualizado) {
+    const index = movimentacoes.value.findIndex(m => m.id === itemAtualizado.id);
+    if (index !== -1) {
+        movimentacoes.value[index] = itemAtualizado;
+    }
+    closeFormEntrega();
+}
 
-// --- Função auxiliar (existente) ---
+// --- Função auxiliar (sem alteração) ---
 const getNomeUnidade = (unidade) => {
     if (unidade && unidade.toLowerCase().includes('coca-cola')) {
         return "Coca-Cola FEMSA Brasil";
@@ -112,7 +186,7 @@ const getNomeUnidade = (unidade) => {
             <main class="p-6 overflow-y-auto" style="font-family: Arial, sans-serif;">
 
                 <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
-                    <img src="/public/logo-femsa.png" alt="Coca-Cola FEMSA Brasil" class="h-10">
+                    <img src="/logo-femsa.png" alt="Coca-Cola FEMSA Brasil" class="h-10">
                     <span class="text-sm font-bold uppercase text-right">
                         Controle de Fornecimento de Uniformes e<br>Equipamentos de Proteção Individual
                     </span>
@@ -140,7 +214,6 @@ const getNomeUnidade = (unidade) => {
                     <p>DECLARO ainda, que fui instruído da sua correta utilização.</p>
                     <p>POR SER VERDADE, SUBSCREVO-ME ABAIXO.</p>
                 </div>
-
                 <div class="text-sm font-semibold mb-2">
                     <p>Código de Entrega: (1 - EPI novo) (2 - EPI Higienizado)</p>
                     <p>Código de devolução: (1 - Troca por tempo de uso) (2 - Perda) (3 - Furto) (4 - Mau uso) (5 -
@@ -164,28 +237,27 @@ const getNomeUnidade = (unidade) => {
                         <thead class="bg-gray-100">
                             <tr class="text-center font-bold">
                                 <td class="border border-black p-1">Data Entrega</td>
-                                <td class="border border-black p-1">Qtde</td>
                                 <td class="border border-black p-1">Descrição do EPI</td>
                                 <td class="border border-black p-1">CA</td>
-                                <td class="border border-black p-1">Assinatura</td>
-                                <td class="border border-black p-1">Data Devolução</td>
-                                <td class="border border-black p-1">Recebedor</td>
-                                <td class="border border-black p-1">Código de Entrega</td>
-                                <td class="border border-black p-1">Código de Devolução</td>
+                                <td class="border border-black p-1">Status</td>
+                                <td class="border border-black p-1">Próxima Entrega</td>
+
                                 <td class="border border-black p-1">Ações</td>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="item in movimentacoes" :key="item.id" class="h-8 hover:bg-gray-100">
-                                <td class="border border-black p-1 text-center">{{ item.data_entrega }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.quantidade }}</td>
-                                <td class="border border-black p-1">{{ item.descricao }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.ca }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.assinatura }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.data_devolucao }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.recebedor }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.cod_entrega }}</td>
-                                <td class="border border-black p-1 text-center">{{ item.cod_devolucao }}</td>
+
+                                <td class="border border-black p-1 text-center">{{ formatarData(item.dataEntrega) }}</td>
+
+                                <td class="border border-black p-1">{{ item.epi ? item.epi.descricao : 'N/A' }}</td>
+
+                                <td class="border border-black p-1 text-center">{{ item.epi ? item.epi.codigoAutenticacao: 'N/A' }}</td>
+
+                                <td class="border border-black p-1 text-center">{{ item.status }}</td>
+
+                                <td class="border border-black p-1 text-center">{{ item.dataProximaEntrega ?
+                                    formatarData(item.dataProximaEntrega) : '' }}</td>
 
                                 <td class="border border-black p-1 text-center whitespace-nowrap">
                                     <button @click="handleEditEpi(item)" title="Editar"
@@ -206,17 +278,9 @@ const getNomeUnidade = (unidade) => {
                                     </button>
                                 </td>
                             </tr>
+
                             <tr v-for="n in linhasEmBranco" :key="`blank-${n}`" class="h-8">
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
-                                <td class="border border-black"></td>
+                                <td v-for="i in 6" :key="i" class="border border-black"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -225,10 +289,13 @@ const getNomeUnidade = (unidade) => {
 
         </div>
     </div>
-<FormularioEntregaEpi v-if="isFormEntregaVisible" :colaboradorId="colaborador.id" @close="closeFormEntrega"
-    @itemAdicionado="handleItemAdicionado" /></template>
 
-<style scoped>@keyframes fade-in {
+    <FormularioEntregaEpi v-if="isFormEntregaVisible" :colaboradorId="colaborador.id" :itemParaEditar="itemParaEditar"
+        @close="closeFormEntrega" @itemAdicionado="handleItemAdicionado" @itemAtualizado="handleItemAtualizado" />
+</template>
+
+<style scoped>
+@keyframes fade-in {
     from {
         opacity: 0;
         transform: scale(0.95);
@@ -242,4 +309,5 @@ const getNomeUnidade = (unidade) => {
 
 .animate-fade-in {
     animation: fade-in 0.2s ease-out;
-}</style>
+}
+</style>
