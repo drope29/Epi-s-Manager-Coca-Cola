@@ -16,7 +16,7 @@ import java.util.List;
 @RequestMapping("api/uniformes")
 public class UniformeController {
 
-    @Autowired
+   /* @Autowired
     private UniformeService service;
 
     @GetMapping("/")
@@ -72,5 +72,5 @@ public class UniformeController {
 
         return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
 
-    }
+    }*/
 }

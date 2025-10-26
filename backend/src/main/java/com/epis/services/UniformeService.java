@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 public class UniformeService {
 
-    @Autowired
+   /* @Autowired
     private UniformeRepoitory repository;
 
     @Autowired
@@ -74,5 +74,5 @@ public class UniformeService {
 
         return new UniformePorFuncaoDto(epis, funcao);
 
-    }
+    }*/
 }

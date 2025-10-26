@@ -6,7 +6,6 @@ import com.epis.entities.Epi;
 import com.epis.entities.Funcao;
 import com.epis.entities.Uniforme;
 import com.epis.repositories.EpiRepository;
-import com.epis.repositories.FuncaoRepository;
 import com.epis.services.exception.EpiNaoEncontradoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UniformeMapper {
 
-    @Autowired
+   /* @Autowired
     private FuncaoRepository funcaoRepository;
 
     @Autowired
@@ -59,6 +58,6 @@ public class UniformeMapper {
 
         }
 
-    }
+    }*/
 
 }

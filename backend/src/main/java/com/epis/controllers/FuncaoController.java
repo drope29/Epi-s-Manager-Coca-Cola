@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/funcoes")
@@ -18,7 +20,7 @@ public class FuncaoController {
     @Autowired
     private FuncaoService service;
 
-    @PostMapping("/upload")
+  @PostMapping("/upload")
     public ResponseEntity<String> uploadFuncoes() {
 
         String mensagemRetorno = "Funcoes Importados com Sucesso";
@@ -33,6 +35,8 @@ public class FuncaoController {
 
     }
 
+
+
     @GetMapping("/")
     public ResponseEntity<List<Funcao>> getAllFuncoes() {
 
@@ -43,7 +47,7 @@ public class FuncaoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getFuncaoById(@PathVariable Long id) {
+    public ResponseEntity<Funcao> getFuncaoById(@PathVariable UUID id) {
 
         Funcao funcao = service.getById(id);
 
@@ -54,23 +58,23 @@ public class FuncaoController {
     @PostMapping("/")
     public ResponseEntity<Funcao> insertFuncao(@Valid @RequestBody Funcao funcaoBody) {
 
-        Funcao funcao = service.insert(funcaoBody);
+        service.insert(funcaoBody);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(funcao);
+        return ResponseEntity.status(HttpStatus.CREATED).body(funcaoBody);
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Funcao> updateFuncao(@PathVariable Long id, @RequestBody Funcao funcaoBody) {
+    public ResponseEntity<Funcao> updateFuncao(@PathVariable UUID id, @RequestBody Funcao funcaoBody) {
 
-        Funcao funcaoUpd = service.update(id, funcaoBody);
+        var funcaoUpd = service.update(id, funcaoBody);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(funcaoUpd);
 
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteFuncao(@PathVariable Long id) {
+    public ResponseEntity<String> deleteFuncao(@PathVariable UUID id) {
 
         service.delete(id);
 

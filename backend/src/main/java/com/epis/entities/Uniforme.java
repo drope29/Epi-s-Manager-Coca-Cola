@@ -10,9 +10,9 @@ public class Uniforme {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+  /*  @ManyToOne
     @JoinColumn(name = "funcao_id")
-    private Funcao funcao;
+    private Funcao funcao;*/
 
     @ManyToOne
     @JoinColumn(name = "epi_id")
@@ -23,12 +23,12 @@ public class Uniforme {
 
     public Uniforme (){}
 
-    public Uniforme(Long id, Funcao funcao, Epi epi, Integer quantidade) {
+   /* public Uniforme(Long id, Funcao funcao, Epi epi, Integer quantidade) {
         this.id = id;
         this.funcao = funcao;
         this.epi = epi;
         this.quantidade = quantidade;
-    }
+    }*/
 
     public Long getId() {
         return id;
@@ -38,13 +38,13 @@ public class Uniforme {
         this.id = id;
     }
 
-    public Funcao getFuncao() {
+   /* public Funcao getFuncao() {
         return funcao;
     }
 
     public void setFuncao(Funcao funcao) {
         this.funcao = funcao;
-    }
+    }*/
 
     public Epi getEpi() {
         return epi;
@@ -66,7 +66,7 @@ public class Uniforme {
     public String toString() {
         return "Uniforme{" +
                 "id=" + id +
-                ", funcao=" + funcao +
+               // ", funcao=" + funcao +
                 ", epi=" + epi +
                 ", quantidade=" + quantidade +
                 '}';
