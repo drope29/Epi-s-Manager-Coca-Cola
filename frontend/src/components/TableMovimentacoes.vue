@@ -64,27 +64,83 @@ async function fetchEpis() {
     }
 }
 
-// --- Helpers de Formatação ---
-const formatarDataDisplay = (dataISO) => {
-    if (!dataISO) return '';
+// --- Helpers de Formatação (CORRIGIDOS) ---
+const formatarDataDisplay = (dataStr) => {
+    if (!dataStr) return "";
+
+    let date;
     try {
-        const date = new Date(dataISO);
-        if (isNaN(date.getTime())) return dataISO;
-        date.setUTCDate(date.getUTCDate() + 1); // Compensar UTC para exibição local
+        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
+        if (dataStr.includes('-')) {
+            const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
+            date = new Date(Date.UTC(
+                parseInt(dateParts[0]), // YYYY
+                parseInt(dateParts[1]) - 1, // MM (0-indexed)
+                parseInt(dateParts[2])  // DD
+            ));
+
+            // Caso 2: Formato Brasileiro (DD/MM/YYYY)
+        } else if (dataStr.includes('/')) {
+            const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
+            date = new Date(Date.UTC(
+                parseInt(dateParts[2]), // YYYY
+                parseInt(dateParts[1]) - 1, // MM (0-indexed)
+                parseInt(dateParts[0])  // DD
+            ));
+
+            // Caso 3: Tentar a sorte com o construtor padrão
+        } else {
+            date = new Date(dataStr);
+        }
+
+        if (isNaN(date.getTime())) {
+            return dataStr; // Retorna o original se for "Invalid Date"
+        }
+
+        // Formata para DD/MM/YYYY
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
     } catch (e) {
-        return dataISO;
+        return dataStr;
     }
 };
-const formatarDataInput = (dataISO) => {
-    if (!dataISO) return '';
+
+const formatarDataInput = (dataStr) => {
+    if (!dataStr) return "";
+
+    let date;
     try {
-        const date = new Date(dataISO);
+        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
+        if (dataStr.includes('-')) {
+            const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
+            date = new Date(Date.UTC(
+                parseInt(dateParts[0]),
+                parseInt(dateParts[1]) - 1,
+                parseInt(dateParts[2])
+            ));
+        }
+        // Caso 2: Formato Brasileiro (DD/MM/YYYY)
+        else if (dataStr.includes('/')) {
+            const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
+            date = new Date(Date.UTC(
+                parseInt(dateParts[2]),
+                parseInt(dateParts[1]) - 1,
+                parseInt(dateParts[0])
+            ));
+        }
+        // Caso 3: Tentar a sorte
+        else {
+            date = new Date(dataStr);
+        }
+
         if (isNaN(date.getTime())) return '';
-        const yearUTC = date.getUTCFullYear();
-        const monthUTC = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-        const dayUTC = date.getUTCDate().toString().padStart(2, '0');
-        return `${yearUTC}-${monthUTC}-${dayUTC}`;
+
+        // Formata para YYYY-MM-DD
+        const year = date.getUTCFullYear();
+        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = date.getUTCDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+
     } catch (e) {
         return '';
     }
@@ -338,12 +394,21 @@ function closeEditDropdown() {
                     </div>
                     <div class="flex flex-wrap space-x-4">
                         <div class="flex-1 min-w-[300px]"><strong>Função:</strong> {{ colaborador.funcao || 'N/A' }}</div>
-                        <div class="flex-1 min-w-[200px]"><strong>Setor:</strong> {{ colaborador.unidade || 'N/A' }}</div>
+                        <div class="flex-1 min-w-[200px]"><strong>Setor:</strong> {{ colaborador.setor || 'N/A' }}</div>
                     </div>
                     <div class="flex flex-wrap space-x-4 mt-1">
                         <div class="flex-1 min-w-[300px]"><strong>RE/CPF:</strong> {{ colaborador.re || 'N/A' }}</div>
-                        <div class="flex-1 min-w-[200px]"><strong>Data de Admissão:</strong> {{ colaborador.dataAdmissao ?
-                            formatarDataDisplay(colaborador.dataAdmissao) : '____/____/______' }}</div>
+
+                        <!-- 
+                          ######################################################
+                          # CORREÇÃO AQUI: Verifica 'data_admissao' e 'dataAdmissao'
+                          ######################################################
+                        -->
+                        <div class="flex-1 min-w-[200px]"><strong>Data de Admissão:</strong> {{ (colaborador.data_admissao
+                            || colaborador.dataAdmissao) ?
+                            formatarDataDisplay(colaborador.data_admissao || colaborador.dataAdmissao) : '____/____/______'
+                        }}</div>
+
                     </div>
                 </div>
                 <div class="text-sm space-y-1 my-3">
@@ -375,10 +440,10 @@ function closeEditDropdown() {
                     <table class="min-w-full border-collapse border border-black text-sm">
                         <thead class="bg-gray-100">
                             <!-- 
-                                ######################################################
-                                # CORREÇÃO CABEÇALHO (THEAD)
-                                ######################################################
-                             -->
+                                    ######################################################
+                                    # CORREÇÃO CABEÇALHO (THEAD)
+                                    ######################################################
+                                -->
                             <tr class="text-center font-bold">
                                 <!-- Ajuste nas larguras e adicionado 'whitespace-normal' para permitir quebra -->
                                 <th class="border border-black p-1 w-[90px] header-cell">DATA ENTREGA</th>
@@ -636,4 +701,5 @@ td input[type=number] {
 /* Estilo para dropdown do combobox */
 .edit-combobox-dropdown {
     z-index: 20;
-}</style>
+}
+</style>

@@ -25,6 +25,70 @@ const columns = [
   { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
   { data: 'nome', title: 'Nome', className: 'text-center' },
   { data: 'funcao', title: 'Cargo', className: 'text-center' },
+
+  {
+    data: 'setor', // data: 'setor' é seguro se o render lida com undefined
+    title: 'Setor',
+    className: 'text-center',
+    render: (_d, _t, row) => row.setor || "Não Informado"
+  },
+
+  // #############################################################
+  // CORREÇÃO AQUI (Lógica de Data Mais Robusta)
+  // #############################################################
+  {
+    data: null, // <-- Não peça 'data_admissao' diretamente
+    title: 'Admissão',
+    className: 'text-center',
+    render: (_data, _type, row) => { // <-- Vamos usar o 'row'
+
+      const dataStr = row.data_admissao || row.dataAdmissao;
+      if (!dataStr) return "Não Informado";
+
+      let date;
+
+      try {
+        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
+        if (dataStr.includes('-')) {
+          const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
+          // Date.UTC(year, monthIndex, day)
+          date = new Date(Date.UTC(
+            parseInt(dateParts[0]), // YYYY
+            parseInt(dateParts[1]) - 1, // MM (0-indexed)
+            parseInt(dateParts[2])  // DD
+          ));
+
+          // Caso 2: Formato Brasileiro (DD/MM/YYYY)
+        } else if (dataStr.includes('/')) {
+          const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
+          // Date.UTC(year, monthIndex, day)
+          date = new Date(Date.UTC(
+            parseInt(dateParts[2]), // YYYY
+            parseInt(dateParts[1]) - 1, // MM (0-indexed)
+            parseInt(dateParts[0])  // DD
+          ));
+
+          // Caso 3: Tentar a sorte com o construtor padrão
+        } else {
+          date = new Date(dataStr);
+        }
+
+        // Verificar se a data é válida
+        if (isNaN(date.getTime())) {
+          return dataStr; // Retorna o original se for "Invalid Date"
+        }
+
+        // Formatar a data válida
+        // toLocaleDateString com UTC garante que não haja "off-by-one" do fuso
+        return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
+      } catch (e) {
+        return dataStr; // Retorna o dado original se qualquer parsing falhar
+      }
+    }
+  },
+  // #############################################################
+
   { data: 'unidade', title: 'Unidade', className: 'text-center', render: (_d, _t, row) => row.unidade || "Não Informado" },
   { data: 'genero', title: 'Gênero', className: 'text-center', render: (_d, _t, row) => row.genero || "Não Informado" },
   { data: null, title: 'Turno', className: 'text-center', render: (_d, _t, row) => row.turno || "Não Informado" },
@@ -59,7 +123,7 @@ const options = {
     infoFiltered: "(filtrado de _MAX_ registros)",
     paginate: { first: "Primeiro", last: "Último", next: "Próximo", previous: "Anterior" },
     emptyTable: "Nenhum Colaborador Cadastrado"
-   },
+  },
 };
 
 const colaboradores = ref([]); // Mantém o ref para os dados originais
@@ -88,7 +152,7 @@ onMounted(async () => {
         dtInstance.search(globalSearch.value).draw();
       }
     } else {
-        console.warn("Referência do DataTable (dtRef.value.dt) não encontrada após nextTick.");
+      console.warn("Referência do DataTable (dtRef.value.dt) não encontrada após nextTick.");
     }
 
   } catch (error) {
@@ -96,7 +160,7 @@ onMounted(async () => {
     colaboradores.value = []; // Garante que seja um array vazio em caso de erro
     // Tenta limpar a tabela se ela já existia
     if (dtRef.value && dtRef.value.dt) {
-        dtRef.value.dt.clear().draw();
+      dtRef.value.dt.clear().draw();
     }
   }
 });
@@ -111,7 +175,7 @@ const applySearch = () => {
 // Watcher para re-aplicar busca se globalSearch mudar DEPOIS da montagem inicial
 // Isso é mais uma garantia
 watch(globalSearch, (newValue) => {
-    applySearch();
+  applySearch();
 });
 
 const handleTableClick = (event) => {
@@ -126,17 +190,17 @@ const handleTableClick = (event) => {
     const rowNode = button.closest('tr');
     let colaborador = null;
     try {
-        colaborador = dtRef.value.dt.row(rowNode).data();
-    } catch(e) {
-         console.warn("Não foi possível obter dados da linha via DT API, tentando fallback...", e)
-         // Fallback para o array local se a API do DT falhar
-         colaborador = colaboradores.value.find(c => c.id.toString() === id);
+      colaborador = dtRef.value.dt.row(rowNode).data();
+    } catch (e) {
+      console.warn("Não foi possível obter dados da linha via DT API, tentando fallback...", e)
+      // Fallback para o array local se a API do DT falhar
+      colaborador = colaboradores.value.find(c => c.id.toString() === id);
     }
 
 
     if (!colaborador) {
-        console.error("Colaborador não encontrado para o ID:", id);
-        return;
+      console.error("Colaborador não encontrado para o ID:", id);
+      return;
     }
 
     if (action === 'edit') {
@@ -190,8 +254,8 @@ const handleDelete = (colaborador) => {
         // Remove do array local E da tabela DataTables
         colaboradores.value = colaboradores.value.filter(c => c.id !== colaborador.id);
         if (dtRef.value && dtRef.value.dt) {
-            // Encontra a linha na tabela DT e remove
-            dtRef.value.dt.rows((idx, data, node) => data.id === colaborador.id).remove().draw();
+          // Encontra a linha na tabela DT e remove
+          dtRef.value.dt.rows((idx, data, node) => data.id === colaborador.id).remove().draw();
         }
 
 
@@ -247,7 +311,8 @@ const handleDelete = (colaborador) => {
 }
 
 :deep(.dataTables_filter) {
-  display: none; /* Esconde a busca padrão do DataTables */
+  display: none;
+  /* Esconde a busca padrão do DataTables */
 }
 
 :deep(.datatable-header),
@@ -283,12 +348,14 @@ const handleDelete = (colaborador) => {
 }
 
 :deep(table.dataTable tbody tr:hover) {
-  background-color: rgb(219, 234, 254) !important; /* Azul mais forte */
+  background-color: rgb(219, 234, 254) !important;
+  /* Azul mais forte */
   cursor: pointer;
 }
 
 :deep(table.dataTable tbody tr button) {
-  cursor: pointer; /* Garante cursor de ponteiro nos botões */
+  cursor: pointer;
+  /* Garante cursor de ponteiro nos botões */
 }
 
 
@@ -339,3 +406,4 @@ const handleDelete = (colaborador) => {
   cursor: pointer;
 }
 </style>
+

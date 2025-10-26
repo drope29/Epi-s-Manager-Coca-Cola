@@ -25,12 +25,12 @@ const searchQuery = ref('');
 
 const isEditMode = computed(() => !!props.itemParaEditar);
 
-// --- form ref (sem alteração) ---
+// --- form ref (ALTERADO) ---
 const form = ref({
     dataEntrega: new Date().toISOString().split('T')[0],
     epiId: null,
     funcionarioId: props.colaboradorId,
-    status: 'ENTREGUE'
+    status: 'ASSINADO'
 });
 
 // --- Lógica de Filtro (CORRIGIDA) ---
@@ -95,7 +95,7 @@ onMounted(() => {
             dataEntrega: dataFormatada,
             epiId: item.epi ? item.epi.id : null,
             funcionarioId: props.colaboradorId,
-            status: item.status || 'ENTREGUE'
+            status: item.status || 'ASSINADO'
         }
     }
 });
@@ -182,7 +182,6 @@ async function handleSave() {
     <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
         <div class="mx-auto w-full max-w-2xl bg-white rounded-xl shadow-lg flex flex-col">
 
-            <!-- Cabeçalho -->
             <div class="px-6 py-4 flex justify-between items-center border-b">
                 <h2 class="font-bold text-2xl sm:text-4xl">
                     {{ isEditMode ? 'Editar Item' : 'Adicionar Item' }}
@@ -200,7 +199,6 @@ async function handleSave() {
                 <div class="p-6">
                     <div class="w-full mx-auto space-y-6">
 
-                        <!-- Combobox -->
                         <div class="relative">
                             <label for="epiCombobox" class="block text-base font-medium text-gray-600 ml-1 mb-1">
                                 Selecione o EPI
@@ -211,7 +209,6 @@ async function handleSave() {
                                 @blur="closeDropdown" placeholder="-- Escolha ou busque um EPI --" required
                                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100 focus:placeholder-gray-500" />
 
-                            <!-- A Lista Dropdown -->
                             <div v-if="isDropdownOpen"
                                 class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                                 <ul class="py-1">
@@ -223,12 +220,6 @@ async function handleSave() {
                                         Nenhum resultado para "{{ searchQuery }}"
                                     </li>
 
-                                    <!-- 
-                                        ####################################################################
-                                        CORREÇÃO VISUAL AQUI
-                                        Use 'epi.descricao' e 'epi.codigoAutenticacao' (conforme confirmado)
-                                        ####################################################################
-                                    -->
                                     <li v-for="epi in (searchQuery ? filteredEpis : filteredEpis.slice(0, 10))"
                                         :key="epi.id" @mousedown="selectEpi(epi)"
                                         class="px-3 py-2 text-lg text-gray-800 cursor-pointer hover:bg-blue-100">
@@ -250,7 +241,6 @@ async function handleSave() {
                     </div>
                 </div>
 
-                <!-- Botão -->
                 <div class="text-center p-6 border-t">
                     <button type="submit" :disabled="loading" class="
                                 font-bold text-white text-xl
