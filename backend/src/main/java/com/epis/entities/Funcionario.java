@@ -2,9 +2,11 @@ package com.epis.entities;
 
 import com.epis.enums.GeneroEnum;
 import com.epis.enums.TurnoEnum;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -35,6 +37,13 @@ public class Funcionario {
     @Enumerated(EnumType.STRING)
     private GeneroEnum genero;
 
+    @Column
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    private Date dataAdmissao;
+
+    @Column
+    private String setor;
+
     @OneToMany(mappedBy = "funcionario")
     private List<Movimentacao> FuncionarioMovimentacao = new ArrayList<>();
 
@@ -46,7 +55,7 @@ public class Funcionario {
         this.funcao = funcao;
     }
 
-    public Funcionario(Long id, String RE, String nome, String funcao, String unidade, TurnoEnum turno, GeneroEnum genero) {
+    public Funcionario(Long id, String RE, String nome, String funcao, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
         this.id = id;
         this.RE = RE;
         this.nome = nome;
@@ -54,6 +63,8 @@ public class Funcionario {
         this.unidade = unidade;
         this.turno = turno;
         this.genero = genero;
+        this.dataAdmissao = dataAdmissao;
+        this.setor = setor;
     }
 
     public Long getId() {
@@ -111,6 +122,14 @@ public class Funcionario {
     public void setGenero(GeneroEnum genero) {
         this.genero = genero;
     }
+
+    public Date getDataAdmissao() { return dataAdmissao; }
+
+    public void setDataAdmissao(Date dataAdmissao) { this.dataAdmissao = dataAdmissao; }
+
+    public String getSetor() { return setor; }
+
+    public void setSetor(String setor) { this.setor = setor; }
 
     @Override
     public String toString() {

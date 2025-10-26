@@ -19,6 +19,8 @@ public class FuncionarioMapper {
         funcionario.setUnidade(dto.getUnidade());
         funcionario.setTurno(TurnoEnum.valueOf(dto.getTurno().toUpperCase()));
         funcionario.setGenero(GeneroEnum.valueOf(dto.getGenero().toUpperCase()));
+        funcionario.setDataAdmissao(dto.getDataAdmissao());
+        funcionario.setSetor(dto.getSetor());
 
         return funcionario;
     }
@@ -47,6 +49,14 @@ public class FuncionarioMapper {
 
         if (dto.getGenero() != null) {
             funcionario.setGenero(GeneroEnum.valueOf(dto.getGenero().toUpperCase()));
+        }
+
+        if (dto.getDataAdmissao() != null) {
+            funcionario.setDataAdmissao(dto.getDataAdmissao());
+        }
+
+        if (dto.getSetor() != null) {
+            funcionario.setSetor(dto.getSetor());
         }
 
     }

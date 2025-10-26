@@ -5,4 +5,6 @@ public enum StatusEnum {
     CANCELADO,
     ATRASADO,
     AGUARDANDO_CONFIRMACAO,
+    ASSINADO,
+    ASSINATURA_PENDENTE
 }

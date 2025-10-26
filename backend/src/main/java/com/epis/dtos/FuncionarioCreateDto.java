@@ -1,6 +1,9 @@
 package com.epis.dtos;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.Date;
 
 public class FuncionarioCreateDto {
 
@@ -22,15 +25,23 @@ public class FuncionarioCreateDto {
     @NotBlank(message = "O campo genero é obrigatorio")
     private String genero;
 
+    @NotNull(message = "O campo data admissão é obrigatorio")
+    private Date dataAdmissao;
+
+    @NotBlank(message = "O campo setor é obrigatorio")
+    private String setor;
+
     public FuncionarioCreateDto(){}
 
-    public FuncionarioCreateDto(String RE, String nome, String funcao, String unidade, String turno, String genero) {
+    public FuncionarioCreateDto(String RE, String nome, String funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
         this.unidade = unidade;
         this.turno = turno;
         this.genero = genero;
+        this.dataAdmissao = dataAdmissao;
+        this.setor = setor;
     }
 
     public String getRE() {
@@ -80,6 +91,14 @@ public class FuncionarioCreateDto {
     public void setGenero(String genero) {
         this.genero = genero;
     }
+
+    public Date getDataAdmissao() { return dataAdmissao; }
+
+    public void setDataAdmissao(Date dataAdmissao) { this.dataAdmissao = dataAdmissao; }
+
+    public String getSetor() { return setor; }
+
+    public void setSetor(String setor) { this.setor = setor; }
 
     @Override
     public String toString() {
