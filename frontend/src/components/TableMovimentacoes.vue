@@ -451,11 +451,11 @@ function closeEditDropdown() {
                                 <th class="border border-black p-1 header-cell">DESCRIÇÃO DO EPI</th>
                                 <!-- Largura flexível -->
                                 <th class="border border-black p-1 w-[70px] header-cell">CA</th>
-                                <th class="border border-black p-1 w-[90px] header-cell">ASSINATURA</th>
-                                <th class="border border-black p-1 w-[90px] header-cell">DATA DEVOLUÇÃO</th>
-                                <th class="border border-black p-1 w-[90px] header-cell">RECEBEDOR</th>
-                                <th class="border border-black p-1 w-[70px] header-cell">COD ENTREGA</th>
-                                <th class="border border-black p-1 w-[70px] header-cell">COD DEVOLUÇÃO</th>
+                                <th class="border border-black p-1 w-[100px] header-cell">ASSINATURA</th>
+                                <th class="border border-black p-1 w-[100px] header-cell">DATA DEVOLUÇÃO</th>
+                                <th class="border border-black p-1 w-[100px] header-cell">RECEBEDOR</th>
+                                <th class="border border-black p-1 w-[100px] header-cell">COD ENTREGA</th>
+                                <th class="border border-black p-1 w-[100px] header-cell">COD DEVOLUÇÃO</th>
                                 <th class="border border-black p-1 w-[80px] header-cell">AÇÕES</th>
                             </tr>
                         </thead>
