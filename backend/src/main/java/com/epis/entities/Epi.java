@@ -28,8 +28,8 @@ public class Epi {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataValidade;
 
-    @OneToMany(mappedBy = "epi")
-    private List<Movimentacao> EpiMovimentacao = new ArrayList<>();
+    /*@OneToMany(mappedBy = "epi")
+    private List<Movimentacao> EpiMovimentacao = new ArrayList<>();*/
 
     @OneToMany(mappedBy = "epi")
     private List<Uniforme> EpiUniforme = new ArrayList<>();

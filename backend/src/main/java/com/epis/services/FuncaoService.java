@@ -27,7 +27,7 @@ public class FuncaoService {
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro ao inserir a função. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro ao inserir as funções. Erro: " + e.getMessage());
 
         }
 
@@ -90,6 +90,7 @@ public class FuncaoService {
             throw new ErroInserirDynamoException("Houve um erro ao inserir a função. Erro: " + e.getMessage());
 
         }
+
     }
 
 

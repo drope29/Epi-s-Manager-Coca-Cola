@@ -13,7 +13,7 @@ import java.util.List;
 
 @Service
 public class MovimentacaoService {
-
+/*
     @Autowired
     private MovimentacaoRepository repository;
 
@@ -54,5 +54,5 @@ public class MovimentacaoService {
 
         repository.delete(movimentacao);
 
-    }
+    }*/
 }

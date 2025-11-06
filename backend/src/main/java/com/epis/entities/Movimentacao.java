@@ -14,7 +14,7 @@ public class Movimentacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+   /* @ManyToOne
     @JoinColumn(name = "funcionario_id")
     private Funcionario funcionario;
 
@@ -103,5 +103,5 @@ public class Movimentacao {
                 ", dataProximaEntrega=" + dataProximaEntrega +
                 ", status=" + status +
                 '}';
-    }
+    }*/
 }

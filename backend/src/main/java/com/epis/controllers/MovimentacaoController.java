@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/movimentacao")
 public class MovimentacaoController {
-
+/*
     @Autowired
     private MovimentacaoService service;
 
@@ -62,5 +62,5 @@ public class MovimentacaoController {
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
-    }
+    }*/
 }

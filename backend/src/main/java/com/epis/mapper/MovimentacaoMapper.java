@@ -7,7 +7,6 @@ import com.epis.entities.Funcionario;
 import com.epis.entities.Movimentacao;
 import com.epis.enums.StatusEnum;
 import com.epis.repositories.EpiRepository;
-import com.epis.repositories.FuncionarioRepository;
 import com.epis.services.exception.EpiNaoEncontradoException;
 import com.epis.services.exception.FuncionarioNaoEncontradoException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MovimentacaoMapper {
-
+/*
     @Autowired
     private FuncionarioRepository funcionarioRepository;
 
@@ -65,6 +64,6 @@ public class MovimentacaoMapper {
             entity.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
         }
 
-    }
+    }*/
 
 }
