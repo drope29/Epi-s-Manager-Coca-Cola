@@ -1,43 +1,33 @@
 package com.epis.entities;
 
 import com.epis.enums.StatusEnum;
+
+import com.epis.utils.DateAttributeConverter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.util.Date;
+import java.util.UUID;
 
-@Entity
-@Table(name = "tb_movimentacao")
+@DynamoDbBean
 public class Movimentacao {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-   /* @ManyToOne
-    @JoinColumn(name = "funcionario_id")
+    private UUID movimentacaoId;
     private Funcionario funcionario;
-
-    @ManyToOne
-    @JoinColumn(name = "epi_id")
     private Epi epi;
-
-    @Column
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataEntrega;
-
-    @Column
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataProximaEntrega;
-
-    @Column
     @Enumerated(EnumType.STRING)
     private StatusEnum status;
 
     public Movimentacao(){}
 
-    public Movimentacao(Long id, Funcionario funcionario, Epi epi, Date dataEntrega, Date dataProximaEntrega, StatusEnum status) {
-        this.id = id;
+    public Movimentacao(UUID movimentacaoId, Funcionario funcionario, Epi epi, Date dataEntrega, Date dataProximaEntrega, StatusEnum status) {
+        this.movimentacaoId = UUID.randomUUID();
         this.funcionario = funcionario;
         this.epi = epi;
         this.dataEntrega = dataEntrega;
@@ -45,12 +35,14 @@ public class Movimentacao {
         this.status = status;
     }
 
-    public Long getId() {
-        return id;
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("movimentacaoId")
+    public UUID getMovimentacaoId() {
+        return movimentacaoId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setMovimentacaoId(UUID movimentacaoId) {
+        this.movimentacaoId = movimentacaoId;
     }
 
     public Funcionario getFuncionario() {
@@ -69,6 +61,8 @@ public class Movimentacao {
         this.epi = epi;
     }
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @DynamoDbConvertedBy(DateAttributeConverter.class)
     public Date getDataEntrega() {
         return dataEntrega;
     }
@@ -77,6 +71,8 @@ public class Movimentacao {
         this.dataEntrega = dataEntrega;
     }
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @DynamoDbConvertedBy(DateAttributeConverter.class)
     public Date getDataProximaEntrega() {
         return dataProximaEntrega;
     }
@@ -96,12 +92,12 @@ public class Movimentacao {
     @Override
     public String toString() {
         return "Movimentacao{" +
-                "id=" + id +
+                "movimentacaoId=" + movimentacaoId +
                 ", funcionario=" + funcionario +
                 ", epi=" + epi +
                 ", dataEntrega=" + dataEntrega +
                 ", dataProximaEntrega=" + dataProximaEntrega +
                 ", status=" + status +
                 '}';
-    }*/
+    }
 }

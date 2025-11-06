@@ -1,18 +1,19 @@
 package com.epis.dtos;
 
 import java.util.Date;
+import java.util.UUID;
 
 public class MovimentacaoUpdateDto {
 
-    private Long funcionario;
-    private Long epi;
+    private UUID funcionario;
+    private UUID epi;
     private Date dataEntrega;
     private Date dataProximaEntrega;
     private String status;
 
     public MovimentacaoUpdateDto(){}
 
-    public MovimentacaoUpdateDto(Long funcionario, Long epi, Date dataEntrega, Date dataProximaEntrega, String status) {
+    public MovimentacaoUpdateDto(UUID funcionario, UUID epi, Date dataEntrega, Date dataProximaEntrega, String status) {
         this.funcionario = funcionario;
         this.epi = epi;
         this.dataEntrega = dataEntrega;
@@ -20,19 +21,19 @@ public class MovimentacaoUpdateDto {
         this.status = status;
     }
 
-    public Long getFuncionario() {
+    public UUID getFuncionario() {
         return funcionario;
     }
 
-    public void setFuncionario(Long funcionario) {
+    public void setFuncionario(UUID funcionario) {
         this.funcionario = funcionario;
     }
 
-    public Long getEpi() {
+    public UUID getEpi() {
         return epi;
     }
 
-    public void setEpi(Long epi) {
+    public void setEpi(UUID epi) {
         this.epi = epi;
     }
 

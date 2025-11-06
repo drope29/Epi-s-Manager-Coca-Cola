@@ -4,55 +4,150 @@ import com.epis.dtos.MovimentacaoCreateDto;
 import com.epis.dtos.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
 import com.epis.mapper.MovimentacaoMapper;
-import com.epis.repositories.MovimentacaoRepository;
+import com.epis.services.exception.ErroBuscarDynamoException;
+import com.epis.services.exception.ErroDeletarDynamoException;
+import com.epis.services.exception.ErroInserirDynamoException;
 import com.epis.services.exception.MovimentacaoNaoEncontradaException;
+import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class MovimentacaoService {
-/*
-    @Autowired
-    private MovimentacaoRepository repository;
 
     @Autowired
     private MovimentacaoMapper mapper;
 
-    public List<Movimentacao> getAll() {
-        return repository.findAll();
+    @Autowired
+    private DynamoDbTemplate dynamoDbTemplate;
+
+    public void uploadMovimentacaos(List<Movimentacao> movimentacoes){
+
+        try {
+
+            movimentacoes.forEach(dynamoDbTemplate::save);
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro ao inserir as movimentacoes. Erro: " + e.getMessage());
+
+        }
+
     }
 
-    public Movimentacao getById(Long id) {
+    public List<Movimentacao> getAll() {
 
-        return repository.findById(id)
-                .orElseThrow(() -> new MovimentacaoNaoEncontradaException("Movimentação não encontrada com id " + id));
+        try {
+
+            return dynamoDbTemplate
+                    .scanAll(Movimentacao.class)
+                    .items()
+                    .stream()
+                    .toList();
+
+        } catch (Exception e) {
+
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar as movimentacoes. Erro: " + e.getMessage());
+
+        }
+
+    }
+
+    public Movimentacao getById(UUID id) {
+
+        try {
+
+            var key = Key.builder().partitionValue(String.valueOf(id)).build();
+
+            Movimentacao movimentacao = dynamoDbTemplate.load(key, Movimentacao.class);
+
+            if (movimentacao == null)
+                throw new MovimentacaoNaoEncontradaException("Movimentacao não encontrada com o id: " + id);
+
+            return movimentacao;
+
+        } catch (MovimentacaoNaoEncontradaException ex) {
+
+            throw ex;
+
+        } catch (Exception e) {
+
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar as movimentacoes. Erro: " + e.getMessage());
+
+        }
 
     }
 
     public Movimentacao insert(MovimentacaoCreateDto dto) {
 
-        Movimentacao movimentacao = mapper.toMovimentacao(dto);
+        try {
 
-        return repository.save(movimentacao);
+            Movimentacao movimentacao = mapper.toMovimentacao(dto);
+
+            dynamoDbTemplate.save(movimentacao);
+
+            return movimentacao;
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro as inserir a movimentação. Erro: " + e.getMessage());
+
+        }
 
     }
 
-    public Movimentacao update(Long id, MovimentacaoUpdateDto dto) {
+    public Movimentacao update(UUID id, MovimentacaoUpdateDto dto) {
 
-        Movimentacao entity = getById(id);
+        try {
 
-        mapper.toMovimentacao(dto, entity);
+            var entity = getById(id);
 
-        return repository.save(entity);
+            mapper.toMovimentacao(dto, entity);
+
+
+            return dynamoDbTemplate.update(entity);
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro ao inserir a movimentação. Erro: " + e.getMessage());
+        }
+
     }
 
-    public void delete(Long id) {
+    public void delete(UUID id) {
 
-        Movimentacao movimentacao = getById(id);
+        try {
 
-        repository.delete(movimentacao);
+            Movimentacao movimentacao = getById(id);
 
-    }*/
+            dynamoDbTemplate.delete(movimentacao);
+
+        } catch (Exception e) {
+
+            throw new ErroDeletarDynamoException("Houve um erro ao buscar os movimentacoes. Erro: " + e.getMessage());
+
+        }
+
+    }
+
+    public void clearMovimentacaoDatabase(){
+
+        try {
+
+            List<Movimentacao> movimentacoes = getAll();
+
+            movimentacoes.forEach(dynamoDbTemplate::delete);
+
+        } catch (Exception e) {
+
+            throw new ErroDeletarDynamoException("Houve um erro ao buscar os movimentacoes. Erro: " + e.getMessage());
+
+        }
+
+    }
+
 }

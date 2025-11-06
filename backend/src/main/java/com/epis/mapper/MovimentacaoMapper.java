@@ -1,25 +1,36 @@
 package com.epis.mapper;
 
+import com.epis.dtos.MovimentacaoCreateDto;
+import com.epis.dtos.MovimentacaoUpdateDto;
+import com.epis.entities.Epi;
+import com.epis.entities.Funcionario;
+import com.epis.entities.Movimentacao;
+import com.epis.enums.StatusEnum;
+import com.epis.services.EpiService;
+import com.epis.services.FuncionarioService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 public class MovimentacaoMapper {
-/*
-    @Autowired
-    private FuncionarioRepository funcionarioRepository;
 
     @Autowired
-    private EpiRepository epiRepository;
+    private FuncionarioService funcionarioService;
+
+    @Autowired
+    private EpiService epiService;
 
     public Movimentacao toMovimentacao(MovimentacaoCreateDto dto){
+
         Movimentacao movimentacao = new Movimentacao();
 
-        Funcionario funcionario = funcionarioRepository.findById(dto.getFuncionario())
-                .orElseThrow(() -> new FuncionarioNaoEncontradoException("Funcionario não Encontrado"));
+        Funcionario funcionario = funcionarioService.getById(dto.getFuncionario());
 
-        Epi epi = epiRepository.findById(dto.getEpi())
-                .orElseThrow(() -> new EpiNaoEncontradoException("Epi não Encontrado"));
+        Epi epi = epiService.getById(dto.getEpi());
 
+        movimentacao.setMovimentacaoId(UUID.randomUUID());
         movimentacao.setFuncionario(funcionario);
         movimentacao.setEpi(epi);
         movimentacao.setDataEntrega(dto.getDataEntrega());
@@ -27,18 +38,18 @@ public class MovimentacaoMapper {
         movimentacao.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
 
         return movimentacao;
+
     }
 
     public void toMovimentacao(MovimentacaoUpdateDto dto, Movimentacao entity){
+
         if (dto.getFuncionario() != null) {
-            Funcionario funcionario = funcionarioRepository.findById(dto.getFuncionario())
-                    .orElseThrow(() -> new FuncionarioNaoEncontradoException("Funcionario não Encontrado"));
+            Funcionario funcionario = funcionarioService.getById(dto.getFuncionario());
             entity.setFuncionario(funcionario);
         }
 
         if (dto.getEpi() != null) {
-            Epi epi = epiRepository.findById(dto.getEpi())
-                    .orElseThrow(() -> new EpiNaoEncontradoException("Epi não Encontrado"));
+            Epi epi = epiService.getById(dto.getEpi());
             entity.setEpi(epi);
         }
 
@@ -54,6 +65,6 @@ public class MovimentacaoMapper {
             entity.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
         }
 
-    }*/
+    }
 
 }

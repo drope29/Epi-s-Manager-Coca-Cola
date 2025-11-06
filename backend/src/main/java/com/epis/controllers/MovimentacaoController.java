@@ -10,11 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/movimentacao")
 public class MovimentacaoController {
-/*
+
     @Autowired
     private MovimentacaoService service;
 
@@ -28,7 +29,7 @@ public class MovimentacaoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getEpiById(@PathVariable Long id) {
+    public ResponseEntity<?> getEpiById(@PathVariable UUID id) {
 
         Movimentacao movimentacao = service.getById(id);
 
@@ -47,7 +48,7 @@ public class MovimentacaoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Movimentacao> updateMovimentacao(@PathVariable Long id, @RequestBody MovimentacaoUpdateDto dto) {
+    public ResponseEntity<Movimentacao> updateMovimentacao(@PathVariable UUID id, @RequestBody MovimentacaoUpdateDto dto) {
 
         Movimentacao movimentacaoUpd = service.update(id, dto);
 
@@ -56,11 +57,11 @@ public class MovimentacaoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMovimentacao(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMovimentacao(@PathVariable UUID id) {
 
         service.delete(id);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 
-    }*/
+    }
 }
