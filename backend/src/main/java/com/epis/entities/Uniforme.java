@@ -14,9 +14,9 @@ public class Uniforme {
     @JoinColumn(name = "funcao_id")
     private Funcao funcao;*/
 
-    @ManyToOne
+   /* @ManyToOne
     @JoinColumn(name = "epi_id")
-    private Epi epi;
+    private Epi epi;*/
 
     @Column
     private Integer quantidade;
@@ -46,13 +46,13 @@ public class Uniforme {
         this.funcao = funcao;
     }*/
 
-    public Epi getEpi() {
+   /* public Epi getEpi() {
         return epi;
     }
 
     public void setEpi(Epi epi) {
         this.epi = epi;
-    }
+    }*/
 
     public Integer getQuantidade() {
         return quantidade;
@@ -67,7 +67,7 @@ public class Uniforme {
         return "Uniforme{" +
                 "id=" + id +
                // ", funcao=" + funcao +
-                ", epi=" + epi +
+               // ", epi=" + epi +
                 ", quantidade=" + quantidade +
                 '}';
     }

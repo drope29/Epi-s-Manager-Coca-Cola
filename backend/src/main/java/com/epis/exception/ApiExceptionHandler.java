@@ -95,4 +95,16 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(ErroDeletarDynamoException.class)
+    public ResponseEntity<ErrorMessage> handleErroDeletarDynamoException(ErroDeletarDynamoException ex, HttpServletRequest request){
+        ErrorMessage error = new ErrorMessage(
+                request.getRequestURI(),
+                request.getMethod(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 }

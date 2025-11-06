@@ -1,60 +1,48 @@
 package com.epis.entities;
 
+import com.epis.utils.DateAttributeConverter;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 
-@Entity
-@Table(name = "tb_epi")
+@DynamoDbBean
 public class Epi {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column
+    private UUID epiId;
     private String codigoCompra;
-
-    @Column
     private String codigoAutenticacao;
-
-    @Column
     private String descricao;
-
-    @Column
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataValidade;
-
-    /*@OneToMany(mappedBy = "epi")
-    private List<Movimentacao> EpiMovimentacao = new ArrayList<>();*/
-
-    @OneToMany(mappedBy = "epi")
-    private List<Uniforme> EpiUniforme = new ArrayList<>();
 
     public Epi(){}
 
     public Epi(String codigoCompra, String descricao) {
+        this.epiId = UUID.randomUUID();
         this.codigoCompra = codigoCompra;
         this.descricao = descricao;
     }
 
-    public Epi(Long id, String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
-        this.id = id;
+    public Epi(String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
+        this.epiId = UUID.randomUUID();
         this.codigoCompra = codigoCompra;
         this.codigoAutenticacao = codigoAutenticacao;
         this.descricao = descricao;
         this.dataValidade = dataValidade;
     }
 
-    public Long getId() {
-        return id;
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("epiId")
+    public UUID getEpiId() {
+        return epiId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setEpiId(UUID epiId) {
+        this.epiId = epiId;
     }
 
     public String getCodigoCompra() {
@@ -81,6 +69,8 @@ public class Epi {
         this.descricao = descricao;
     }
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @DynamoDbConvertedBy(DateAttributeConverter.class)
     public Date getDataValidade() {
         return dataValidade;
     }
@@ -92,7 +82,7 @@ public class Epi {
     @Override
     public String toString() {
         return "Epi{" +
-                "id=" + id +
+                "epiId=" + epiId +
                 ", codigoCompra='" + codigoCompra + '\'' +
                 ", codigoAutenticacao='" + codigoAutenticacao + '\'' +
                 ", descricao='" + descricao + '\'' +

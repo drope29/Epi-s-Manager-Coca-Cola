@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/epis")
@@ -26,7 +27,7 @@ public class EpiController {
         String mensagemRetorno = "Epis Importados com Sucesso";
 
         try {
-            service.uploadEpi(UploadFiles.lerEpis());
+            service.uploadEpis(UploadFiles.lerEpis());
         } catch (Exception e) {
             mensagemRetorno = "Ocorreu um erro ao importar epis, erro: " + e.getMessage();
         }
@@ -45,7 +46,7 @@ public class EpiController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Epi> getEpiById(@PathVariable Long id) {
+    public ResponseEntity<Epi> getEpiById(@PathVariable UUID id) {
 
         Epi epi = service.getById(id);
 
@@ -63,7 +64,7 @@ public class EpiController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Epi> updateEpi(@PathVariable Long id, @RequestBody EpiUpdateDto dto) {
+    public ResponseEntity<Epi> updateEpi(@PathVariable UUID id, @RequestBody EpiUpdateDto dto) {
 
         Epi epiUpd = service.update(id, dto);
 
@@ -72,7 +73,7 @@ public class EpiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteEpi(@PathVariable Long id) {
+    public ResponseEntity<String> deleteEpi(@PathVariable UUID id) {
 
         service.delete(id);
 

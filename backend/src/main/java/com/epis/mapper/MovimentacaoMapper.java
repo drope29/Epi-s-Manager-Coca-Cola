@@ -1,15 +1,5 @@
 package com.epis.mapper;
 
-import com.epis.dtos.MovimentacaoCreateDto;
-import com.epis.dtos.MovimentacaoUpdateDto;
-import com.epis.entities.Epi;
-import com.epis.entities.Funcionario;
-import com.epis.entities.Movimentacao;
-import com.epis.enums.StatusEnum;
-import com.epis.repositories.EpiRepository;
-import com.epis.services.exception.EpiNaoEncontradoException;
-import com.epis.services.exception.FuncionarioNaoEncontradoException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component

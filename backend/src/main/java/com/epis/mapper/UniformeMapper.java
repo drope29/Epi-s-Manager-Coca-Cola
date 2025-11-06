@@ -1,13 +1,5 @@
 package com.epis.mapper;
 
-import com.epis.dtos.UniformeCreateDto;
-import com.epis.dtos.UniformeUpdateDto;
-import com.epis.entities.Epi;
-import com.epis.entities.Funcao;
-import com.epis.entities.Uniforme;
-import com.epis.repositories.EpiRepository;
-import com.epis.services.exception.EpiNaoEncontradoException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
