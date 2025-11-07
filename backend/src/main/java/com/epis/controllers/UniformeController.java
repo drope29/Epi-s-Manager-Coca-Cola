@@ -1,7 +1,6 @@
 package com.epis.controllers;
 
 import com.epis.dtos.UniformeCreateDto;
-import com.epis.dtos.UniformePorFuncaoDto;
 import com.epis.dtos.UniformeUpdateDto;
 import com.epis.entities.Uniforme;
 import com.epis.services.UniformeService;
@@ -11,12 +10,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/uniformes")
 public class UniformeController {
 
-   /* @Autowired
+   @Autowired
     private UniformeService service;
 
     @GetMapping("/")
@@ -29,7 +29,7 @@ public class UniformeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Uniforme> getById(@PathVariable Long id){
+    public ResponseEntity<Uniforme> getById(@PathVariable UUID id){
 
         Uniforme uniforme = service.getById(id);
 
@@ -48,7 +48,7 @@ public class UniformeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Uniforme> updateUniforme(@PathVariable Long id, @RequestBody UniformeUpdateDto dto) {
+    public ResponseEntity<Uniforme> updateUniforme(@PathVariable UUID id, @RequestBody UniformeUpdateDto dto) {
 
         Uniforme uniforme = service.update(id, dto);
 
@@ -57,7 +57,7 @@ public class UniformeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUniforme(@PathVariable Long id){
+    public ResponseEntity<Void> deleteUniforme(@PathVariable UUID id){
 
         service.delete(id);
 
@@ -65,7 +65,7 @@ public class UniformeController {
 
     }
 
-    @GetMapping("/buscaUniforme/{funcao_id}")
+    /*@GetMapping("/buscaUniforme/{funcao_id}")
     public ResponseEntity<UniformePorFuncaoDto> getUniformesPorFuncao(@PathVariable("funcao_id") Long funcaoId) {
 
         UniformePorFuncaoDto dto = service.getUniformesPorFuncao(funcaoId);

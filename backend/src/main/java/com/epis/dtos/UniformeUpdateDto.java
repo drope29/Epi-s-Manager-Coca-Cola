@@ -1,49 +1,41 @@
 package com.epis.dtos;
 
+import java.util.List;
+import java.util.UUID;
+
 public class UniformeUpdateDto {
 
-    private Long funcao;
-    private Long epi;
-    private Integer quantidade;
+    private UUID funcao;
+    private List<UniformeEpiDto> uniformeEpis;
 
     public UniformeUpdateDto() {}
 
-    public UniformeUpdateDto(Long funcao, Long epi, Integer quantidade) {
+    public UniformeUpdateDto(UUID funcao, List<UniformeEpiDto> uniformeEpis) {
         this.funcao = funcao;
-        this.epi = epi;
-        this.quantidade = quantidade;
+        this.uniformeEpis = uniformeEpis;
     }
 
-    public Long getFuncao() {
+    public UUID getFuncao() {
         return funcao;
     }
 
-    public void setFuncao(Long funcao) {
+    public void setFuncao(UUID funcao) {
         this.funcao = funcao;
     }
 
-    public Long getEpi() {
-        return epi;
+    public List<UniformeEpiDto> getUniformeEpis() {
+        return uniformeEpis;
     }
 
-    public void setEpi(Long epi) {
-        this.epi = epi;
-    }
-
-    public Integer getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
+    public void setUniformeEpis(List<UniformeEpiDto> uniformeEpis) {
+        this.uniformeEpis = uniformeEpis;
     }
 
     @Override
     public String toString() {
         return "UniformeUpdateDto{" +
                 "funcao=" + funcao +
-                ", epi=" + epi +
-                ", quantidade=" + quantidade +
+                ", uniformeEpis=" + uniformeEpis +
                 '}';
     }
 }

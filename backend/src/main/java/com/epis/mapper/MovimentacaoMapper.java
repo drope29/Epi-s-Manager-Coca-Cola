@@ -44,13 +44,11 @@ public class MovimentacaoMapper {
     public void toMovimentacao(MovimentacaoUpdateDto dto, Movimentacao entity){
 
         if (dto.getFuncionario() != null) {
-            Funcionario funcionario = funcionarioService.getById(dto.getFuncionario());
-            entity.setFuncionario(funcionario);
+            entity.setFuncionario(funcionarioService.getById(dto.getFuncionario()));
         }
 
         if (dto.getEpi() != null) {
-            Epi epi = epiService.getById(dto.getEpi());
-            entity.setEpi(epi);
+            entity.setEpi(epiService.getById(dto.getEpi()));
         }
 
         if (dto.getDataEntrega() != null) {
