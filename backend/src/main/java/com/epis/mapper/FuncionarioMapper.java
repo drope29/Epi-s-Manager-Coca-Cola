@@ -19,6 +19,7 @@ public class FuncionarioMapper {
     private FuncaoService funcaoService;
 
     public Funcionario toFuncionario(FuncionarioCreateDto dto) {
+
         Funcionario funcionario = new Funcionario();
 
         Funcao funcao = funcaoService.getById(dto.getFuncao());
@@ -32,6 +33,7 @@ public class FuncionarioMapper {
         funcionario.setGenero(GeneroEnum.valueOf(dto.getGenero().toUpperCase()));
 
         return funcionario;
+
     }
 
     public void toFuncionario(FuncionarioUpdateDto dto, Funcionario funcionario) {

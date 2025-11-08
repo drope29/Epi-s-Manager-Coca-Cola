@@ -58,7 +58,7 @@ public class UniformeService {
 
         } catch (Exception e) {
 
-            throw new ErroBuscarDynamoException("Houve um erro ao buscar os uniformes. Erro: " + e.getMessage());
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar o uniforme. Erro: " + e.getMessage());
 
         }
 
@@ -76,7 +76,7 @@ public class UniformeService {
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro as inserir a movimentação. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro as inserir o uniforme. Erro: " + e.getMessage());
 
         }
 
@@ -95,7 +95,7 @@ public class UniformeService {
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro ao inserir a movimentação. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro ao atualizar o uniforme. Erro: " + e.getMessage());
         }
 
     }
@@ -107,22 +107,6 @@ public class UniformeService {
             Uniforme uniforme = getById(id);
 
             dynamoDbTemplate.delete(uniforme);
-
-        } catch (Exception e) {
-
-            throw new ErroDeletarDynamoException("Houve um erro ao buscar os uniformes. Erro: " + e.getMessage());
-
-        }
-
-    }
-
-    public void clearUniformeDatabase(){
-
-        try {
-
-            List<Uniforme> uniformes = getAll();
-
-            uniformes.forEach(dynamoDbTemplate::delete);
 
         } catch (Exception e) {
 

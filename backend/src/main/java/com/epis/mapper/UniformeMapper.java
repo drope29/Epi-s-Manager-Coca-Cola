@@ -43,6 +43,7 @@ public class UniformeMapper {
         uniforme.setUniformeEpis(itens);
 
         return uniforme;
+
     }
 
     public void toUniforme(UniformeUpdateDto dto, Uniforme uniforme) {

@@ -11,6 +11,7 @@ import java.util.UUID;
 public class EpiMapper {
 
     public Epi toEpi(EpiCreateDto dto) {
+
         Epi epi = new Epi();
 
         epi.setEpiId(UUID.randomUUID());
@@ -20,6 +21,7 @@ public class EpiMapper {
         epi.setDataValidade(dto.getDataValidade());
 
         return epi;
+
     }
 
     public void toEpi(EpiUpdateDto dto, Epi epi) {

@@ -33,7 +33,6 @@ public class FuncaoService {
 
     }
 
-
     public List<Funcao> getAll() {
 
         try {
@@ -92,7 +91,6 @@ public class FuncaoService {
         }
 
     }
-
 
     public Funcao update(UUID id, Funcao funcao) {
 

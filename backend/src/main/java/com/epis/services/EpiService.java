@@ -94,7 +94,7 @@ public class EpiService {
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro ao inserir o epi. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro ao atualizar o epi. Erro: " + e.getMessage());
 
         }
 

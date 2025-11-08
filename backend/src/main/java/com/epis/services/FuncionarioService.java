@@ -4,10 +4,7 @@ import com.epis.dtos.FuncionarioCreateDto;
 import com.epis.dtos.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
 import com.epis.mapper.FuncionarioMapper;
-import com.epis.services.exception.ErroBuscarDynamoException;
-import com.epis.services.exception.ErroInserirDynamoException;
-import com.epis.services.exception.FuncaoNaoEncontradaException;
-import com.epis.services.exception.FuncionarioNaoEncontradoException;
+import com.epis.services.exception.*;
 import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,7 +63,7 @@ public class FuncionarioService {
             Funcionario funcionario = dynamoDbTemplate.load(key, Funcionario.class);
 
             if (funcionario == null)
-                throw new FuncionarioNaoEncontradoException("Funcionario não encontrada com o id: " + id);
+                throw new FuncionarioNaoEncontradoException("Funcionario não encontrado com o id: " + id);
 
             return funcionario;
 
@@ -88,15 +85,13 @@ public class FuncionarioService {
 
             Funcionario funcionario = mapper.toFuncionario(dto);
 
-            Funcionario teste = funcionario;
-
             dynamoDbTemplate.save(funcionario);
 
             return funcionario;
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro ao inserir a função. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro ao inserir o funcionario. Erro: " + e.getMessage());
 
         }
 
@@ -110,12 +105,11 @@ public class FuncionarioService {
 
             mapper.toFuncionario(dto, entity);
 
-
             return dynamoDbTemplate.update(entity);
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro ao inserir a função. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro ao atualizar o funcionario. Erro: " + e.getMessage());
         }
 
     }
@@ -130,7 +124,7 @@ public class FuncionarioService {
 
         } catch (Exception e) {
 
-            throw new ErroBuscarDynamoException("Houve um erro ao buscar as funções. Erro: " + e.getMessage());
+            throw new ErroDeletarDynamoException("Houve um erro ao deletar o funcionario. Erro: " + e.getMessage());
 
         }
 
@@ -146,7 +140,7 @@ public class FuncionarioService {
 
         } catch (Exception e) {
 
-            throw new ErroBuscarDynamoException("Houve um erro ao buscar as funções. Erro: " + e.getMessage());
+            throw new ErroBuscarDynamoException("Houve um erro ao deletar os funcionarios. Erro: " + e.getMessage());
 
         }
 

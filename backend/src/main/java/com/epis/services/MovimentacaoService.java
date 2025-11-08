@@ -25,20 +25,6 @@ public class MovimentacaoService {
     @Autowired
     private DynamoDbTemplate dynamoDbTemplate;
 
-    public void uploadMovimentacaos(List<Movimentacao> movimentacoes){
-
-        try {
-
-            movimentacoes.forEach(dynamoDbTemplate::save);
-
-        } catch (Exception e) {
-
-            throw new ErroInserirDynamoException("Houve um erro ao inserir as movimentacoes. Erro: " + e.getMessage());
-
-        }
-
-    }
-
     public List<Movimentacao> getAll() {
 
         try {
@@ -108,12 +94,11 @@ public class MovimentacaoService {
 
             mapper.toMovimentacao(dto, entity);
 
-
             return dynamoDbTemplate.update(entity);
 
         } catch (Exception e) {
 
-            throw new ErroInserirDynamoException("Houve um erro ao inserir a movimentação. Erro: " + e.getMessage());
+            throw new ErroInserirDynamoException("Houve um erro ao atualizar a movimentação. Erro: " + e.getMessage());
         }
 
     }
@@ -128,23 +113,7 @@ public class MovimentacaoService {
 
         } catch (Exception e) {
 
-            throw new ErroDeletarDynamoException("Houve um erro ao buscar os movimentacoes. Erro: " + e.getMessage());
-
-        }
-
-    }
-
-    public void clearMovimentacaoDatabase(){
-
-        try {
-
-            List<Movimentacao> movimentacoes = getAll();
-
-            movimentacoes.forEach(dynamoDbTemplate::delete);
-
-        } catch (Exception e) {
-
-            throw new ErroDeletarDynamoException("Houve um erro ao buscar os movimentacoes. Erro: " + e.getMessage());
+            throw new ErroDeletarDynamoException("Houve um erro ao buscar as movimentacoes. Erro: " + e.getMessage());
 
         }
 
