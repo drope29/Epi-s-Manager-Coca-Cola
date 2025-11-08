@@ -1,12 +1,13 @@
 package com.epis.dtos;
 
+import java.util.UUID;
 import java.util.Date;
 
 public class FuncionarioUpdateDto {
 
     private String RE;
     private String nome;
-    private String funcao;
+    private UUID funcao;
     private String unidade;
     private String turno;
     private String genero;
@@ -15,7 +16,7 @@ public class FuncionarioUpdateDto {
 
     public FuncionarioUpdateDto(){}
 
-    public FuncionarioUpdateDto(String RE, String nome, String funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
+    public FuncionarioUpdateDto(String RE, String nome, UUID funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
@@ -42,11 +43,11 @@ public class FuncionarioUpdateDto {
         this.nome = nome;
     }
 
-    public String getFuncao() {
+    public UUID getFuncao() {
         return funcao;
     }
 
-    public void setFuncao(String funcao) {
+    public void setFuncao(UUID funcao) {
         this.funcao = funcao;
     }
 

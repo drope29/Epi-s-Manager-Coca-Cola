@@ -2,61 +2,40 @@ package com.epis.entities;
 
 import com.epis.enums.GeneroEnum;
 import com.epis.enums.TurnoEnum;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
 
-import java.util.ArrayList;
+import java.util.UUID;
 import java.util.Date;
-import java.util.List;
 
-@Entity
-@Table(name = "tb_funcionarios")
+@DynamoDbBean
 public class Funcionario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @Column
+    private UUID funcionarioId;
     private String RE;
-
-    @Column
     private String nome;
-
-    @Column
-    private String funcao;
-
-    @Column
+    private Funcao funcao;
     private String unidade;
-
-    @Column
-    @Enumerated(EnumType.STRING)
     private TurnoEnum turno;
-
-    @Column
-    @Enumerated(EnumType.STRING)
     private GeneroEnum genero;
-
-    @Column
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataAdmissao;
-
-    @Column
     private String setor;
-
-    @OneToMany(mappedBy = "funcionario")
-    private List<Movimentacao> FuncionarioMovimentacao = new ArrayList<>();
 
     public Funcionario(){}
 
-    public Funcionario(String RE, String nome, String funcao) {
+    public Funcionario(String RE, String nome, Funcao funcao) {
+        this.funcionarioId = UUID.randomUUID();
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
     }
 
-    public Funcionario(Long id, String RE, String nome, String funcao, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
-        this.id = id;
+    public Funcionario(String RE, String nome, Funcao funcao, String unidade, TurnoEnum turno, GeneroEnum genero) {
+        this.funcionarioId = UUID.randomUUID();
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
@@ -67,12 +46,14 @@ public class Funcionario {
         this.setor = setor;
     }
 
-    public Long getId() {
-        return id;
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("funcionarioId")
+    public UUID getFuncionarioId() {
+        return funcionarioId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setFuncionarioId(UUID funcionarioId) {
+        this.funcionarioId = funcionarioId;
     }
 
     public String getRE() {
@@ -91,11 +72,11 @@ public class Funcionario {
         this.nome = nome;
     }
 
-    public String getFuncao() {
+    public Funcao getFuncao() {
         return funcao;
     }
 
-    public void setFuncao(String funcao) {
+    public void setFuncao(Funcao funcao) {
         this.funcao = funcao;
     }
 
@@ -134,7 +115,7 @@ public class Funcionario {
     @Override
     public String toString() {
         return "Funcionario{" +
-                "id=" + id +
+                "funcionarioId=" + funcionarioId +
                 ", RE='" + RE + '\'' +
                 ", nome='" + nome + '\'' +
                 ", funcao='" + funcao + '\'' +

@@ -31,7 +31,8 @@ public class UploadFiles {
                 String nome = getCellValueAsString(row.getCell(1));
                 String funcao = getCellValueAsString(row.getCell(2));
 
-                Funcionario f = new Funcionario(re, nome, funcao);
+                Funcao funcaoObj = new Funcao(funcao);
+                Funcionario f = new Funcionario(re, nome, funcaoObj);
                 funcionariosses.add(f);
             }
 

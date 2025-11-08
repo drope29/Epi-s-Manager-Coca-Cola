@@ -4,60 +4,149 @@ import com.epis.dtos.EpiCreateDto;
 import com.epis.dtos.EpiUpdateDto;
 import com.epis.entities.Epi;
 import com.epis.mapper.EpiMapper;
-import com.epis.repositories.EpiRepository;
+import com.epis.services.exception.ErroBuscarDynamoException;
+import com.epis.services.exception.ErroDeletarDynamoException;
+import com.epis.services.exception.ErroInserirDynamoException;
 import com.epis.services.exception.EpiNaoEncontradoException;
+import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class EpiService {
 
     @Autowired
-    private EpiRepository repository;
-
-    @Autowired
     private EpiMapper mapper;
 
-    public void uploadEpi(List<Epi> epi){
-        repository.saveAll(epi);
+    @Autowired
+    private DynamoDbTemplate dynamoDbTemplate;
+
+    public void uploadEpis(List<Epi> epis){
+
+        try {
+
+            epis.forEach(dynamoDbTemplate::save);
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro ao inserir os epis. Erro: " + e.getMessage());
+
+        }
+
     }
 
     public List<Epi> getAll() {
-        return repository.findAll();
+
+        try {
+
+            return dynamoDbTemplate
+                    .scanAll(Epi.class)
+                    .items()
+                    .stream()
+                    .toList();
+
+        } catch (Exception e) {
+
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar os epis. Erro: " + e.getMessage());
+
+        }
+
     }
 
-    public Epi getById(Long id) {
+    public Epi getById(UUID id) {
 
-        return repository.findById(id)
-                .orElseThrow(() -> new EpiNaoEncontradoException("Epi não encontrado com id " + id));
+        try {
+
+            var key = Key.builder().partitionValue(String.valueOf(id)).build();
+
+            Epi epi = dynamoDbTemplate.load(key, Epi.class);
+
+            if (epi == null)
+                throw new EpiNaoEncontradoException("Epi não encontrada com o id: " + id);
+
+            return epi;
+
+        } catch (EpiNaoEncontradoException ex) {
+
+            throw ex;
+
+        } catch (Exception e) {
+
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar os epis. Erro: " + e.getMessage());
+
+        }
 
     }
 
     public Epi insert(EpiCreateDto dto) {
 
-        Epi epi = mapper.toEpi(dto);
+        try {
 
-        return repository.save(epi);
+            Epi epi = mapper.toEpi(dto);
+
+            dynamoDbTemplate.save(epi);
+
+            return epi;
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro ao atualizar o epi. Erro: " + e.getMessage());
+
+        }
 
     }
 
-    public Epi update(Long id, EpiUpdateDto dto) {
+    public Epi update(UUID id, EpiUpdateDto dto) {
 
-        Epi entity = getById(id);
+        try {
 
-        mapper.toEpi(dto, entity);
+            var entity = getById(id);
 
-        return repository.save(entity);
+            mapper.toEpi(dto, entity);
+
+
+            return dynamoDbTemplate.update(entity);
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro ao inserir o epi. Erro: " + e.getMessage());
+        }
 
     }
 
-    public void delete(Long id) {
+    public void delete(UUID id) {
 
-        Epi epi = getById(id);
+        try {
 
-        repository.delete(epi);
+            Epi epi = getById(id);
+
+            dynamoDbTemplate.delete(epi);
+
+        } catch (Exception e) {
+
+            throw new ErroDeletarDynamoException("Houve um erro ao buscar os epis. Erro: " + e.getMessage());
+
+        }
+
+    }
+
+    public void clearEpiDatabase(){
+
+        try {
+
+            List<Epi> epis = getAll();
+
+            epis.forEach(dynamoDbTemplate::delete);
+
+        } catch (Exception e) {
+
+            throw new ErroDeletarDynamoException("Houve um erro ao buscar os epis. Erro: " + e.getMessage());
+
+        }
 
     }
 

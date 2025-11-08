@@ -1,16 +1,18 @@
 package com.epis.dtos;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
+import java.util.UUID;
 
 public class MovimentacaoCreateDto {
 
-    @NotBlank(message = "O campo funcionario é obrigatorio")
-    private Long funcionario;
+    @NotNull(message = "O campo funcionario é obrigatorio")
+    private UUID funcionario;
 
-    @NotBlank(message = "O campo epi é obrigatorio")
-    private Long epi;
+    @NotNull(message = "O campo epi é obrigatorio")
+    private UUID epi;
 
     @NotBlank(message = "O campo data entrega é obrigatorio")
     private Date dataEntrega;
@@ -23,7 +25,7 @@ public class MovimentacaoCreateDto {
 
     public MovimentacaoCreateDto(){}
 
-    public MovimentacaoCreateDto(Long funcionario, Long epi, Date dataEntrega, Date dataProximaEntrega, String status) {
+    public MovimentacaoCreateDto(UUID funcionario, UUID epi, Date dataEntrega, Date dataProximaEntrega, String status) {
         this.funcionario = funcionario;
         this.epi = epi;
         this.dataEntrega = dataEntrega;
@@ -31,19 +33,19 @@ public class MovimentacaoCreateDto {
         this.status = status;
     }
 
-    public Long getFuncionario() {
+    public UUID getFuncionario() {
         return funcionario;
     }
 
-    public void setFuncionario(Long funcionario) {
+    public void setFuncionario(UUID funcionario) {
         this.funcionario = funcionario;
     }
 
-    public Long getEpi() {
+    public UUID getEpi() {
         return epi;
     }
 
-    public void setEpi(Long epi) {
+    public void setEpi(UUID epi) {
         this.epi = epi;
     }
 

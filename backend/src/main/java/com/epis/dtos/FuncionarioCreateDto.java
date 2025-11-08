@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
+import java.util.UUID;
 
 public class FuncionarioCreateDto {
 
@@ -14,7 +15,7 @@ public class FuncionarioCreateDto {
     private String nome;
 
     @NotBlank(message = "O campo funcao é obrigatorio")
-    private String funcao;
+    private UUID funcao;
 
     @NotBlank(message = "O campo unidade é obrigatorio")
     private String unidade;
@@ -33,7 +34,7 @@ public class FuncionarioCreateDto {
 
     public FuncionarioCreateDto(){}
 
-    public FuncionarioCreateDto(String RE, String nome, String funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
+    public FuncionarioCreateDto(String RE, String nome, UUID funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
@@ -60,11 +61,11 @@ public class FuncionarioCreateDto {
         this.nome = nome;
     }
 
-    public String getFuncao() {
+    public UUID getFuncao() {
         return funcao;
     }
 
-    public void setFuncao(String funcao) {
+    public void setFuncao(UUID funcao) {
         this.funcao = funcao;
     }
 

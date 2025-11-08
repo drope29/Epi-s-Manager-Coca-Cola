@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/funcionarios")
@@ -45,7 +46,7 @@ public class FuncionarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getFuncionarioById(@PathVariable Long id) {
+    public ResponseEntity<?> getFuncionarioById(@PathVariable UUID id) {
 
         Funcionario funcionario = service.getById(id);
 
@@ -63,7 +64,7 @@ public class FuncionarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Funcionario> updateFuncionario(@PathVariable Long id, @RequestBody FuncionarioUpdateDto dto) {
+    public ResponseEntity<Funcionario> updateFuncionario(@PathVariable UUID id, @RequestBody FuncionarioUpdateDto dto) {
 
         Funcionario funcionarioUpd = service.update(id, dto);
 
@@ -72,9 +73,18 @@ public class FuncionarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFuncionario(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFuncionario(@PathVariable UUID id) {
 
         service.delete(id);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<Void> deleteFuncionario() {
+
+        service.clearFuncionarioDatabase();
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 

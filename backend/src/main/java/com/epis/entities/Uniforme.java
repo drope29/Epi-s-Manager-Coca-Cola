@@ -1,44 +1,40 @@
 package com.epis.entities;
 
-import jakarta.persistence.*;
+import com.epis.utils.ListAttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
-@Entity
-@Table(name = "tb_uniforme")
+import java.util.List;
+import java.util.UUID;
+
+@DynamoDbBean
 public class Uniforme {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "funcao_id")
+    private UUID uniformeId;
     private Funcao funcao;
-
-    @ManyToOne
-    @JoinColumn(name = "epi_id")
-    private Epi epi;
-
-    @Column
-    private Integer quantidade;
+    private List<UniformeEpi> uniformeEpis;
 
     public Uniforme (){}
 
-    public Uniforme(Long id, Funcao funcao, Epi epi, Integer quantidade) {
-        this.id = id;
+    public Uniforme(UUID uniformeId, Funcao funcao, List<UniformeEpi> uniformeEpis) {
+        this.uniformeId = uniformeId;
         this.funcao = funcao;
-        this.epi = epi;
-        this.quantidade = quantidade;
+        this.uniformeEpis = uniformeEpis;
     }
 
-    public Long getId() {
-        return id;
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("uniformeId")
+    public UUID getUniformeId() {
+        return uniformeId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUniformeId(UUID uniformeId) {
+        this.uniformeId = uniformeId;
     }
 
-    public Funcao getFuncao() {
+   public Funcao getFuncao() {
         return funcao;
     }
 
@@ -46,29 +42,21 @@ public class Uniforme {
         this.funcao = funcao;
     }
 
-    public Epi getEpi() {
-        return epi;
+    @DynamoDbConvertedBy(ListAttributeConverter.class)
+    public List<UniformeEpi> getUniformeEpis() {
+        return uniformeEpis;
     }
 
-    public void setEpi(Epi epi) {
-        this.epi = epi;
-    }
-
-    public Integer getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
+    public void setUniformeEpis(List<UniformeEpi> uniformeEpis) {
+        this.uniformeEpis = uniformeEpis;
     }
 
     @Override
     public String toString() {
         return "Uniforme{" +
-                "id=" + id +
+                "uniformeId=" + uniformeId +
                 ", funcao=" + funcao +
-                ", epi=" + epi +
-                ", quantidade=" + quantidade +
+                ", uniformeEpis=" + uniformeEpis +
                 '}';
     }
 }

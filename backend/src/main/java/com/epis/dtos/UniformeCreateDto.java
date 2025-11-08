@@ -1,47 +1,46 @@
 package com.epis.dtos;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
+import java.util.UUID;
 
 public class UniformeCreateDto {
 
-    @NotBlank(message = "O campo função é obrigatório")
-    private Long funcao;
+    @NotNull(message = "O campo função é obrigatório")
+    private UUID funcao;
 
-    @NotBlank(message = "O campo epi é obrigatório")
-    private Long epi;
-
-    @NotBlank(message = "O campo quantidade é obrigatório")
-    private Integer quantidade;
+    @NotNull(message = "O campo função é obrigatório")
+    private List<UniformeEpiDto> uniformeEpis;
 
     public UniformeCreateDto() {}
 
-    public UniformeCreateDto(Long funcao, Long epi, Integer quantidade) {
+    public UniformeCreateDto(UUID funcao, List<UniformeEpiDto> uniformeEpis) {
         this.funcao = funcao;
-        this.epi = epi;
-        this.quantidade = quantidade;
+        this.uniformeEpis = uniformeEpis;
     }
 
-    public Long getFuncao() {
+    public UUID getFuncao() {
         return funcao;
     }
 
-    public void setFuncao(Long funcao) {
+    public void setFuncao(UUID funcao) {
         this.funcao = funcao;
     }
 
-    public Long getEpi() {
-        return epi;
+    public List<UniformeEpiDto> getUniformeEpis() {
+        return uniformeEpis;
     }
 
-    public void setEpi(Long epi) {
-        this.epi = epi;
+    public void setUniformeEpis(List<UniformeEpiDto> uniformeEpis) {
+        this.uniformeEpis = uniformeEpis;
     }
 
-    public Integer getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
+    @Override
+    public String toString() {
+        return "UniformeCreateDto{" +
+                "funcao=" + funcao +
+                ", uniformeEpis=" + uniformeEpis +
+                '}';
     }
 }
