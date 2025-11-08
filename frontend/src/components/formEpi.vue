@@ -96,7 +96,7 @@ async function registrarEPI() {
 async function atualizarEPI() {
   try {
     const payload = createPayload();
-    const response = await axios.put(`${backUrl}/api/epis/${props.epi.id}`, payload);
+    const response = await axios.put(`${backUrl}/api/epis/${props.epi.epiId}`, payload);
 
     if (response.status >= 200 && response.status < 300) {
       Swal.fire('Atualizado!', 'O EPI foi atualizado com sucesso.', 'success');

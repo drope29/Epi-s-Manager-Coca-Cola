@@ -150,7 +150,7 @@ async function registrarColaborador() {
 // === ATUALIZAR (PUT) ATUALIZADO (COM MELHORIA NO CATCH) ===
 async function atualizarColaborador() {
   try {
-    const response = await axios.put(`${backUrl}/api/funcionarios/${props.colaborador.id}`, {
+    const response = await axios.put(`${backUrl}/api/funcionarios/${props.colaborador.funcionarioId}`, {
       nome: `${form.nome} ${form.sobrenome}`,
       funcao: form.cargo,
       re: form.re,
