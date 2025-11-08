@@ -5,8 +5,10 @@ import com.epis.enums.TurnoEnum;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.UUID;
+import java.util.Date;
 
 @DynamoDbBean
 public class Funcionario {
@@ -19,6 +21,9 @@ public class Funcionario {
     private String unidade;
     private TurnoEnum turno;
     private GeneroEnum genero;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    private Date dataAdmissao;
+    private String setor;
 
     public Funcionario(){}
 
@@ -37,6 +42,8 @@ public class Funcionario {
         this.unidade = unidade;
         this.turno = turno;
         this.genero = genero;
+        this.dataAdmissao = dataAdmissao;
+        this.setor = setor;
     }
 
     @DynamoDbPartitionKey
@@ -96,6 +103,14 @@ public class Funcionario {
     public void setGenero(GeneroEnum genero) {
         this.genero = genero;
     }
+
+    public Date getDataAdmissao() { return dataAdmissao; }
+
+    public void setDataAdmissao(Date dataAdmissao) { this.dataAdmissao = dataAdmissao; }
+
+    public String getSetor() { return setor; }
+
+    public void setSetor(String setor) { this.setor = setor; }
 
     @Override
     public String toString() {
