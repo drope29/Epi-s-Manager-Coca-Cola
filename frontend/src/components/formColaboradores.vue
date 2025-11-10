@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed, onMounted } from 'vue';
+import { reactive, computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
@@ -40,10 +40,20 @@ const errors = reactive({
   genero: null,
 });
 
+const funcoes = ref([]);
+
 const isEditMode = computed(() => !!props.colaborador);
 
 // === ONMOUNTED ATUALIZADO ===
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const response = await axios.get(`${backUrl}/api/funcoes/`);
+    funcoes.value = response.data;
+  } catch (error) {
+    console.error("Erro ao buscar funções:", error);
+    Swal.fire('Erro!', 'Não foi possível carregar a lista de funções.', 'error');
+  }
+
   if (isEditMode.value) {
     const nomeCompleto = props.colaborador.nome.split(' ');
     form.nome = nomeCompleto.shift();
@@ -51,7 +61,7 @@ onMounted(() => {
 
     form.unidade = props.colaborador.unidade;
     form.re = props.colaborador.re;
-    form.cargo = props.colaborador.funcao;
+    form.cargo = props.colaborador.funcao.funcaoId;
     form.turno = props.colaborador.turno;
     form.genero = props.colaborador.genero;
 
@@ -100,9 +110,10 @@ function validateForm() {
 // === REGISTRAR (POST) ATUALIZADO (COM MELHORIA NO CATCH) ===
 async function registrarColaborador() {
   try {
+    const selectedFuncao = funcoes.value.find(f => f.funcaoId === form.cargo);
     const response = await axios.post(`${backUrl}/api/funcionarios/`, {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: form.cargo,
+      funcao: selectedFuncao,
       re: form.re,
       unidade: form.unidade,
       turno: form.turno,
@@ -150,9 +161,10 @@ async function registrarColaborador() {
 // === ATUALIZAR (PUT) ATUALIZADO (COM MELHORIA NO CATCH) ===
 async function atualizarColaborador() {
   try {
+    const selectedFuncao = funcoes.value.find(f => f.funcaoId === form.cargo);
     const response = await axios.put(`${backUrl}/api/funcionarios/${props.colaborador.funcionarioId}`, {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: form.cargo,
+      funcao: selectedFuncao,
       re: form.re,
       unidade: form.unidade,
       turno: form.turno,
@@ -266,8 +278,13 @@ async function handleSubmit() {
             </div>
 
             <div>
-              <input type="text" placeholder="Cargo" v-model="form.cargo"
-                class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100" />
+              <select v-model="form.cargo"
+                class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100">
+                <option disabled value="">Selecione um cargo</option>
+                <option v-for="funcao in funcoes" :key="funcao.funcaoId" :value="funcao.funcaoId">
+                  {{ funcao.nome }}
+                </option>
+              </select>
               <p v-if="errors.cargo" class="text-red-500 text-sm mt-1">{{ errors.cargo }}</p>
             </div>
 
