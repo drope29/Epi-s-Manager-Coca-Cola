@@ -2,8 +2,10 @@ package com.epis.entities;
 
 import com.epis.enums.GeneroEnum;
 import com.epis.enums.TurnoEnum;
+import com.epis.utils.DateAttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -21,7 +23,6 @@ public class Funcionario {
     private String unidade;
     private TurnoEnum turno;
     private GeneroEnum genero;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private Date dataAdmissao;
     private String setor;
 
@@ -34,7 +35,7 @@ public class Funcionario {
         this.funcao = funcao;
     }
 
-    public Funcionario(String RE, String nome, Funcao funcao, String unidade, TurnoEnum turno, GeneroEnum genero) {
+    public Funcionario(UUID funcionarioId, String RE, String nome, Funcao funcao, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
         this.funcionarioId = UUID.randomUUID();
         this.RE = RE;
         this.nome = nome;
@@ -104,6 +105,8 @@ public class Funcionario {
         this.genero = genero;
     }
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @DynamoDbConvertedBy(DateAttributeConverter.class)
     public Date getDataAdmissao() { return dataAdmissao; }
 
     public void setDataAdmissao(Date dataAdmissao) { this.dataAdmissao = dataAdmissao; }
