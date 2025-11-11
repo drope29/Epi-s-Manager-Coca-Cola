@@ -2,13 +2,11 @@ package com.epis.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 @Component
-@Profile("!test")
 public class DynamoDbInitializer implements CommandLineRunner {
 
     private final DynamoDbClient dynamoDbClient;
