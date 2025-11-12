@@ -24,7 +24,7 @@ const dtRef = ref(null); // Referência para a instância do DataTable
 const columns = [
   { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
   { data: 'nome', title: 'Nome', className: 'text-center' },
-  { data: 'funcao', title: 'Cargo', className: 'text-center' },
+  { data: 'funcao.nome', title: 'Cargo', className: 'text-center' },
 
   {
     data: 'setor', // data: 'setor' é seguro se o render lida com undefined
@@ -33,9 +33,6 @@ const columns = [
     render: (_d, _t, row) => row.setor || "Não Informado"
   },
 
-  // #############################################################
-  // CORREÇÃO AQUI (Lógica de Data Mais Robusta)
-  // #############################################################
   {
     data: null, // <-- Não peça 'data_admissao' diretamente
     title: 'Admissão',
@@ -312,7 +309,6 @@ const handleDelete = (colaborador) => {
 
 :deep(.dataTables_filter) {
   display: none;
-  /* Esconde a busca padrão do DataTables */
 }
 
 :deep(.datatable-header),

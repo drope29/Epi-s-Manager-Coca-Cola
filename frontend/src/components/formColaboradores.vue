@@ -61,33 +61,27 @@ onMounted(async () => {
 
     form.unidade = props.colaborador.unidade;
     form.re = props.colaborador.re;
-    form.cargo = props.colaborador.funcao.funcaoId;
+    form.cargo = props.colaborador.funcao.funcaoUuid;
+
     form.turno = props.colaborador.turno;
     form.genero = props.colaborador.genero;
+    form.setor = props.colaborador.setor;
 
-    // --- Campos Adicionados ---
-    form.setor = props.colaborador.setor; // <-- ADICIONADO
-
-    // Lógica para formatar a data de admissão para o input type="date"
     if (props.colaborador.data_admissao) {
       let dataFormatada = props.colaborador.data_admissao;
       try {
-        // Tenta formatar a partir de um ISO string (ex: "2023-10-20T00:00:00Z")
         dataFormatada = new Date(props.colaborador.data_admissao).toISOString().split('T')[0];
       } catch (e) {
-        // Fallback para caso a data venha como DD/MM/YYYY
         if (props.colaborador.data_admissao.includes('/')) {
-          const partes = props.colaborador.data_admissao.split('/'); // [DD, MM, YYYY]
+          const partes = props.colaborador.data_admissao.split('/');
           dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
         }
-        // Se já estiver como YYYY-MM-DD, vai funcionar
       }
-      form.data_admissao = dataFormatada; // <-- ADICIONADO
+      form.data_admissao = dataFormatada;
     }
   }
 });
 
-// === VALIDAÇÃO ATUALIZADA ===
 function validateForm() {
   Object.keys(errors).forEach(key => errors[key] = null);
   let formValido = true;
@@ -96,30 +90,33 @@ function validateForm() {
   if (!form.sobrenome.trim()) { errors.sobrenome = "Campo Obrigatório"; formValido = false; }
   if (!form.unidade) { errors.unidade = "Campo Obrigatório"; formValido = false; }
   if (!form.re) { errors.re = "Campo Obrigatório"; formValido = false; }
-  if (!form.cargo.trim()) { errors.cargo = "Campo Obrigatório"; formValido = false; }
+
+  // --- CORREÇÃO APLICADA AQUI ---
+  // Checa especificamente se o valor ainda é a string vazia inicial ('')
+  // Isso permite que um ID de cargo com valor 0 seja considerado válido.
+  if (form.cargo === '') { errors.cargo = "Campo Obrigatório"; formValido = false; }
+
   if (!form.turno) { errors.turno = "Campo Obrigatório"; formValido = false; }
   if (!form.genero) { errors.genero = "Campo Obrigatório"; formValido = false; }
 
   // --- Validações Adicionadas ---
-  if (!form.setor.trim()) { errors.setor = "Campo Obrigatório"; formValido = false; } // <-- ADICIONADO
-  if (!form.data_admissao) { errors.data_admissao = "Campo Obrigatório"; formValido = false; } // <-- ADICIONADO
+  if (!form.setor.trim()) { errors.setor = "Campo Obrigatório"; formValido = false; }
+  if (!form.data_admissao) { errors.data_admissao = "Campo Obrigatório"; formValido = false; }
 
   return formValido;
 }
 
-// === REGISTRAR (POST) ATUALIZADO (COM MELHORIA NO CATCH) ===
 async function registrarColaborador() {
   try {
-    const selectedFuncao = funcoes.value.find(f => f.funcaoId === form.cargo);
     const response = await axios.post(`${backUrl}/api/funcionarios/`, {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: selectedFuncao,
-      re: form.re,
+      funcao: "5b32fd45-3a99-4e13-8685-6a44f31501df",
+      re: Number(form.re),
       unidade: form.unidade,
       turno: form.turno,
       genero: form.genero,
-      setor: form.setor,
-      dataAdmissao: form.data_admissao // <-- MUDANÇA AQUI (de data_admissao para dataAdmissao)
+      dataAdmissao: form.data_admissao,
+      setor: form.setor
     });
 
     if (response.status === 201) {
@@ -129,22 +126,22 @@ async function registrarColaborador() {
   } catch (error) {
     console.error("Erro ao registrar colaborador:", error);
 
-    // --- LÓGICA DE ERRO MELHORADA ---
     let detailedError = 'Não foi possível registrar o colaborador.';
 
     if (error.response?.status === 400) {
-      detailedError = "Erro de validação (400): Verifique os dados. O 'RE' pode já existir.";
-      // Tenta extrair erros de campos específicos se o backend os enviar
-      // Ex: se o backend retorna { re: ["Este RE já existe"] } ou { detail: "..." }
       if (error.response.data) {
         if (typeof error.response.data === 'object' && error.response.data !== null) {
           const fieldErrors = Object.values(error.response.data).flat().join(' ');
           if (fieldErrors) {
             detailedError = fieldErrors;
+          } else {
+            detailedError = "Erro de validação (400): Verifique os dados. O 'RE' pode já existir.";
           }
         } else if (typeof error.response.data === 'string') {
           detailedError = error.response.data;
         }
+      } else {
+        detailedError = "Erro de validação (400): Verifique os dados. O 'RE' pode já existir.";
       }
     } else if (error.message) {
       detailedError = error.message;
@@ -158,22 +155,21 @@ async function registrarColaborador() {
   }
 }
 
-// === ATUALIZAR (PUT) ATUALIZADO (COM MELHORIA NO CATCH) ===
 async function atualizarColaborador() {
   try {
-    const selectedFuncao = funcoes.value.find(f => f.funcaoId === form.cargo);
+    // A linha 'const selectedFuncao = ...' não é mais necessária aqui.
     const response = await axios.put(`${backUrl}/api/funcionarios/${props.colaborador.funcionarioId}`, {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: selectedFuncao,
-      re: form.re,
+      funcao: form.funcaoId,
+      re: Number(form.re),
       unidade: form.unidade,
       turno: form.turno,
       genero: form.genero,
-      setor: form.setor,
-      dataAdmissao: form.data_admissao // <-- MUDANÇA AQUI (de data_admissao para dataAdmissao)
+      dataAdmissao: form.data_admissao,
+      setor: form.setor
     });
 
-    if (response.status === 204) {
+    if (response.status === 204 || response.status === 200) { // Adicionado status 200
       Swal.fire('Atualizado!', 'O colaborador foi atualizado com sucesso.', 'success');
       emit('colaboradorAtualizado');
     } else {
@@ -183,20 +179,23 @@ async function atualizarColaborador() {
   } catch (error) {
     console.error("Erro ao atualizar colaborador:", error);
 
-    // --- LÓGICA DE ERRO MELHORADA ---
     let detailedError = 'Não foi possível atualizar o colaborador.';
 
     if (error.response?.status === 400) {
-      detailedError = "Erro de validação (400): Verifique os dados.";
+      // Tenta pegar a mensagem de erro específica do backend
       if (error.response.data) {
         if (typeof error.response.data === 'object' && error.response.data !== null) {
           const fieldErrors = Object.values(error.response.data).flat().join(' ');
           if (fieldErrors) {
             detailedError = fieldErrors;
+          } else {
+            detailedError = "Erro de validação (400): Verifique os dados.";
           }
         } else if (typeof error.response.data === 'string') {
           detailedError = error.response.data;
         }
+      } else {
+        detailedError = "Erro de validação (400): Verifique os dados.";
       }
     } else if (error.message) {
       detailedError = error.message;
@@ -267,7 +266,7 @@ async function handleSubmit() {
                 <option>ANTONIO CARLOS</option>
                 <option>BLUMENAU</option>
               </select>
-              <p vV-if="errors.unidade" class="text-red-500 text-sm mt-1">{{ errors.unidade }}</p>
+              <p v-if="errors.unidade" class="text-red-500 text-sm mt-1">{{ errors.unidade }}</p>
             </div>
 
             <div>
@@ -281,9 +280,11 @@ async function handleSubmit() {
               <select v-model="form.cargo"
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100">
                 <option disabled value="">Selecione um cargo</option>
-                <option v-for="funcao in funcoes" :key="funcao.funcaoId" :value="funcao.funcaoId">
+
+                <option v-for="funcao in funcoes" :key="funcao.funcaoId" :value="funcao.funcaoUuid">
                   {{ funcao.nome }}
                 </option>
+
               </select>
               <p v-if="errors.cargo" class="text-red-500 text-sm mt-1">{{ errors.cargo }}</p>
             </div>
