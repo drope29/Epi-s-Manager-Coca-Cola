@@ -24,7 +24,7 @@ const dtRef = ref(null); // Referência para a instância do DataTable
 const columns = [
   { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
   { data: 'nome', title: 'Nome', className: 'text-center' },
-  { data: 'funcao', title: 'Cargo', className: 'text-center' },
+  { data: 'funcao.nome', title: 'Cargo', className: 'text-center' },
 
   {
     data: 'setor', // data: 'setor' é seguro se o render lida com undefined
@@ -33,9 +33,6 @@ const columns = [
     render: (_d, _t, row) => row.setor || "Não Informado"
   },
 
-  // #############################################################
-  // CORREÇÃO AQUI (Lógica de Data Mais Robusta)
-  // #############################################################
   {
     data: null, // <-- Não peça 'data_admissao' diretamente
     title: 'Admissão',
@@ -99,8 +96,8 @@ const columns = [
     searchable: false,
     className: 'text-center',
     render: (_d, _t, row) => {
-      const editBtn = `<button data-action="edit" data-id="${row.id}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Editar">Editar</button>`;
-      const deleteBtn = `<button data-action="delete" data-id="${row.id}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Excluir">Excluir</button>`;
+      const editBtn = `<button data-action="edit" data-id="${row.funcionarioId}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Editar">Editar</button>`;
+      const deleteBtn = `<button data-action="delete" data-id="${row.funcionarioId}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Excluir">Excluir</button>`;
       return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
     }
   }
@@ -194,7 +191,7 @@ const handleTableClick = (event) => {
     } catch (e) {
       console.warn("Não foi possível obter dados da linha via DT API, tentando fallback...", e)
       // Fallback para o array local se a API do DT falhar
-      colaborador = colaboradores.value.find(c => c.id.toString() === id);
+      colaborador = colaboradores.value.find(c => c.funcionarioId.toString() === id);
     }
 
 
@@ -243,7 +240,7 @@ const handleDelete = (colaborador) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`${backUrl}/api/funcionarios/${colaborador.id}`, {
+        const response = await fetch(`${backUrl}/api/funcionarios/${colaborador.funcionarioId}`, {
           method: 'DELETE',
         });
 
@@ -252,10 +249,10 @@ const handleDelete = (colaborador) => {
         }
 
         // Remove do array local E da tabela DataTables
-        colaboradores.value = colaboradores.value.filter(c => c.id !== colaborador.id);
+        colaboradores.value = colaboradores.value.filter(c => c.funcionarioId !== colaborador.funcionarioId);
         if (dtRef.value && dtRef.value.dt) {
           // Encontra a linha na tabela DT e remove
-          dtRef.value.dt.rows((idx, data, node) => data.id === colaborador.id).remove().draw();
+          dtRef.value.dt.rows((idx, data, node) => data.funcionarioId === colaborador.funcionarioId).remove().draw();
         }
 
 
@@ -312,7 +309,6 @@ const handleDelete = (colaborador) => {
 
 :deep(.dataTables_filter) {
   display: none;
-  /* Esconde a busca padrão do DataTables */
 }
 
 :deep(.datatable-header),

@@ -56,7 +56,7 @@ const columns = [
       const editBtn = `
         <button
           data-action="edit"
-          data-id="${row.id}"
+          data-id="${row.epiId}"
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
           title="Editar">
           Editar
@@ -65,7 +65,7 @@ const columns = [
       const deleteBtn = `
         <button
           data-action="delete"
-          data-id="${row.id}"
+          data-id="${row.epiId}"
           class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
           title="Excluir">
           Excluir
@@ -125,7 +125,7 @@ const handleTableClick = (event) => {
 
   const action = target.dataset.action;
   const id = target.dataset.id;
-  const epi = epis.value.find(e => e.id.toString() === id);
+  const epi = epis.value.find(e => e.epiId.toString() === id);
 
   if (!epi) return;
 
@@ -155,7 +155,7 @@ const handleDelete = (epi) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`${backUrl}/api/epis/${epi.id}`, {
+        const response = await fetch(`${backUrl}/api/epis/${epi.epiId}`, {
           method: 'DELETE',
         });
 
@@ -163,7 +163,7 @@ const handleDelete = (epi) => {
           throw new Error('Falha ao excluir EPI');
         }
 
-        epis.value = epis.value.filter(e => e.id !== epi.id);
+        epis.value = epis.value.filter(e => e.epiId !== epi.epiId);
 
         Swal.fire(
           'Excluído!',
