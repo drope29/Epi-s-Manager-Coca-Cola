@@ -61,7 +61,7 @@ onMounted(async () => {
 
     form.unidade = props.colaborador.unidade;
     form.re = props.colaborador.re;
-    form.cargo = props.colaborador.funcao.funcaoUuid;
+    form.cargo = props.colaborador.funcao.id;
 
     form.turno = props.colaborador.turno;
     form.genero = props.colaborador.genero;
@@ -108,9 +108,11 @@ function validateForm() {
 
 async function registrarColaborador() {
   try {
+    console.log("🔍 Cargo selecionado:", form.cargo);
+
     const response = await axios.post(`${backUrl}/api/funcionarios/`, {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: "5b32fd45-3a99-4e13-8685-6a44f31501df",
+      funcao: form.cargo,         
       re: Number(form.re),
       unidade: form.unidade,
       turno: form.turno,
@@ -134,33 +136,24 @@ async function registrarColaborador() {
           const fieldErrors = Object.values(error.response.data).flat().join(' ');
           if (fieldErrors) {
             detailedError = fieldErrors;
-          } else {
-            detailedError = "Erro de validação (400): Verifique os dados. O 'RE' pode já existir.";
           }
         } else if (typeof error.response.data === 'string') {
           detailedError = error.response.data;
         }
-      } else {
-        detailedError = "Erro de validação (400): Verifique os dados. O 'RE' pode já existir.";
       }
     } else if (error.message) {
       detailedError = error.message;
     }
 
-    Swal.fire(
-      'Erro!',
-      detailedError,
-      'error'
-    );
+    Swal.fire('Erro!', detailedError, 'error');
   }
 }
 
 async function atualizarColaborador() {
   try {
-    // A linha 'const selectedFuncao = ...' não é mais necessária aqui.
     const response = await axios.put(`${backUrl}/api/funcionarios/${props.colaborador.funcionarioId}`, {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: form.funcaoId,
+      funcao: form.cargo,           
       re: Number(form.re),
       unidade: form.unidade,
       turno: form.turno,
@@ -169,11 +162,11 @@ async function atualizarColaborador() {
       setor: form.setor
     });
 
-    if (response.status === 204 || response.status === 200) { // Adicionado status 200
+    if (response.status === 204 || response.status === 200) {
       Swal.fire('Atualizado!', 'O colaborador foi atualizado com sucesso.', 'success');
       emit('colaboradorAtualizado');
     } else {
-      Swal.fire('Ops!', 'Houve um problema ao atualizar o colaborador, tente novamente mais tarde.', 'warning');
+      Swal.fire('Ops!', 'Houve um problema ao atualizar o colaborador.', 'warning');
       emit('colaboradorAtualizado');
     }
   } catch (error) {
@@ -182,32 +175,24 @@ async function atualizarColaborador() {
     let detailedError = 'Não foi possível atualizar o colaborador.';
 
     if (error.response?.status === 400) {
-      // Tenta pegar a mensagem de erro específica do backend
       if (error.response.data) {
         if (typeof error.response.data === 'object' && error.response.data !== null) {
           const fieldErrors = Object.values(error.response.data).flat().join(' ');
           if (fieldErrors) {
             detailedError = fieldErrors;
-          } else {
-            detailedError = "Erro de validação (400): Verifique os dados.";
           }
         } else if (typeof error.response.data === 'string') {
           detailedError = error.response.data;
         }
-      } else {
-        detailedError = "Erro de validação (400): Verifique os dados.";
       }
     } else if (error.message) {
       detailedError = error.message;
     }
 
-    Swal.fire(
-      'Erro!',
-      detailedError,
-      'error'
-    );
+    Swal.fire('Erro!', detailedError, 'error');
   }
 }
+
 
 async function handleSubmit() {
   if (validateForm()) {
@@ -281,7 +266,7 @@ async function handleSubmit() {
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100">
                 <option disabled value="">Selecione um cargo</option>
 
-                <option v-for="funcao in funcoes" :key="funcao.funcaoId" :value="funcao.funcaoUuid">
+                <option v-for="funcao in funcoes" :key="funcao.funcaoId" :value="funcao.id">
                   {{ funcao.nome }}
                 </option>
 
