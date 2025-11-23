@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 public class AuthFilterToken extends OncePerRequestFilter {
 
@@ -37,21 +39,49 @@ public class AuthFilterToken extends OncePerRequestFilter {
         }
 
         try {
+
             String jwt = getToken(request);
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                
                 String username = jwtUtils.getUsernameToken(jwt);
-                UserDetails userDetails = userDetailService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                String role = jwtUtils.getRoleFromToken(jwt);
+
+                UsernamePasswordAuthenticationToken auth = getUsernamePasswordAuthenticationToken(role, username);
+
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // 5. Setar no contexto
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
+
         } catch (Exception e) {
             logger.error("Erro ao processar token", e);
         }
 
         filterChain.doFilter(request, response);
     }
+
+    private static UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(String role, String username) {
+        SimpleGrantedAuthority authority =
+                new SimpleGrantedAuthority("ROLE_" + role);
+
+        UserDetails userDetails =
+                new org.springframework.security.core.userdetails.User(
+                        username,
+                        "",
+                        List.of(authority)
+                );
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+        return auth;
+    }
+
 
     private String getToken(HttpServletRequest request) {
 

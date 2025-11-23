@@ -18,11 +18,11 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping(value = "/login")
-    public ResponseEntity<ResponseAuthenticatedDto> login(@RequestBody AuthenticationDto authDto) {
+    public ResponseEntity<?> login(@RequestBody AuthenticationDto authDto) {
 
         ResponseAuthenticatedDto authenticatedDto = new ResponseAuthenticatedDto(authService.login(authDto), authDto.getUsername(), authDto.getPassword());
 
-        return ResponseEntity.ok(authenticatedDto);
+        return ResponseEntity.ok().body(authenticatedDto);
 
     }
 

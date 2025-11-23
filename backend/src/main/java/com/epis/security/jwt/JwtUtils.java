@@ -2,10 +2,7 @@ package com.epis.security.jwt;
 
 import com.epis.services.UserDetailsImpl;
 import com.epis.services.exception.InvalidJwtTokenException;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,9 +25,11 @@ public class JwtUtils {
 
         Key key = getSigninKey();
         long now = System.currentTimeMillis();
+        String role = userDetail.getUsuario().getFuncionario().getFuncao().getNome().toUpperCase();
 
         return Jwts.builder()
                 .subject(userDetail.getUsername())
+                .claim("role", role)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + jwtExpirationMs))
                 .signWith(key)
@@ -77,4 +76,16 @@ public class JwtUtils {
 
     }
 
+    public String getRoleFromToken(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("role", String.class);
+    }
+
+    private Claims parseToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(getSigninKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
 }

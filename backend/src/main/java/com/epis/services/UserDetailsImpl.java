@@ -2,31 +2,24 @@ package com.epis.services;
 
 import com.epis.entities.Usuario;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public class UserDetailsImpl implements UserDetails {
 
-    private UUID id;
+    private Usuario usuario;
 
-    private String username;
-
-    private String password;
-
-    public UserDetailsImpl(UUID id, String username, String password) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
+    public UserDetailsImpl(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     public static UserDetailsImpl build(Usuario usuario) {
 
-        return new UserDetailsImpl(
-                usuario.getUsuarioId(),
-                usuario.getUsername(),
-                usuario.getPassword());
+        return new UserDetailsImpl(usuario);
 
     }
 
@@ -34,17 +27,23 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+
+        String role =  usuario.getFuncionario().getFuncao().getNome();
+
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
+        return List.of(authority);
+
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return usuario.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return username;
+        return usuario.getUsername();
     }
 
     @Override
@@ -67,20 +66,12 @@ public class UserDetailsImpl implements UserDetails {
         return true;
     }
 
-    public UUID getId() {
-        return id;
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
