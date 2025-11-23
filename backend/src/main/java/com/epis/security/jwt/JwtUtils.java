@@ -26,10 +26,12 @@ public class JwtUtils {
         Key key = getSigninKey();
         long now = System.currentTimeMillis();
         String role = userDetail.getUsuario().getFuncionario().getFuncao().getNome().toUpperCase();
+        Integer tokenVersion = userDetail.getUsuario().getTokenVersion();
 
         return Jwts.builder()
                 .subject(userDetail.getUsername())
                 .claim("role", role)
+                .claim("tokenVersion", tokenVersion)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + jwtExpirationMs))
                 .signWith(key)
@@ -88,4 +90,14 @@ public class JwtUtils {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public Integer getTokenVersionFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(getSigninKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("tokenVersion", Integer.class);
+    }
+
 }

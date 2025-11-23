@@ -128,6 +128,7 @@ public class UsuarioService {
             var entity = getById(id);
 
             entity.setPassword(dto.getPassword());
+            entity.setTokenVersion(dto.getTokenVersion());
 
             return dynamoDbTemplate.update(entity);
 

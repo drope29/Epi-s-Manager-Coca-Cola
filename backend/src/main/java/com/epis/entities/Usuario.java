@@ -14,6 +14,7 @@ public class Usuario {
     private String username;
     private String password;
     private Funcionario funcionario;
+    private Integer tokenVersion;
 
     public Usuario(){}
 
@@ -22,6 +23,7 @@ public class Usuario {
         this.username = username;
         this.password = password;
         this.funcionario = funcionario;
+        this.tokenVersion = 0;
     }
 
     @DynamoDbPartitionKey
@@ -59,6 +61,14 @@ public class Usuario {
 
     public void setFuncionario(Funcionario funcionario) {
         this.funcionario = funcionario;
+    }
+
+    public Integer getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public void setTokenVersion(Integer tokenVersion) {
+        this.tokenVersion = tokenVersion;
     }
 
     @Override

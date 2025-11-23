@@ -39,7 +39,7 @@ public class FuncaoController {
 
 
     @GetMapping("/getAllFuncoes")
-    @PreAuthorize("hasRole('ESTAGIARIO')")
+    @PreAuthorize("hasRole('ESTAGIARIO') or hasRole('CHEFE')")
     public ResponseEntity<List<Funcao>> getAllFuncoes() {
 
         List<Funcao> funcoes = service.getAll();

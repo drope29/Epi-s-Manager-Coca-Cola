@@ -1,6 +1,8 @@
 package com.epis.security.jwt;
 
+import com.epis.entities.Usuario;
 import com.epis.services.UserDetailServiceImpl;
+import com.epis.services.UsuarioService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +27,9 @@ public class AuthFilterToken extends OncePerRequestFilter {
     @Autowired
     private UserDetailServiceImpl userDetailService;
 
+    @Autowired
+    private UsuarioService usuarioService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -39,28 +44,45 @@ public class AuthFilterToken extends OncePerRequestFilter {
         }
 
         try {
-
             String jwt = getToken(request);
 
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                
-                String username = jwtUtils.getUsernameToken(jwt);
-                String role = jwtUtils.getRoleFromToken(jwt);
-
-                UsernamePasswordAuthenticationToken auth = getUsernamePasswordAuthenticationToken(role, username);
-
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // 5. Setar no contexto
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (jwt == null) {
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            if (!jwtUtils.validateJwtToken(jwt)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido ou expirado");
+                return;
+            }
+
+            String username = jwtUtils.getUsernameToken(jwt);
+            String role = jwtUtils.getRoleFromToken(jwt);
+            Integer jwtTokenVersion = jwtUtils.getTokenVersionFromToken(jwt);
+
+            Usuario usuario = usuarioService.getByLogin(username);
+
+            if (!jwtTokenVersion.equals(usuario.getTokenVersion())) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+                        "Token não é mais válido. Faça login novamente.");
+                return;
+            }
+
+            UsernamePasswordAuthenticationToken auth =
+                    getUsernamePasswordAuthenticationToken(role, username);
+
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception e) {
             logger.error("Erro ao processar token", e);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
+
 
     private static UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(String role, String username) {
         SimpleGrantedAuthority authority =
