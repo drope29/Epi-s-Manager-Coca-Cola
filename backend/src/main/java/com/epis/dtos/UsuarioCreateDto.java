@@ -1,13 +1,17 @@
 package com.epis.dtos;
 
+import java.util.UUID;
+
 public class UsuarioCreateDto {
 
     private String username;
     private String password;
+    private UUID funcionarioId;
 
-    public UsuarioCreateDto(String password, String username) {
-        this.password = password;
+    public UsuarioCreateDto(String username, String password, UUID funcionarioId) {
         this.username = username;
+        this.password = password;
+        this.funcionarioId = funcionarioId;
     }
 
     public String getUsername() {
@@ -26,11 +30,16 @@ public class UsuarioCreateDto {
         this.password = password;
     }
 
+    public UUID getFuncionarioId() { return funcionarioId; }
+
+    public void setFuncionarioId(UUID funcionarioId) { this.funcionarioId = funcionarioId; }
+
     @Override
     public String toString() {
         return "UsuarioCreateDto{" +
                 "username='" + username + '\'' +
                 ", password='" + password + '\'' +
+                ", funcionarioId=" + funcionarioId +
                 '}';
     }
 }

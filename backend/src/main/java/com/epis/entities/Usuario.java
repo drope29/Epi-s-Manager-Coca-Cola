@@ -13,13 +13,15 @@ public class Usuario {
     private UUID usuarioId;
     private String username;
     private String password;
+    private Funcionario funcionario;
 
     public Usuario(){}
 
-    public Usuario(UUID usuarioId, String username, String password) {
+    public Usuario(UUID usuarioId, String username, String password, Funcionario funcionario) {
         this.usuarioId = UUID.randomUUID();
         this.username = username;
         this.password = password;
+        this.funcionario = funcionario;
     }
 
     @DynamoDbPartitionKey
@@ -49,6 +51,14 @@ public class Usuario {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Funcionario getFuncionario() {
+        return funcionario;
+    }
+
+    public void setFuncionario(Funcionario funcionario) {
+        this.funcionario = funcionario;
     }
 
     @Override

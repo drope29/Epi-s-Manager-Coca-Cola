@@ -1,9 +1,10 @@
 package com.epis.services;
 
+import com.epis.dtos.UsuarioUpdateDto;
 import com.epis.dtos.UsuarioCreateDto;
 import com.epis.entities.Usuario;
 import com.epis.mapper.UsuarioMapper;
-import com.epis.services.exception.ErroInserirDynamoException;
+import com.epis.services.exception.*;
 import com.epis.services.exception.UsuarioNaoEncontradoException;
 import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -57,6 +60,49 @@ public class UsuarioService {
 
     }
 
+    public List<Usuario> getAll() {
+
+        try {
+
+            return dynamoDbTemplate
+                    .scanAll(Usuario.class)
+                    .items()
+                    .stream()
+                    .toList();
+
+        } catch (Exception e) {
+
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar os usuarios. Erro: " + e.getMessage());
+
+        }
+
+    }
+
+    public Usuario getById(UUID id) {
+
+        try {
+
+            var key = Key.builder().partitionValue(String.valueOf(id)).build();
+
+            Usuario usuario = dynamoDbTemplate.load(key, Usuario.class);
+
+            if (usuario == null)
+                throw new UsuarioNaoEncontradoException("Usuario não encontrado com o id: " + id);
+
+            return usuario;
+
+        } catch (UsuarioNaoEncontradoException ex) {
+
+            throw ex;
+
+        } catch (Exception e) {
+
+            throw new ErroBuscarDynamoException("Houve um erro ao buscar os usuarios. Erro: " + e.getMessage());
+
+        }
+
+    }
+
     public Usuario insert(UsuarioCreateDto dto) {
 
         try {
@@ -70,6 +116,39 @@ public class UsuarioService {
         } catch (Exception e) {
 
             throw new ErroInserirDynamoException("Houve um erro as inserir o usuario. Erro: " + e.getMessage());
+
+        }
+
+    }
+
+    public Usuario update(UUID id, UsuarioUpdateDto dto) {
+
+        try {
+
+            var entity = getById(id);
+
+            entity.setPassword(dto.getPassword());
+
+            return dynamoDbTemplate.update(entity);
+
+        } catch (Exception e) {
+
+            throw new ErroInserirDynamoException("Houve um erro ao atualizar o usuario. Erro: " + e.getMessage());
+        }
+
+    }
+
+    public void delete(UUID id) {
+
+        try {
+
+            Usuario usuario = getById(id);
+
+            dynamoDbTemplate.delete(usuario);
+
+        } catch (Exception e) {
+
+            throw new ErroDeletarDynamoException("Houve um erro ao buscar os usuarios. Erro: " + e.getMessage());
 
         }
 
