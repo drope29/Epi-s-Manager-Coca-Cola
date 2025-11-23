@@ -1,28 +1,29 @@
 package com.epis.entities;
 
-import java.util.ArrayList;
-import java.util.List;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
+
 import java.util.UUID;
 
+@DynamoDbBean
 public class Usuario {
 
-
     private UUID usuarioId;
-    private String nome;
-    private String email;
+    private String username;
     private String password;
-    private ArrayList<?> authorities;
 
     public Usuario(){}
 
-    public Usuario(UUID usuarioId, String nome, String email, String password, ArrayList<?> authorities) {
+    public Usuario(UUID usuarioId, String username, String password) {
         this.usuarioId = UUID.randomUUID();
-        this.nome = nome;
-        this.email = email;
+        this.username = username;
         this.password = password;
-        this.authorities = authorities;
     }
 
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("usuarioId")
     public UUID getUsuarioId() {
         return usuarioId;
     }
@@ -31,21 +32,16 @@ public class Usuario {
         this.usuarioId = usuarioId;
     }
 
-    public String getNome() {
-        return nome;
+    @DynamoDbSecondaryPartitionKey(indexNames = "username-index")
+    @DynamoDbAttribute("username")
+    public String getUsername() {
+        return username;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setUsername(String username) {
+        this.username = username;
     }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    
 
     public String getPassword() {
         return password;
@@ -55,11 +51,12 @@ public class Usuario {
         this.password = password;
     }
 
-    public ArrayList<?> getAuthorities() {
-        return authorities;
-    }
-
-    public void setAuthorities(ArrayList<?> authorities) {
-        this.authorities = authorities;
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "usuarioId=" + usuarioId +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 }

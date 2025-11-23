@@ -3,6 +3,7 @@ package com.epis.services;
 import com.epis.dtos.AccessDto;
 import com.epis.dtos.AuthenticationDto;
 import com.epis.security.jwt.JwtUtils;
+import com.epis.services.exception.InvalidJwtTokenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -35,10 +36,8 @@ public class AuthService {
             return new AccessDto(token);
 
         } catch (BadCredentialsException e) {
-            System.out.println("Credenciais Incoretas. " + e.getMessage());
+            throw new InvalidJwtTokenException("Credenciais Incoretas. Acesso negado" + e.getMessage());
         }
-
-        return new AccessDto("Acesso negado");
 
     }
 

@@ -1,7 +1,6 @@
 package com.epis.mapper;
 
 import com.epis.dtos.UniformeCreateDto;
-import com.epis.dtos.UniformeEpiDto;
 import com.epis.dtos.UniformeUpdateDto;
 import com.epis.entities.Epi;
 import com.epis.entities.Uniforme;

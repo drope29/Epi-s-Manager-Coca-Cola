@@ -1,6 +1,7 @@
 package com.epis.controllers;
 
 import com.epis.dtos.AuthenticationDto;
+import com.epis.dtos.ResponseAuthenticatedDto;
 import com.epis.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,11 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping(value = "/login")
-    public ResponseEntity<?> login(@RequestBody AuthenticationDto authDto) {
+    public ResponseEntity<ResponseAuthenticatedDto> login(@RequestBody AuthenticationDto authDto) {
 
-        return  ResponseEntity.ok(authService.login(authDto));
+        ResponseAuthenticatedDto authenticatedDto = new ResponseAuthenticatedDto(authService.login(authDto), authDto.getUsername(), authDto.getPassword());
+
+        return ResponseEntity.ok(authenticatedDto);
 
     }
 

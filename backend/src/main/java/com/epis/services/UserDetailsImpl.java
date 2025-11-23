@@ -4,7 +4,6 @@ import com.epis.entities.Usuario;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -14,26 +13,20 @@ public class UserDetailsImpl implements UserDetails {
 
     private String username;
 
-    private String email;
-
     private String password;
 
-    public UserDetailsImpl(UUID id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
-        this.id = UUID.randomUUID();
+    public UserDetailsImpl(UUID id, String username, String password) {
+        this.id = id;
         this.username = username;
-        this.email = email;
         this.password = password;
-        this.authorities = authorities;
     }
 
     public static UserDetailsImpl build(Usuario usuario) {
 
         return new UserDetailsImpl(
                 usuario.getUsuarioId(),
-                usuario.getNome(),
-                usuario.getEmail(),
-                usuario.getPassword(),
-                new ArrayList<>());
+                usuario.getUsername(),
+                usuario.getPassword());
 
     }
 
@@ -72,5 +65,25 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
     }
 }

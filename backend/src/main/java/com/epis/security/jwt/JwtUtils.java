@@ -1,6 +1,7 @@
 package com.epis.security.jwt;
 
 import com.epis.services.UserDetailsImpl;
+import com.epis.services.exception.InvalidJwtTokenException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -38,7 +39,7 @@ public class JwtUtils {
 
     public Key getSigninKey() {
 
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+            return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
 
     }
 
@@ -65,16 +66,15 @@ public class JwtUtils {
             return true;
 
         } catch (MalformedJwtException e) {
-            System.out.println("Token inválido: " + e.getMessage());
+            throw  new InvalidJwtTokenException("Token inválido: " + e.getMessage());
         } catch (ExpiredJwtException e) {
-            System.out.println("Token expirado: " + e.getMessage());
+            throw  new InvalidJwtTokenException("Token expirado: " + e.getMessage());
         } catch (UnsupportedJwtException e) {
-            System.out.println("Token não suportado: " + e.getMessage());
+            throw  new InvalidJwtTokenException("Token não suportado: " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.out.println("Token argumento inválido: " + e.getMessage());
+            throw  new InvalidJwtTokenException("Token argumento inválido: " + e.getMessage());
         }
 
-        return false;
     }
 
 }

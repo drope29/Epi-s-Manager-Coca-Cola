@@ -24,33 +24,33 @@ public class AuthFilterToken extends OncePerRequestFilter {
     private UserDetailServiceImpl userDetailService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        if (path.startsWith("/auth/") || path.startsWith("/api/usuarios/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-
             String jwt = getToken(request);
-
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-
                 String username = jwtUtils.getUsernameToken(jwt);
-
                 UserDetails userDetails = userDetailService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
             }
-
         } catch (Exception e) {
-            System.out.println("Ocorreu um erro ao processar o token");
-        } finally {
-
+            logger.error("Erro ao processar token", e);
         }
 
         filterChain.doFilter(request, response);
-
     }
 
     private String getToken(HttpServletRequest request) {

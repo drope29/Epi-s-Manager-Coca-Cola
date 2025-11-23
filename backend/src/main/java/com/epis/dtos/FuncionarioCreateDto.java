@@ -14,7 +14,7 @@ public class FuncionarioCreateDto {
     @NotBlank(message = "O campo nome é obrigatorio")
     private String nome;
 
-    @NotBlank(message = "O campo funcao é obrigatorio")
+    @NotNull(message = "O campo funcao é obrigatorio")
     private UUID funcao;
 
     @NotBlank(message = "O campo unidade é obrigatorio")

@@ -22,6 +22,7 @@ public class DynamoDbInitializer implements CommandLineRunner {
         createTableIfNotExists("epi", "epiId");
         createTableIfNotExists("uniforme", "uniformeId");
         createTableIfNotExists("movimentacao", "movimentacaoId");
+        createTableIfNotExists("usuario", "usuarioId");
     }
 
     private void createTableIfNotExists(String tableName, String partitionKey) {

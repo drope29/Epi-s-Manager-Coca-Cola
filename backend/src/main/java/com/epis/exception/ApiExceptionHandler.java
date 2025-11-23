@@ -1,6 +1,9 @@
 package com.epis.exception;
 
 import com.epis.services.exception.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -105,6 +108,30 @@ public class ApiExceptionHandler {
                 ex.getMessage()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidJwtTokenException.class)
+    public ResponseEntity<ErrorMessage> handleInvalidJwtTokenException(ErroDeletarDynamoException ex, HttpServletRequest request){
+        ErrorMessage error = new ErrorMessage(
+                request.getRequestURI(),
+                request.getMethod(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(UsuarioNaoEncontradoException.class)
+    public ResponseEntity<ErrorMessage> handleUsuarioNaoEncontradoException(UsuarioNaoEncontradoException ex, HttpServletRequest request){
+        ErrorMessage error = new ErrorMessage(
+                request.getRequestURI(),
+                request.getMethod(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
 }
