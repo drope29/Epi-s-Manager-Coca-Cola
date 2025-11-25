@@ -4,7 +4,6 @@ import com.epis.dtos.AccessDto;
 import com.epis.dtos.AuthenticationDto;
 import com.epis.dtos.UsuarioUpdateDto;
 import com.epis.entities.Usuario;
-import com.epis.mapper.UsuarioMapper;
 import com.epis.security.jwt.JwtUtils;
 import com.epis.services.exception.InvalidJwtTokenException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +44,7 @@ public class AuthService {
 
             Usuario usuarioAtualizado = usuarioService.getByLogin(authDto.getUsername());
 
-            String token = jwtUtils.generetaTokenFromUserDetailsImpl(
-                    new UserDetailsImpl(usuarioAtualizado)
-            );
+            String token = jwtUtils.generetaTokenFromUserDetailsImpl(userAuthenticate);
 
             return new AccessDto(token);
 

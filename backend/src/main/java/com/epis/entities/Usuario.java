@@ -13,16 +13,16 @@ public class Usuario {
     private UUID usuarioId;
     private String username;
     private String password;
-    private Funcionario funcionario;
+    private UUID funcionarioId;
     private Integer tokenVersion;
 
     public Usuario(){}
 
-    public Usuario(UUID usuarioId, String username, String password, Funcionario funcionario) {
+    public Usuario(UUID usuarioId, String username, String password, UUID funcionarioId) {
         this.usuarioId = UUID.randomUUID();
         this.username = username;
         this.password = password;
-        this.funcionario = funcionario;
+        this.funcionarioId = funcionarioId;
         this.tokenVersion = 0;
     }
 
@@ -45,7 +45,6 @@ public class Usuario {
     public void setUsername(String username) {
         this.username = username;
     }
-    
 
     public String getPassword() {
         return password;
@@ -55,13 +54,9 @@ public class Usuario {
         this.password = password;
     }
 
-    public Funcionario getFuncionario() {
-        return funcionario;
-    }
+    public UUID getFuncionarioId() { return funcionarioId; }
 
-    public void setFuncionario(Funcionario funcionario) {
-        this.funcionario = funcionario;
-    }
+    public void setFuncionarioId(UUID funcionarioId) { this.funcionarioId = funcionarioId; }
 
     public Integer getTokenVersion() {
         return tokenVersion;

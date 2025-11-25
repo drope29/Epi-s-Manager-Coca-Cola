@@ -24,13 +24,11 @@ public class UsuarioMapper {
 
     public Usuario toUsuario(UsuarioCreateDto dto) {
 
-        Funcionario funcionario = funcionarioService.getById(dto.getFuncionarioId());
-
         return new Usuario(
                 UUID.randomUUID(),
                 dto.getUsername(),
                 encoder.encode(dto.getPassword()),
-                funcionario
+                dto.getFuncionarioId()
         );
     }
 

@@ -19,6 +19,9 @@ import java.util.UUID;
 public class EpiController {
 
     @Autowired
+    private UploadFiles uploadFiles;
+
+    @Autowired
     private EpiService service;
 
     @PostMapping("/upload")
@@ -27,7 +30,7 @@ public class EpiController {
         String mensagemRetorno = "Epis Importados com Sucesso";
 
         try {
-            service.uploadEpis(UploadFiles.lerEpis());
+            service.uploadEpis(uploadFiles.lerEpis());
         } catch (Exception e) {
             mensagemRetorno = "Ocorreu um erro ao importar epis, erro: " + e.getMessage();
         }

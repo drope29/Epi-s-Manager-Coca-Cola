@@ -19,6 +19,9 @@ import java.util.UUID;
 public class FuncionarioController {
 
     @Autowired
+    private UploadFiles uploadFiles;
+
+    @Autowired
     private FuncionarioService service;
 
     @PostMapping("/upload")
@@ -27,7 +30,7 @@ public class FuncionarioController {
         String mensagemRetorno = "Funcionários Importados com Sucesso";
 
         try {
-            service.uploadFuncionarios(UploadFiles.lerFuncionarios());
+            service.uploadFuncionarios(uploadFiles.lerFuncionarios());
         } catch (Exception e) {
             mensagemRetorno = "Ocorreu um erro ao importar usuários, erro: " + e.getMessage();
         }

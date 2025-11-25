@@ -17,6 +17,11 @@ public class Funcao {
         this.nome = nome;
     }
 
+    public Funcao(UUID id, String nome) {
+        this.id = id;
+        this.nome = nome;
+    }
+
     @DynamoDbPartitionKey
     @DynamoDbAttribute("funcaoId")
     public UUID getId() {

@@ -26,7 +26,7 @@ public class FuncionarioMapper {
 
         funcionario.setFuncionarioId(UUID.randomUUID());
         funcionario.setNome(dto.getNome());
-        funcionario.setFuncao(funcao);
+        funcionario.setFuncaoId(funcao.getId());
         funcionario.setRE(dto.getRE());
         funcionario.setUnidade(dto.getUnidade());
         funcionario.setTurno(TurnoEnum.valueOf(dto.getTurno().toUpperCase()));
@@ -48,7 +48,7 @@ public class FuncionarioMapper {
 
             Funcao funcao = funcaoService.getById(dto.getFuncao());
 
-            funcionario.setFuncao(funcao);
+            funcionario.setFuncaoId(funcao.getId());
         }
 
         if (dto.getRE() != null) {

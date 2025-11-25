@@ -7,19 +7,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 public class UserDetailsImpl implements UserDetails {
 
     private Usuario usuario;
+    private String role;
 
     public UserDetailsImpl(Usuario usuario) {
         this.usuario = usuario;
     }
 
-    public static UserDetailsImpl build(Usuario usuario) {
+    public UserDetailsImpl(Usuario usuario, String role) {
+        this.usuario = usuario;
+        this.role = role;
+    }
 
-        return new UserDetailsImpl(usuario);
+    public static UserDetailsImpl build(Usuario usuario, String role) {
+
+        return new UserDetailsImpl(usuario, role);
 
     }
 
@@ -27,13 +32,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-
-        String role =  usuario.getFuncionario().getFuncao().getNome();
-
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-
-        return List.of(authority);
-
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     @Override
@@ -73,6 +72,10 @@ public class UserDetailsImpl implements UserDetails {
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
     }
+
+    public String getRole() { return role; }
+
+    public void setRole(String role) { this.role = role; }
 
     public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
         this.authorities = authorities;

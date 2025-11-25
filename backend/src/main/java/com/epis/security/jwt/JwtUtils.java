@@ -1,10 +1,15 @@
 package com.epis.security.jwt;
 
+import com.epis.entities.Funcao;
+import com.epis.services.FuncaoService;
+import com.epis.services.FuncionarioService;
 import com.epis.services.UserDetailsImpl;
+import com.epis.services.UsuarioService;
 import com.epis.services.exception.InvalidJwtTokenException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,11 +26,19 @@ public class JwtUtils {
     @Value("${epi.jwtExpirationMs}")
     private int jwtExpirationMs;
 
+    @Autowired
+    private FuncionarioService funcionarioService;
+
+    @Autowired
+    private FuncaoService funcaoService;
+
     public String generetaTokenFromUserDetailsImpl(UserDetailsImpl userDetail) {
 
         Key key = getSigninKey();
         long now = System.currentTimeMillis();
-        String role = userDetail.getUsuario().getFuncionario().getFuncao().getNome().toUpperCase();
+        var funcionario = funcionarioService.getById(userDetail.getUsuario().getFuncionarioId());
+        Funcao funcao = funcaoService.getById(funcionario.getFuncaoId());
+        String role = funcao.getNome().toUpperCase();
         Integer tokenVersion = userDetail.getUsuario().getTokenVersion();
 
         return Jwts.builder()

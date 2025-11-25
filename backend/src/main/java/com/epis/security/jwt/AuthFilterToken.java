@@ -1,6 +1,8 @@
 package com.epis.security.jwt;
 
 import com.epis.entities.Usuario;
+import com.epis.services.FuncaoService;
+import com.epis.services.FuncionarioService;
 import com.epis.services.UserDetailServiceImpl;
 import com.epis.services.UsuarioService;
 import jakarta.servlet.FilterChain;

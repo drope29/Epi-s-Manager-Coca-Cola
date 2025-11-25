@@ -21,23 +21,6 @@ public class FuncaoController {
     @Autowired
     private FuncaoService service;
 
-  @PostMapping("/upload")
-    public ResponseEntity<String> uploadFuncoes() {
-
-        String mensagemRetorno = "Funcoes Importados com Sucesso";
-
-        try {
-            service.uploadFuncoes(UploadFiles.lerFuncoes());
-        } catch (Exception e) {
-            mensagemRetorno = "Ocorreu um erro ao importar funcoes, erro: " + e.getMessage();
-        }
-
-        return ResponseEntity.ok(mensagemRetorno);
-
-    }
-
-
-
     @GetMapping("/getAllFuncoes")
     @PreAuthorize("hasRole('ESTAGIARIO') or hasRole('CHEFE')")
     public ResponseEntity<List<Funcao>> getAllFuncoes() {

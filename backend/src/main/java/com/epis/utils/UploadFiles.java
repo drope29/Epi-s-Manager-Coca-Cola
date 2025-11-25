@@ -3,17 +3,30 @@ package com.epis.utils;
 import com.epis.entities.Epi;
 import com.epis.entities.Funcao;
 import com.epis.entities.Funcionario;
+import com.epis.services.FuncaoService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+@Component
 public class UploadFiles {
 
-    public static List<Funcionario> lerFuncionarios() {
-        List<Funcionario> funcionariosses = new ArrayList<>();
+    @Autowired
+    private FuncaoService funcaoService;
+
+    private static final Logger log = LoggerFactory.getLogger(UploadFiles.class);
+
+    public List<Funcionario> lerFuncionarios() {
+        List<Funcionario> funcionarios = new ArrayList<>();
+
+        Map<String, Funcao> funcoesMap = new HashMap<>();
 
         try (InputStream arquivo = UploadFiles.class.getResourceAsStream("/base-funcionarios.xlsx");
              Workbook workbook = new XSSFWorkbook(arquivo)) {
@@ -29,21 +42,31 @@ public class UploadFiles {
 
                 String re = getCellValueAsString(row.getCell(0));
                 String nome = getCellValueAsString(row.getCell(1));
-                String funcao = getCellValueAsString(row.getCell(2));
+                String funcaoNome = getCellValueAsString(row.getCell(2)).trim();
 
-                Funcao funcaoObj = new Funcao(funcao);
-                Funcionario f = new Funcionario(re, nome, funcaoObj);
-                funcionariosses.add(f);
+                if (re.isEmpty() || nome.isEmpty() || funcaoNome.isEmpty()) {
+                    continue;
+                }
+
+                Funcao funcao = funcoesMap.computeIfAbsent(funcaoNome, nomeFuncao ->
+                        new Funcao(UUID.randomUUID(), nomeFuncao)
+                );
+
+                Funcionario funcionario = new Funcionario(re, nome, funcao.getId());
+                funcionarios.add(funcionario);
             }
+
+            this.lerFuncoes(new ArrayList<>(funcoesMap.values()));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return funcionariosses;
+        return funcionarios;
     }
 
-    public static List<Epi> lerEpis() {
+
+    public List<Epi> lerEpis() {
         Set<String> codigosEpis = new LinkedHashSet<>();
         List<Epi> epis = new ArrayList<>();
 
@@ -78,38 +101,8 @@ public class UploadFiles {
         return epis;
     }
 
-    public static List<Funcao> lerFuncoes() {
-        Set<String> nomesFuncoes = new HashSet<>();
-        List<Funcao> funcoes = new ArrayList<>();
-
-        try (InputStream arquivo = UploadFiles.class.getResourceAsStream("/base-funcionarios.xlsx");
-             Workbook workbook = new XSSFWorkbook(arquivo)) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-            boolean primeiraLinha = true;
-
-            for (Row row : sheet) {
-                if (primeiraLinha) {
-                    primeiraLinha = false;
-                    continue;
-                }
-
-                String funcaoImportada = getCellValueAsString(row.getCell(2));
-
-                if (funcaoImportada == null || funcaoImportada.trim().isEmpty()) {
-                    continue;
-                }
-
-                if (nomesFuncoes.add(funcaoImportada.trim())) {
-                    funcoes.add(new Funcao(funcaoImportada.trim()));
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return funcoes;
+    public void lerFuncoes(List<Funcao> funcoes) {
+        funcaoService.uploadFuncoes(funcoes);
     }
 
 
@@ -133,15 +126,5 @@ public class UploadFiles {
             default:
                 return "";
         }
-    }
-
-    public static void main(String[] args) {
-        //List<Funcionario> listaFunc = lerFuncionarios();
-        //listaFunc.forEach(System.out::println);
-
-        System.out.println("\n--- EPIS ---\n");
-
-        List<Epi> listaEpi = lerEpis();
-        listaEpi.forEach(System.out::println);
     }
 }
