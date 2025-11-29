@@ -12,6 +12,7 @@ public class UserDetailsImpl implements UserDetails {
 
     private Usuario usuario;
     private String role;
+    private Integer tokenVersion;
 
     public UserDetailsImpl(Usuario usuario) {
         this.usuario = usuario;
@@ -20,6 +21,7 @@ public class UserDetailsImpl implements UserDetails {
     public UserDetailsImpl(Usuario usuario, String role) {
         this.usuario = usuario;
         this.role = role;
+        this.tokenVersion = usuario.getTokenVersion();
     }
 
     public static UserDetailsImpl build(Usuario usuario, String role) {
@@ -27,8 +29,6 @@ public class UserDetailsImpl implements UserDetails {
         return new UserDetailsImpl(usuario, role);
 
     }
-
-    private Collection<? extends  GrantedAuthority> authorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -77,7 +77,7 @@ public class UserDetailsImpl implements UserDetails {
 
     public void setRole(String role) { this.role = role; }
 
-    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
-        this.authorities = authorities;
-    }
+    public Integer getTokenVersion() { return tokenVersion; }
+
+    public void setTokenVersion(Integer tokenVersion) { this.tokenVersion = tokenVersion; }
 }

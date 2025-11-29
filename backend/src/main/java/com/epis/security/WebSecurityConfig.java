@@ -59,7 +59,8 @@ public class WebSecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/logout").authenticated()
                         .requestMatchers("/api/usuarios/**").permitAll()
                         .requestMatchers("/api/funcionarios/**").permitAll()
                         .anyRequest().authenticated()

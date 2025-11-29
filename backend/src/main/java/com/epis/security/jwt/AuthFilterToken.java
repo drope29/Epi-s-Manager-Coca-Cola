@@ -40,7 +40,7 @@ public class AuthFilterToken extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        if (path.startsWith("/auth/") || path.startsWith("/api/usuarios/")) {
+        if (path.startsWith("/auth/login") || path.startsWith("/api/usuarios/")) {
             filterChain.doFilter(request, response);
             return;
         }

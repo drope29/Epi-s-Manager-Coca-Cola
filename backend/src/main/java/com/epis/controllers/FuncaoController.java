@@ -22,7 +22,6 @@ public class FuncaoController {
     private FuncaoService service;
 
     @GetMapping("/getAllFuncoes")
-    @PreAuthorize("hasRole('ESTAGIARIO') or hasRole('CHEFE')")
     public ResponseEntity<List<Funcao>> getAllFuncoes() {
 
         List<Funcao> funcoes = service.getAll();
