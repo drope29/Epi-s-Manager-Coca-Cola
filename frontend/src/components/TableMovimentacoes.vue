@@ -604,8 +604,14 @@ function closeEditDropdown() {
     </div>
 
     <!-- Modal para Adicionar Item -->
-    <FormularioEntregaEpi v-if="isFormEntregaVisible" :colaboradorId="colaborador.id" :itemParaEditar="null"
-        @close="closeFormEntrega" @itemAdicionado="handleItemAdicionado" />
+    <FormularioEntregaEpi
+        v-if="isFormEntregaVisible"
+        :funcionarioId="colaborador.funcionarioId"
+        :itemParaEditar="null"
+        @close="closeFormEntrega"
+        @itemAdicionado="handleItemAdicionado"
+        @itemAtualizado="handleItemAtualizado"
+    />
 </template>
 
 <style scoped>
