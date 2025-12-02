@@ -17,8 +17,8 @@ import java.util.UUID;
 public class Movimentacao {
 
     private UUID movimentacaoId;
-    private Funcionario funcionario;
-    private Epi epi;
+    private UUID funcionarioId;
+    private UUID epiId;
     private Date dataEntrega;
     private Date dataProximaEntrega;
     @Enumerated(EnumType.STRING)
@@ -26,10 +26,10 @@ public class Movimentacao {
 
     public Movimentacao(){}
 
-    public Movimentacao(UUID movimentacaoId, Funcionario funcionario, Epi epi, Date dataEntrega, Date dataProximaEntrega, StatusEnum status) {
-        this.movimentacaoId = UUID.randomUUID();
-        this.funcionario = funcionario;
-        this.epi = epi;
+    public Movimentacao(UUID movimentacaoId, UUID funcionarioId, UUID epiId, Date dataEntrega, Date dataProximaEntrega, StatusEnum status) {
+        this.movimentacaoId = movimentacaoId;
+        this.funcionarioId = funcionarioId;
+        this.epiId = epiId;
         this.dataEntrega = dataEntrega;
         this.dataProximaEntrega = dataProximaEntrega;
         this.status = status;
@@ -45,21 +45,13 @@ public class Movimentacao {
         this.movimentacaoId = movimentacaoId;
     }
 
-    public Funcionario getFuncionario() {
-        return funcionario;
-    }
+    public UUID getFuncionarioId() { return funcionarioId; }
 
-    public void setFuncionario(Funcionario funcionario) {
-        this.funcionario = funcionario;
-    }
+    public void setFuncionarioId(UUID funcionarioId) { this.funcionarioId = funcionarioId; }
 
-    public Epi getEpi() {
-        return epi;
-    }
+    public UUID getEpiId() { return epiId; }
 
-    public void setEpi(Epi epi) {
-        this.epi = epi;
-    }
+    public void setEpiId(UUID epiId) { this.epiId = epiId; }
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     @DynamoDbConvertedBy(DateAttributeConverter.class)
@@ -93,8 +85,8 @@ public class Movimentacao {
     public String toString() {
         return "Movimentacao{" +
                 "movimentacaoId=" + movimentacaoId +
-                ", funcionario=" + funcionario +
-                ", epi=" + epi +
+                ", funcionarioId=" + funcionarioId +
+                ", epiId=" + epiId +
                 ", dataEntrega=" + dataEntrega +
                 ", dataProximaEntrega=" + dataProximaEntrega +
                 ", status=" + status +

@@ -1,8 +1,10 @@
 package com.epis.controllers;
 
 import com.epis.dtos.movimentacao.MovimentacaoCreateDto;
+import com.epis.dtos.movimentacao.MovimentacaoResponseDto;
 import com.epis.dtos.movimentacao.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
+import com.epis.mapper.MovimentacaoMapper;
 import com.epis.services.MovimentacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,9 @@ public class MovimentacaoController {
     @Autowired
     private MovimentacaoService service;
 
+    @Autowired
+    private MovimentacaoMapper mapper;
+
     @GetMapping("/")
     public ResponseEntity<List<Movimentacao>> getAll() {
 
@@ -33,26 +38,26 @@ public class MovimentacaoController {
 
         Movimentacao movimentacao = service.getById(id);
 
-        return ResponseEntity.ok(movimentacao);
+        return ResponseEntity.ok(mapper.toMovimentacaoResponseDto(movimentacao));
 
     }
 
 
     @PostMapping("/")
-    public ResponseEntity<Movimentacao> insertMovimentacao(@RequestBody MovimentacaoCreateDto dto) {
+    public ResponseEntity<MovimentacaoResponseDto> insertMovimentacao(@RequestBody MovimentacaoCreateDto dto) {
 
-        Movimentacao movimentecao = service.insert(dto);
+        Movimentacao movimentacao = service.insert(dto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(movimentecao);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toMovimentacaoResponseDto(movimentacao));
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Movimentacao> updateMovimentacao(@PathVariable UUID id, @RequestBody MovimentacaoUpdateDto dto) {
+    public ResponseEntity<MovimentacaoResponseDto> updateMovimentacao(@PathVariable UUID id, @RequestBody MovimentacaoUpdateDto dto) {
 
         Movimentacao movimentacaoUpd = service.update(id, dto);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(movimentacaoUpd);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(mapper.toMovimentacaoResponseDto(movimentacaoUpd));
 
     }
 
