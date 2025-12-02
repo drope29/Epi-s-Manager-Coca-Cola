@@ -11,6 +11,8 @@ import com.epis.services.FuncaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -87,6 +89,26 @@ public class FuncionarioMapper {
         funcionarioResponseDto.setFuncao(funcao);
 
         return funcionarioResponseDto;
+
+    }
+
+    public List<FuncionarioResponseDto> toFuncionarioResponseDtoList(List<Funcionario> funcionarios) {
+
+        List<FuncionarioResponseDto> funcionarioResponseDtoList = new ArrayList<>();
+
+        for (Funcionario funcionario : funcionarios) {
+
+            FuncionarioResponseDto funcionarioResponseDto = new FuncionarioResponseDto(funcionario);
+
+            Funcao funcao = funcaoService.getById(funcionario.getFuncaoId());
+
+            funcionarioResponseDto.setFuncao(funcao);
+
+            funcionarioResponseDtoList.add(funcionarioResponseDto);
+
+        }
+
+        return funcionarioResponseDtoList;
 
     }
 

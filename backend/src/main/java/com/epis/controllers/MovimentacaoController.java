@@ -25,11 +25,11 @@ public class MovimentacaoController {
     private MovimentacaoMapper mapper;
 
     @GetMapping("/")
-    public ResponseEntity<List<Movimentacao>> getAll() {
+    public ResponseEntity<List<MovimentacaoResponseDto>> getAll() {
 
         List<Movimentacao> movimentacoes = service.getAll();
 
-        return ResponseEntity.ok(movimentacoes);
+        return ResponseEntity.ok(mapper.toMovimentacaoResponseDtoList(movimentacoes));
 
     }
 

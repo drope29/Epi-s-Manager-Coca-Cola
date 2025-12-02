@@ -45,11 +45,11 @@ public class FuncionarioController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<Funcionario>> getAllFuncionarios() {
+    public ResponseEntity<List<FuncionarioResponseDto>> getAllFuncionarios() {
 
         List<Funcionario> funcionarios = service.getAll();
 
-        return ResponseEntity.ok(funcionarios);
+        return ResponseEntity.ok(mapper.toFuncionarioResponseDtoList(funcionarios));
 
     }
 

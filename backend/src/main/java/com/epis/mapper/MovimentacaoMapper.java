@@ -12,6 +12,8 @@ import com.epis.services.FuncionarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -79,6 +81,28 @@ public class MovimentacaoMapper {
         movimentacaoResponseDto.setEpi(epi);
 
         return movimentacaoResponseDto;
+
+    }
+
+    public List<MovimentacaoResponseDto> toMovimentacaoResponseDtoList(List<Movimentacao> movimentacoes) {
+
+        List<MovimentacaoResponseDto> movimentacaoResponseDtoList = new ArrayList<>();
+
+        for (Movimentacao movimentacao: movimentacoes) {
+
+            MovimentacaoResponseDto movimentacaoResponseDto = new MovimentacaoResponseDto(movimentacao);
+
+            Funcionario funcionario = funcionarioService.getById(movimentacao.getFuncionarioId());
+            Epi epi = epiService.getById(movimentacao.getEpiId());
+
+            movimentacaoResponseDto.setFuncionario(funcionario);
+            movimentacaoResponseDto.setEpi(epi);
+
+            movimentacaoResponseDtoList.add(movimentacaoResponseDto);
+
+        }
+
+        return movimentacaoResponseDtoList;
 
     }
 
