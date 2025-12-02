@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.funcionario;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

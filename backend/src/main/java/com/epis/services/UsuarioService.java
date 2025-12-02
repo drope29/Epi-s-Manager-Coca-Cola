@@ -1,7 +1,7 @@
 package com.epis.services;
 
-import com.epis.dtos.UsuarioUpdateDto;
-import com.epis.dtos.UsuarioCreateDto;
+import com.epis.dtos.usuario.UsuarioUpdateDto;
+import com.epis.dtos.usuario.UsuarioCreateDto;
 import com.epis.entities.Usuario;
 import com.epis.mapper.UsuarioMapper;
 import com.epis.services.exception.*;

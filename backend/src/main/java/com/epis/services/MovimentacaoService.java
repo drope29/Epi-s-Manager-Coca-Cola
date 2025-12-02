@@ -1,7 +1,7 @@
 package com.epis.services;
 
-import com.epis.dtos.MovimentacaoCreateDto;
-import com.epis.dtos.MovimentacaoUpdateDto;
+import com.epis.dtos.movimentacao.MovimentacaoCreateDto;
+import com.epis.dtos.movimentacao.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
 import com.epis.mapper.MovimentacaoMapper;
 import com.epis.services.exception.ErroBuscarDynamoException;

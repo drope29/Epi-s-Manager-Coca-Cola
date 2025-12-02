@@ -1,8 +1,8 @@
 package com.epis.services;
 
-import com.epis.dtos.AccessDto;
-import com.epis.dtos.AuthenticationDto;
-import com.epis.dtos.UsuarioUpdateDto;
+import com.epis.dtos.auth.AccessDto;
+import com.epis.dtos.auth.AuthenticationDto;
+import com.epis.dtos.usuario.UsuarioUpdateDto;
 import com.epis.entities.Funcao;
 import com.epis.entities.Funcionario;
 import com.epis.entities.Usuario;

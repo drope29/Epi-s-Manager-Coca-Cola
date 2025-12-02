@@ -1,8 +1,8 @@
 package com.epis.controllers;
 
-import com.epis.dtos.AuthenticationDto;
-import com.epis.dtos.ResponseAuthenticatedDto;
-import com.epis.dtos.UsuarioUpdateDto;
+import com.epis.dtos.auth.AuthenticationDto;
+import com.epis.dtos.auth.ResponseAuthenticatedDto;
+import com.epis.dtos.usuario.UsuarioUpdateDto;
 import com.epis.entities.Usuario;
 import com.epis.services.AuthService;
 import com.epis.services.UsuarioService;

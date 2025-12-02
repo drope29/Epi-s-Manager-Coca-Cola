@@ -1,8 +1,7 @@
 package com.epis.controllers;
 
-import com.epis.dtos.UsuarioUpdateDto;
-import com.epis.dtos.UsuarioCreateDto;
-import com.epis.entities.Usuario;
+import com.epis.dtos.usuario.UsuarioUpdateDto;
+import com.epis.dtos.usuario.UsuarioCreateDto;
 import com.epis.entities.Usuario;
 import com.epis.services.UsuarioService;
 import jakarta.validation.Valid;

@@ -1,7 +1,7 @@
 package com.epis.controllers;
 
-import com.epis.dtos.MovimentacaoCreateDto;
-import com.epis.dtos.MovimentacaoUpdateDto;
+import com.epis.dtos.movimentacao.MovimentacaoCreateDto;
+import com.epis.dtos.movimentacao.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
 import com.epis.services.MovimentacaoService;
 import org.springframework.beans.factory.annotation.Autowired;

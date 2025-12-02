@@ -1,24 +1,17 @@
-package com.epis.dtos;
-
-import jakarta.validation.constraints.NotBlank;
+package com.epis.dtos.epi;
 
 import java.util.Date;
 
-public class EpiCreateDto {
+public class EpiUpdateDto {
 
-    @NotBlank(message = "O campo código compra é obrigatório")
     private String codigoCompra;
-
     private String codigoAutenticacao;
-
-    @NotBlank(message = "O campo descrição é obrigatório")
     private String descricao;
-
     private Date dataValidade;
 
-    public EpiCreateDto(){}
+    public EpiUpdateDto(){}
 
-    public EpiCreateDto(String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
+    public EpiUpdateDto(String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
         this.codigoCompra = codigoCompra;
         this.codigoAutenticacao = codigoAutenticacao;
         this.descricao = descricao;
@@ -59,7 +52,7 @@ public class EpiCreateDto {
 
     @Override
     public String toString() {
-        return "EpiCreateDto{" +
+        return "EpiUpdateDto{" +
                 "codigoCompra='" + codigoCompra + '\'' +
                 ", codigoAutenticacao='" + codigoAutenticacao + '\'' +
                 ", descricao='" + descricao + '\'' +

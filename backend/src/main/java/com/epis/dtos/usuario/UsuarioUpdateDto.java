@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.usuario;
 
 public class UsuarioUpdateDto {
 

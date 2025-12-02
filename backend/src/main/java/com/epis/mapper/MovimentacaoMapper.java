@@ -1,7 +1,7 @@
 package com.epis.mapper;
 
-import com.epis.dtos.MovimentacaoCreateDto;
-import com.epis.dtos.MovimentacaoUpdateDto;
+import com.epis.dtos.movimentacao.MovimentacaoCreateDto;
+import com.epis.dtos.movimentacao.MovimentacaoUpdateDto;
 import com.epis.entities.Epi;
 import com.epis.entities.Funcionario;
 import com.epis.entities.Movimentacao;

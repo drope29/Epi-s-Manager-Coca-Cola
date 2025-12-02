@@ -1,7 +1,7 @@
 package com.epis.controllers;
 
-import com.epis.dtos.EpiCreateDto;
-import com.epis.dtos.EpiUpdateDto;
+import com.epis.dtos.epi.EpiCreateDto;
+import com.epis.dtos.epi.EpiUpdateDto;
 import com.epis.entities.Epi;
 import com.epis.services.EpiService;
 import com.epis.utils.UploadFiles;

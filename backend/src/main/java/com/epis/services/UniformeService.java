@@ -1,6 +1,7 @@
 package com.epis.services;
 
-import com.epis.dtos.*;
+import com.epis.dtos.uniforme.UniformeCreateDto;
+import com.epis.dtos.uniforme.UniformeUpdateDto;
 import com.epis.entities.Uniforme;
 import com.epis.mapper.UniformeMapper;
 import com.epis.services.exception.*;

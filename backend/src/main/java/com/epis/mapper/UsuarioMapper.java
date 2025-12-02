@@ -1,7 +1,6 @@
 package com.epis.mapper;
 
-import com.epis.dtos.UsuarioCreateDto;
-import com.epis.entities.Funcionario;
+import com.epis.dtos.usuario.UsuarioCreateDto;
 import com.epis.entities.Usuario;
 import com.epis.services.FuncionarioService;
 import org.springframework.beans.factory.annotation.Autowired;

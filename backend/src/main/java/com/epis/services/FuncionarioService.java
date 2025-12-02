@@ -1,7 +1,7 @@
 package com.epis.services;
 
-import com.epis.dtos.FuncionarioCreateDto;
-import com.epis.dtos.FuncionarioUpdateDto;
+import com.epis.dtos.funcionario.FuncionarioCreateDto;
+import com.epis.dtos.funcionario.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
 import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.exception.*;

@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.usuario;
 
 import java.util.UUID;
 

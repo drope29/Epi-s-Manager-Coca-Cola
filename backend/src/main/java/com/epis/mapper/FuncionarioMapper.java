@@ -1,7 +1,8 @@
 package com.epis.mapper;
 
-import com.epis.dtos.FuncionarioCreateDto;
-import com.epis.dtos.FuncionarioUpdateDto;
+import com.epis.dtos.funcionario.FuncionarioCreateDto;
+import com.epis.dtos.funcionario.FuncionarioResponseDto;
+import com.epis.dtos.funcionario.FuncionarioUpdateDto;
 import com.epis.entities.Funcao;
 import com.epis.entities.Funcionario;
 import com.epis.enums.GeneroEnum;
@@ -74,6 +75,18 @@ public class FuncionarioMapper {
         if (dto.getSetor() != null) {
             funcionario.setSetor(dto.getSetor());
         }
+
+    }
+
+    public FuncionarioResponseDto toFuncionarioResponseDto(Funcionario funcionario) {
+
+        FuncionarioResponseDto funcionarioResponseDto = new FuncionarioResponseDto(funcionario);
+
+        Funcao funcao = funcaoService.getById(funcionario.getFuncaoId());
+
+        funcionarioResponseDto.setFuncao(funcao);
+
+        return funcionarioResponseDto;
 
     }
 
