@@ -166,6 +166,7 @@ async function atualizarColaborador() {
   }
 }
 
+
 async function handleSubmit() {
   if (validateForm()) {
     if (isEditMode.value) {
