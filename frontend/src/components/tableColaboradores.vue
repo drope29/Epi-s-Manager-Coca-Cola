@@ -26,7 +26,7 @@ const dtRef = ref(null); // Referência para a instância do DataTable
 const columns = [
   { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
   { data: 'nome', title: 'Nome', className: 'text-center' },
-  { data: 'funcao', title: 'Cargo', className: 'text-center' },
+  { data: 'funcao', title: 'Cargo', className: 'text-center', render: (data) => data?.nome ?? "Não Informado" },
 
   {
     data: 'setor', // data: 'setor' é seguro se o render lida com undefined
