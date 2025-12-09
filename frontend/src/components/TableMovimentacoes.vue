@@ -620,32 +620,14 @@ const assinaturaRowIndex = ref(null);
     </div>
 
     <!-- Modal para Adicionar Item -->
-    <FormularioEntregaEpi v-if="isFormEntregaVisible" :colaboradorId="colaborador.id" :itemParaEditar="null"
-        @close="closeFormEntrega" @itemAdicionado="handleItemAdicionado" />
-
-    <!-- Modal Vue-Pad -->
-    <div v-if="showSignatureModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white p-6 rounded shadow-xl w-[400px]">
-            <h2 class="text-lg font-bold mb-4">Assinar</h2>
-
-            <VueSignaturePad ref="signaturePad" :options="{ penColor: 'black' }"
-                class="border border-gray-300 w-full h-48" />
-
-            <div class="flex justify-between mt-4">
-                <button class="bg-gray-400 text-white px-4 py-2 rounded" @click="showSignatureModal = false">
-                    Cancelar
-                </button>
-
-                <button class="bg-red-500 text-white px-4 py-2 rounded" @click="clearPad">
-                    Limpar
-                </button>
-
-                <button class="bg-green-600 text-white px-4 py-2 rounded" @click="confirmSignature">
-                    Confirmar
-                </button>
-            </div>
-        </div>
-    </div>
+    <FormularioEntregaEpi
+        v-if="isFormEntregaVisible"
+        :funcionarioId="colaborador.funcionarioId"
+        :itemParaEditar="null"
+        @close="closeFormEntrega"
+        @itemAdicionado="handleItemAdicionado"
+        @itemAtualizado="handleItemAtualizado"
+    />
 </template>
 
 <style scoped>

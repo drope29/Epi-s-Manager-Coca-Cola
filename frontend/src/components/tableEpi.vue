@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
@@ -20,7 +20,9 @@ DataTable.use(Buttons);
 
 const globalSearch = ref('');
 const dtRef = ref(null);
+let tableInstance = null; // referência ao dataTables instance (jQuery DataTable)
 
+// colunas: note que agora data-id usa row.epiId || row.id
 const columns = [
   {
     data: 'codigoAutenticacao',
@@ -33,7 +35,6 @@ const columns = [
     title: 'Descrição',
     className: 'text-center'
   },
-
   {
     data: 'codigoCompra',
     title: 'Cod. Compra',
@@ -53,10 +54,12 @@ const columns = [
     searchable: false,
     className: 'text-center',
     render: (_d, _t, row) => {
+      // usa epiId se existir, senão id
+      const dataId = row.epiId ?? row.id ?? '';
       const editBtn = `
         <button
           data-action="edit"
-          data-id="${row.epiId}"
+          data-id="${dataId}"
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
           title="Editar">
           Editar
@@ -65,7 +68,7 @@ const columns = [
       const deleteBtn = `
         <button
           data-action="delete"
-          data-id="${row.epiId}"
+          data-id="${dataId}"
           class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
           title="Excluir">
           Excluir
@@ -97,52 +100,14 @@ const options = {
 
 const epis = ref([]);
 
-onMounted(async () => {
-  try {
-    const response = await fetch(`${backUrl}/api/epis/`);
-    if (!response.ok) throw new Error('Erro ao buscar EPI');
-    const data = await response.json();
-    epis.value = data;
-
-    if (data.length > 0) {
-      console.log('Dados do primeiro EPI (da API):', data[0]);
-    }
-
-    await nextTick();
-    if (dtRef.value && globalSearch.value) dtRef.value.dt.search(globalSearch.value).draw();
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-const applySearch = () => {
-  if (dtRef.value) dtRef.value.dt.search(globalSearch.value).draw();
-}
-
-const handleTableClick = (event) => {
-  const target = event.target.closest('button[data-action]');
-  if (!target) return;
-
-  const action = target.dataset.action;
-  const id = target.dataset.id;
-  const epi = epis.value.find(e => e.epiId.toString() === id);
-
-  if (!epi) return;
-
-  if (action === 'edit') {
-    handleEdit(epi);
-  } else if (action === 'delete') {
-    handleDelete(epi);
-  }
-};
-
+// handler de editar
 const handleEdit = (epi) => {
   console.log('EDITAR EPI:', epi);
   emit('open-edit-epi-modal', epi);
 };
 
+// handler de excluir (já com SweetAlert)
 const handleDelete = (epi) => {
-
   Swal.fire({
     title: 'Você tem certeza?',
     text: `Deseja realmente excluir o EPI "${epi.descricao}" (CA: ${epi.codigoCompra})?`,
@@ -155,7 +120,7 @@ const handleDelete = (epi) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`${backUrl}/api/epis/${epi.epiId}`, {
+        const response = await fetch(`${backUrl}/api/epis/${epi.id ?? epi.epiId}`, {
           method: 'DELETE',
         });
 
@@ -163,25 +128,96 @@ const handleDelete = (epi) => {
           throw new Error('Falha ao excluir EPI');
         }
 
-        epis.value = epis.value.filter(e => e.epiId !== epi.epiId);
+        // remove da lista local
+        epis.value = epis.value.filter(e => {
+          // compara ambos os campos possíveis
+          const a = e.id?.toString?.() ?? e.id;
+          const b = e.epiId?.toString?.() ?? e.epiId;
+          const target = epi.id?.toString?.() ?? epi.epiId?.toString?.();
+          return !(a === target || b === target);
+        });
 
-        Swal.fire(
-          'Excluído!',
-          'O EPI foi excluído com sucesso.',
-          'success'
-        );
+        Swal.fire('Excluído!', 'O EPI foi excluído com sucesso.', 'success');
 
       } catch (error) {
         console.error('Erro ao excluir EPI:', error);
-        Swal.fire(
-          'Erro!',
-          'Não foi possível excluir o EPI. Tente novamente.',
-          'error'
-        );
+        Swal.fire('Erro!', 'Não foi possível excluir o EPI. Tente novamente.', 'error');
       }
     }
   });
 };
+
+onMounted(async () => {
+  try {
+    console.log("URL do backend:", `${backUrl}/api/epis/`);
+    const response = await fetch(`${backUrl}/api/epis/`);
+    if (!response.ok) throw new Error('Erro ao buscar EPI');
+    const data = await response.json();
+    epis.value = data;
+
+    if (data.length > 0) {
+      console.log('Dados do primeiro EPI (da API):', data[0]);
+    }
+
+    await nextTick();
+
+    // se quiser aplicar busca inicial
+    if (dtRef.value && globalSearch.value) dtRef.value.dt.search(globalSearch.value).draw();
+
+    // pega instância do DataTable (é um objeto jQuery DataTable)
+    // dtRef.value.dt é a instância exposta pelo datatables.net-vue3
+    tableInstance = dtRef.value?.dt;
+
+    // se existir, registra listener direto no DataTables (delegation)
+    if (tableInstance && typeof tableInstance.on === 'function') {
+      // use function() para que "this" seja o elemento clicado (ou podemos usar event.currentTarget)
+      tableInstance.on('click', 'button[data-action]', function (e) {
+        // this é o botão que foi clicado
+        const btn = this;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+
+        if (!id) {
+          console.warn('botão com data-id vazio');
+          return;
+        }
+
+        // procura pelo EPI: compara com epiId ou id (string safe)
+        const epi = epis.value.find(ep => {
+          const epId = ep.epiId?.toString?.();
+          const normalId = ep.id?.toString?.();
+          return (epId === id) || (normalId === id);
+        });
+
+        if (!epi) {
+          console.warn('EPI não encontrado para id', id);
+          return;
+        }
+
+        if (action === 'edit') {
+          handleEdit(epi);
+        } else if (action === 'delete') {
+          handleDelete(epi);
+        }
+      });
+    } else {
+      console.warn('Não foi possível recuperar tableInstance para adicionar o listener.');
+    }
+
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+onUnmounted(() => {
+  if (tableInstance && typeof tableInstance.off === 'function') {
+    tableInstance.off('click', 'button[data-action]');
+  }
+});
+
+const applySearch = () => {
+  if (dtRef.value) dtRef.value.dt.search(globalSearch.value).draw();
+}
 </script>
 
 <template>
@@ -202,8 +238,8 @@ const handleDelete = (epi) => {
 
     <main class="p-4 sm:p-8">
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
-        <DataTable :columns="columns" :data="epis" :options="options" ref="dtRef" class="w-full text-sm text-gray-700"
-          @click="handleTableClick">
+        <!-- sem @click aqui -->
+        <DataTable :columns="columns" :data="epis" :options="options" ref="dtRef" class="w-full text-sm text-gray-700">
         </DataTable>
       </div>
     </main>
@@ -215,6 +251,8 @@ const handleDelete = (epi) => {
   width: 100%;
   padding: 0 !important;
 }
+
+/* (mantive o seu CSS original — não alterei visual) */
 
 :deep(.dataTables_filter) {
   display: none;
