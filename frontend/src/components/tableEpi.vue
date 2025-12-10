@@ -20,33 +20,13 @@ DataTable.use(Buttons);
 
 const globalSearch = ref('');
 const dtRef = ref(null);
-let tableInstance = null; // referência ao dataTables instance (jQuery DataTable)
+let tableInstance = null;
 
-// colunas: note que agora data-id usa row.epiId || row.id
 const columns = [
-  {
-    data: 'codigoAutenticacao',
-    title: 'CA',
-    className: 'text-center',
-    render: (data) => data || "Não Informado"
-  },
-  {
-    data: 'descricao',
-    title: 'Descrição',
-    className: 'text-center'
-  },
-  {
-    data: 'codigoCompra',
-    title: 'Cod. Compra',
-    className: 'text-center',
-    render: (data) => data == 0 ? "Não Informado" : data
-  },
-  {
-    data: 'dataValidade',
-    title: 'Validade',
-    className: 'text-center',
-    render: (data) => data == null ? "Não Informado" : data
-  },
+  { data: 'codigoAutenticacao', title: 'CA', className: 'text-center', render: (data) => data || "Não Informado" },
+  { data: 'descricao', title: 'Descrição', className: 'text-center' },
+  { data: 'codigoCompra', title: 'Cod. Compra', className: 'text-center', render: (data) => data == 0 ? "Não Informado" : data },
+  { data: 'dataValidade', title: 'Validade', className: 'text-center', render: (data) => data == null ? "Não Informado" : data },
   {
     data: null,
     title: 'Ações',
@@ -54,26 +34,9 @@ const columns = [
     searchable: false,
     className: 'text-center',
     render: (_d, _t, row) => {
-      // usa epiId se existir, senão id
       const dataId = row.epiId ?? row.id ?? '';
-      const editBtn = `
-        <button
-          data-action="edit"
-          data-id="${dataId}"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
-          title="Editar">
-          Editar
-        </button>`;
-
-      const deleteBtn = `
-        <button
-          data-action="delete"
-          data-id="${dataId}"
-          class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
-          title="Excluir">
-          Excluir
-        </button>`;
-
+      const editBtn = `<button data-action="edit" data-id="${dataId}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Editar">Editar</button>`;
+      const deleteBtn = `<button data-action="delete" data-id="${dataId}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Excluir">Excluir</button>`;
       return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
     }
   }
@@ -100,13 +63,11 @@ const options = {
 
 const epis = ref([]);
 
-// handler de editar
 const handleEdit = (epi) => {
   console.log('EDITAR EPI:', epi);
   emit('open-edit-epi-modal', epi);
 };
 
-// handler de excluir (já com SweetAlert)
 const handleDelete = (epi) => {
   Swal.fire({
     title: 'Você tem certeza?',
@@ -120,17 +81,19 @@ const handleDelete = (epi) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
+        const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
         const response = await fetch(`${backUrl}/api/epis/${epi.id ?? epi.epiId}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}` // <--- ENVIA TOKEN
+          }
         });
 
         if (!response.ok) {
           throw new Error('Falha ao excluir EPI');
         }
 
-        // remove da lista local
         epis.value = epis.value.filter(e => {
-          // compara ambos os campos possíveis
           const a = e.id?.toString?.() ?? e.id;
           const b = e.epiId?.toString?.() ?? e.epiId;
           const target = epi.id?.toString?.() ?? epi.epiId?.toString?.();
@@ -149,9 +112,25 @@ const handleDelete = (epi) => {
 
 onMounted(async () => {
   try {
+    const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+
     console.log("URL do backend:", `${backUrl}/api/epis/`);
-    const response = await fetch(`${backUrl}/api/epis/`);
-    if (!response.ok) throw new Error('Erro ao buscar EPI');
+
+    const response = await fetch(`${backUrl}/api/epis/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // <--- ENVIA TOKEN
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        Swal.fire('Sessão Expirada', 'Faça login novamente.', 'warning');
+      }
+      throw new Error('Erro ao buscar EPI');
+    }
+
     const data = await response.json();
     epis.value = data;
 
@@ -161,47 +140,29 @@ onMounted(async () => {
 
     await nextTick();
 
-    // se quiser aplicar busca inicial
     if (dtRef.value && globalSearch.value) dtRef.value.dt.search(globalSearch.value).draw();
 
-    // pega instância do DataTable (é um objeto jQuery DataTable)
-    // dtRef.value.dt é a instância exposta pelo datatables.net-vue3
     tableInstance = dtRef.value?.dt;
 
-    // se existir, registra listener direto no DataTables (delegation)
     if (tableInstance && typeof tableInstance.on === 'function') {
-      // use function() para que "this" seja o elemento clicado (ou podemos usar event.currentTarget)
       tableInstance.on('click', 'button[data-action]', function (e) {
-        // this é o botão que foi clicado
         const btn = this;
         const action = btn.getAttribute('data-action');
         const id = btn.getAttribute('data-id');
 
-        if (!id) {
-          console.warn('botão com data-id vazio');
-          return;
-        }
+        if (!id) return;
 
-        // procura pelo EPI: compara com epiId ou id (string safe)
         const epi = epis.value.find(ep => {
           const epId = ep.epiId?.toString?.();
           const normalId = ep.id?.toString?.();
           return (epId === id) || (normalId === id);
         });
 
-        if (!epi) {
-          console.warn('EPI não encontrado para id', id);
-          return;
-        }
+        if (!epi) return;
 
-        if (action === 'edit') {
-          handleEdit(epi);
-        } else if (action === 'delete') {
-          handleDelete(epi);
-        }
+        if (action === 'edit') handleEdit(epi);
+        else if (action === 'delete') handleDelete(epi);
       });
-    } else {
-      console.warn('Não foi possível recuperar tableInstance para adicionar o listener.');
     }
 
   } catch (error) {
@@ -238,7 +199,6 @@ const applySearch = () => {
 
     <main class="p-4 sm:p-8">
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
-        <!-- sem @click aqui -->
         <DataTable :columns="columns" :data="epis" :options="options" ref="dtRef" class="w-full text-sm text-gray-700">
         </DataTable>
       </div>
@@ -251,8 +211,6 @@ const applySearch = () => {
   width: 100%;
   padding: 0 !important;
 }
-
-/* (mantive o seu CSS original — não alterei visual) */
 
 :deep(.dataTables_filter) {
   display: none;
@@ -292,6 +250,7 @@ const applySearch = () => {
 
 :deep(table.dataTable tbody tr:hover) {
   background-color: rgb(219, 234, 254);
+  cursor: pointer;
 }
 
 :deep(table.dataTable tbody tr button) {
@@ -324,7 +283,6 @@ const applySearch = () => {
 
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button.current) {
   background-color: #2563eb;
-  /* azul */
   color: white;
   border-color: #2563eb;
   font-weight: 600;
@@ -340,11 +298,7 @@ const applySearch = () => {
   cursor: pointer;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_paginate .first,
-  div.dataTables_wrapper div.dataTables_paginate .last,
-  div.dataTables_wrapper div.dataTables_paginate .previous,
-  div.dataTables_wrapper div.dataTables_paginate .next) {
+:deep(div.dataTables_wrapper div.dataTables_paginate .first, div.dataTables_wrapper div.dataTables_paginate .last, div.dataTables_wrapper div.dataTables_paginate .previous, div.dataTables_wrapper div.dataTables_paginate .next) {
   font-weight: 500;
   cursor: pointer;
-}
-</style>
+}</style>

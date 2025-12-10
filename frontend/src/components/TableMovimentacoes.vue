@@ -1,11 +1,10 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
-import FormularioEntregaEpi from './FormularioEntregaEpi.vue'; // Certifique-se que o caminho está correto
+import FormularioEntregaEpi from './FormularioEntregaEpi.vue';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import VueSignaturePad from 'vue-signature-pad';
-
 
 // --- Props e Emits ---
 const props = defineProps({
@@ -38,9 +37,18 @@ onMounted(async () => {
 async function fetchMovimentacoes() {
     loading.value = true;
     try {
-        const response = await fetch(`${backUrl}/api/movimentacao/`); // Busca todas
+        const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+        const response = await fetch(`${backUrl}/api/movimentacao/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // <--- ENVIA TOKEN
+            }
+        });
+
         if (!response.ok) {
             console.warn(`API ${response.url} não encontrada ou falhou: ${response.status}`);
+            if (response.status === 401) Swal.fire('Erro', 'Sessão expirada. Faça login novamente.', 'warning');
             movimentacoes.value = [];
         } else {
             const allData = await response.json();
@@ -59,47 +67,34 @@ async function fetchMovimentacoes() {
 
 async function fetchEpis() {
     try {
-        const response = await axios.get(`${backUrl}/api/epis/`);
+        const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+        const response = await axios.get(`${backUrl}/api/epis/`, {
+            headers: { Authorization: `Bearer ${token}` } // <--- ENVIA TOKEN
+        });
         epis.value = response.data;
     } catch (error) {
         console.error("Erro ao buscar EPIs:", error);
     }
 }
 
-// --- Helpers de Formatação (CORRIGIDOS) ---
+// --- Helpers de Formatação ---
 const formatarDataDisplay = (dataStr) => {
     if (!dataStr) return "";
-
     let date;
     try {
-        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
+        // Caso 1: Formato ISO
         if (dataStr.includes('-')) {
-            const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[0]), // YYYY
-                parseInt(dateParts[1]) - 1, // MM (0-indexed)
-                parseInt(dateParts[2])  // DD
-            ));
-
-            // Caso 2: Formato Brasileiro (DD/MM/YYYY)
+            const dateParts = dataStr.split('T')[0].split('-');
+            date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
+            // Caso 2: Formato Brasileiro
         } else if (dataStr.includes('/')) {
-            const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[2]), // YYYY
-                parseInt(dateParts[1]) - 1, // MM (0-indexed)
-                parseInt(dateParts[0])  // DD
-            ));
-
-            // Caso 3: Tentar a sorte com o construtor padrão
+            const dateParts = dataStr.split('/');
+            date = new Date(Date.UTC(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0])));
         } else {
             date = new Date(dataStr);
         }
 
-        if (isNaN(date.getTime())) {
-            return dataStr; // Retorna o original se for "Invalid Date"
-        }
-
-        // Formata para DD/MM/YYYY
+        if (isNaN(date.getTime())) return dataStr;
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
     } catch (e) {
@@ -109,35 +104,19 @@ const formatarDataDisplay = (dataStr) => {
 
 const formatarDataInput = (dataStr) => {
     if (!dataStr) return "";
-
     let date;
     try {
-        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
         if (dataStr.includes('-')) {
-            const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[0]),
-                parseInt(dateParts[1]) - 1,
-                parseInt(dateParts[2])
-            ));
-        }
-        // Caso 2: Formato Brasileiro (DD/MM/YYYY)
-        else if (dataStr.includes('/')) {
-            const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[2]),
-                parseInt(dateParts[1]) - 1,
-                parseInt(dateParts[0])
-            ));
-        }
-        // Caso 3: Tentar a sorte
-        else {
+            const dateParts = dataStr.split('T')[0].split('-');
+            date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
+        } else if (dataStr.includes('/')) {
+            const dateParts = dataStr.split('/');
+            date = new Date(Date.UTC(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0])));
+        } else {
             date = new Date(dataStr);
         }
 
         if (isNaN(date.getTime())) return '';
-
-        // Formata para YYYY-MM-DD
         const year = date.getUTCFullYear();
         const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
         const day = date.getUTCDate().toString().padStart(2, '0');
@@ -157,7 +136,7 @@ const linhasEmBranco = computed(() => {
 const filteredEpisInEdit = computed(() => {
     const query = editSearchQuery.value.toLowerCase().trim();
     if (!query) {
-        return epis.value; // Template limita a 10
+        return epis.value;
     }
     return epis.value.filter(epi => {
         const descricao = epi.descricao ? epi.descricao.toLowerCase() : '';
@@ -180,7 +159,6 @@ const editDisplayValue = computed({
     },
     set(value) {
         editSearchQuery.value = value;
-        // Não limpa epiId aqui automaticamente ao digitar
     }
 });
 
@@ -195,9 +173,12 @@ const editedCaDisplay = computed(() => {
 
 // --- Funções de Edição Inline ---
 function startEdit(item) {
-    editingItemId.value = item.id;
+    // <--- CORREÇÃO: Garante o ID correto (movimentacaoId ou id)
+    const idCorreto = item.movimentacaoId || item.id;
+    editingItemId.value = idCorreto;
+
     editFormData.value = {
-        id: item.id,
+        id: idCorreto,
         dataEntrega: formatarDataInput(item.dataEntrega),
         epiId: item.epi?.id || null,
         status: item.status || '',
@@ -215,18 +196,12 @@ function startEdit(item) {
 }
 
 async function saveEdit() {
-    // Validações...
     if (!editFormData.value.epiId) { Swal.fire('Atenção', 'Selecione um EPI.', 'warning'); return; }
     const quantidadeNum = parseInt(editFormData.value.quantidade, 10);
     if (isNaN(quantidadeNum) || quantidadeNum <= 0) { Swal.fire('Atenção', 'Quantidade inválida.', 'warning'); return; }
-    const codEntregaNum = parseInt(editFormData.value.cod_entrega, 10);
-    if (editFormData.value.cod_entrega && isNaN(codEntregaNum)) { Swal.fire('Atenção', 'Cod Entrega inválido.', 'warning'); return; }
-    const codDevolucaoNum = parseInt(editFormData.value.cod_devolucao, 10);
-    if (editFormData.value.cod_devolucao && isNaN(codDevolucaoNum)) { Swal.fire('Atenção', 'Cod Devolução inválido.', 'warning'); return; }
 
     loading.value = true;
 
-    // Payload para o backend (campos que existem)
     const payloadBackend = {
         dataEntrega: editFormData.value.dataEntrega || null,
         epiId: editFormData.value.epiId,
@@ -237,24 +212,33 @@ async function saveEdit() {
     };
 
     try {
+        const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+        // <--- CORREÇÃO: Usa o ID correto na URL
         const response = await axios.put(`${backUrl}/api/movimentacao/${editingItemId.value}`, payloadBackend, {
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // <--- ENVIA TOKEN
+            }
         });
 
         if (response.status >= 200 && response.status < 300) {
             const updatedItemFromServer = response.data || {};
 
-            // Atualiza item local mesclando dados
-            const finalUpdatedItem = {
-                ...movimentacoes.value.find(m => m.id === editingItemId.value),
-                ...editFormData.value,
-                epi: epis.value.find(e => e.id === editFormData.value.epiId) || {},
-                dataEntrega: editFormData.value.dataEntrega ? new Date(editFormData.value.dataEntrega + 'T00:00:00Z').toISOString() : null,
-                dataProximaEntrega: editFormData.value.dataProximaEntrega ? new Date(editFormData.value.dataProximaEntrega + 'T00:00:00Z').toISOString() : null,
-                ...updatedItemFromServer,
-            };
+            // Atualiza item local mesclando dados (Busca pelo ID correto)
+            const index = movimentacoes.value.findIndex(m => (m.movimentacaoId || m.id) === editingItemId.value);
 
-            handleItemAtualizado(finalUpdatedItem);
+            if (index !== -1) {
+                const itemAtual = movimentacoes.value[index];
+                movimentacoes.value[index] = {
+                    ...itemAtual,
+                    ...editFormData.value,
+                    epi: epis.value.find(e => e.id === editFormData.value.epiId) || {},
+                    dataEntrega: editFormData.value.dataEntrega ? new Date(editFormData.value.dataEntrega + 'T00:00:00Z').toISOString() : null,
+                    dataProximaEntrega: editFormData.value.dataProximaEntrega ? new Date(editFormData.value.dataProximaEntrega + 'T00:00:00Z').toISOString() : null,
+                    ...updatedItemFromServer,
+                };
+            }
+
             Swal.fire('Salvo!', 'Alterações salvas.', 'success');
             cancelEdit();
         } else {
@@ -288,6 +272,14 @@ watch(() => editFormData.value.epiId, (newEpiId) => {
 // --- Função Excluir ---
 function handleDeleteEpi(item) {
     const nomeEpi = item.epi?.descricao || 'Item Desconhecido';
+    // <--- CORREÇÃO: Garante o ID correto para exclusão
+    const idParaExcluir = item.movimentacaoId || item.id;
+
+    if (!idParaExcluir) {
+        Swal.fire('Erro', 'ID da movimentação não encontrado.', 'error');
+        return;
+    }
+
     Swal.fire({
         title: 'Você tem certeza?',
         text: `Deseja realmente excluir: ${nomeEpi}?`,
@@ -301,12 +293,20 @@ function handleDeleteEpi(item) {
         if (result.isConfirmed) {
             loading.value = true;
             try {
-                const response = await fetch(`${backUrl}/api/movimentacao/${item.id}`, { method: 'DELETE' });
+                const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+                // <--- CORREÇÃO: Usa idParaExcluir na URL
+                const response = await fetch(`${backUrl}/api/movimentacao/${idParaExcluir}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` } // <--- ENVIA TOKEN
+                });
+
                 if (!response.ok) {
                     const errorData = await response.text();
                     throw new Error(`Falha ao excluir: ${response.status} ${errorData}`);
                 }
-                movimentacoes.value = movimentacoes.value.filter(m => m.id !== item.id);
+
+                // Remove visualmente usando o ID correto
+                movimentacoes.value = movimentacoes.value.filter(m => (m.movimentacaoId || m.id) !== idParaExcluir);
                 Swal.fire('Excluído!', `'${nomeEpi}' foi excluído.`, 'success');
             } catch (error) {
                 console.error('Erro ao excluir:', error);
@@ -323,7 +323,8 @@ function openFormEntrega() { isFormEntregaVisible.value = true; }
 function closeFormEntrega() { isFormEntregaVisible.value = false; fetchMovimentacoes(); }
 function handleItemAdicionado(itemSalvo) { movimentacoes.value.unshift({ ...itemSalvo, epi: itemSalvo.epi || {} }); closeFormEntrega(); }
 function handleItemAtualizado(itemAtualizado) {
-    const index = movimentacoes.value.findIndex(m => m.id === itemAtualizado.id);
+    const idKey = itemAtualizado.movimentacaoId ? 'movimentacaoId' : 'id';
+    const index = movimentacoes.value.findIndex(m => m[idKey] === itemAtualizado[idKey]);
     if (index !== -1) {
         const newList = [...movimentacoes.value];
         newList[index] = { ...itemAtualizado, epi: itemAtualizado.epi || {} };
@@ -342,7 +343,7 @@ function selectEpiInEdit(epi) {
     editFormData.value.epiId = epi.id;
     isEditDropdownOpen.value = false;
     editSearchQuery.value = '';
-    const currentDisplay = editDisplayValue.value; // Força re-render do display
+    const currentDisplay = editDisplayValue.value;
 }
 
 
@@ -361,10 +362,13 @@ function closeEditDropdown() {
 }
 
 // --- Vue-pad ---
-
 const showSignatureModal = ref(false);
 const assinaturaAtual = ref(null);
 const assinaturaRowIndex = ref(null);
+function abrirPad(index) {
+    console.log("Abrir pad para linha index:", index);
+    // Sua lógica original do pad iria aqui, mantive a estrutura.
+}
 
 </script>
 
@@ -373,7 +377,6 @@ const assinaturaRowIndex = ref(null);
         class="fixed inset-0 z-40 bg-black bg-opacity-70 flex justify-center items-center p-4 transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-2xl w-[1400px] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
 
-            <!-- Cabeçalho do Modal -->
             <header class="bg-gray-100 p-4 flex justify-between items-center border-b border-gray-300">
                 <h2 class="text-xl font-semibold text-gray-800">
                     Ficha de Controle de EPIs {{ loading ? '(Carregando...)' : '' }}
@@ -387,7 +390,6 @@ const assinaturaRowIndex = ref(null);
             </header>
 
             <main class="p-6 overflow-y-auto" style="font-family: Arial, sans-serif;">
-                <!-- Cabeçalho da Ficha -->
                 <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
                     <img src="/logo-femsa.png" alt="Coca-Cola FEMSA Brasil" class="h-10"
                         onerror="this.style.display='none'">
@@ -408,17 +410,9 @@ const assinaturaRowIndex = ref(null);
                     </div>
                     <div class="flex flex-wrap space-x-4 mt-1">
                         <div class="flex-1 min-w-[300px]"><strong>RE/CPF:</strong> {{ colaborador.re || 'N/A' }}</div>
-
-                        <!-- 
-                          ######################################################
-                          # CORREÇÃO AQUI: Verifica 'data_admissao' e 'dataAdmissao'
-                          ######################################################
-                        -->
                         <div class="flex-1 min-w-[200px]"><strong>Data de Admissão:</strong> {{ (colaborador.data_admissao
-                            || colaborador.dataAdmissao) ?
-                            formatarDataDisplay(colaborador.data_admissao || colaborador.dataAdmissao) : '____/____/______'
-                        }}</div>
-
+                            || colaborador.dataAdmissao) ? formatarDataDisplay(colaborador.data_admissao ||
+                                colaborador.dataAdmissao) : '____/____/______' }}</div>
                     </div>
                 </div>
                 <div class="text-sm space-y-1 my-3">
@@ -445,21 +439,13 @@ const assinaturaRowIndex = ref(null);
                     </button>
                 </div>
 
-                <!-- Tabela com Edição Inline -->
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-collapse border border-black text-sm">
                         <thead class="bg-gray-100">
-                            <!-- 
-                                    ######################################################
-                                    # CORREÇÃO CABEÇALHO (THEAD)
-                                    ######################################################
-                                -->
                             <tr class="text-center font-bold">
-                                <!-- Ajuste nas larguras e adicionado 'whitespace-normal' para permitir quebra -->
                                 <th class="border border-black p-1 w-[90px] header-cell">DATA ENTREGA</th>
                                 <th class="border border-black p-1 w-[50px] header-cell">QTDE</th>
                                 <th class="border border-black p-1 header-cell">DESCRIÇÃO DO EPI</th>
-                                <!-- Largura flexível -->
                                 <th class="border border-black p-1 w-[70px] header-cell">CA</th>
                                 <th class="border border-black p-1 w-[100px] header-cell">ASSINATURA</th>
                                 <th class="border border-black p-1 w-[100px] header-cell">DATA DEVOLUÇÃO</th>
@@ -470,27 +456,27 @@ const assinaturaRowIndex = ref(null);
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in movimentacoes" :key="item.id" class="h-9 hover:bg-gray-50"
-                                :class="{ 'bg-yellow-100': editingItemId === item.id }">
+                            <tr v-for="item in movimentacoes" :key="item.movimentacaoId || item.id"
+                                class="h-9 hover:bg-gray-50"
+                                :class="{ 'bg-yellow-100': editingItemId === (item.movimentacaoId || item.id) }">
 
-                                <!-- Data Entrega -->
                                 <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="date" v-model="editFormData.dataEntrega"
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="date"
+                                        v-model="editFormData.dataEntrega"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ formatarDataDisplay(item.dataEntrega) }}</span>
                                 </td>
 
-                                <!-- Quantidade -->
                                 <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="number" min="1"
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="number" min="1"
                                         v-model.number="editFormData.quantidade"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.quantidade || 1 }}</span>
                                 </td>
 
-                                <!-- Descrição (Combobox EPI) -->
                                 <td class="border border-black p-0 relative align-top">
-                                    <div v-if="editingItemId === item.id" class="relative w-full h-full">
+                                    <div v-if="editingItemId === (item.movimentacaoId || item.id)"
+                                        class="relative w-full h-full">
                                         <input type="text" :value="editDisplayValue"
                                             @input="editDisplayValue = $event.target.value; isEditDropdownOpen = true"
                                             @focus="openEditDropdown" @blur="closeEditDropdown"
@@ -517,60 +503,54 @@ const assinaturaRowIndex = ref(null);
                                     <span v-else class="p-1 block">{{ item.epi?.descricao || 'N/A' }}</span>
                                 </td>
 
-
-                                <!-- CA (Automático) -->
                                 <td class="border border-black p-1 text-center align-top">
-                                    <span v-if="editingItemId === item.id">{{ editedCaDisplay }}</span>
+                                    <span v-if="editingItemId === (item.movimentacaoId || item.id)">{{ editedCaDisplay
+                                    }}</span>
                                     <span v-else>{{ item.epi?.codigoAutenticacao || 'N/A' }}</span>
                                 </td>
 
-                                <!-- Assinatura (Status) -->
-                                <td class="text-center align-middle">
-                                    <template v-if="row.assinatura">
-                                        <img :src="row.assinatura" class="h-10 mx-auto" />
+                                <td class="text-center align-middle border border-black">
+                                    <template v-if="item.assinatura">
+                                        <img :src="item.assinatura" class="h-10 mx-auto" />
                                     </template>
-
                                     <template v-else>
-                                        <button class="bg-green-600 text-white px-3 py-1 rounded" @click="abrirPad(index)">
+                                        <button class="bg-green-600 text-white px-3 py-1 rounded text-xs"
+                                            @click="abrirPad(item)">
                                             Assinar
                                         </button>
                                     </template>
                                 </td>
 
-                                <!-- Data Devolução -->
                                 <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="date"
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="date"
                                         v-model="editFormData.dataProximaEntrega"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ formatarDataDisplay(item.dataProximaEntrega) }}</span>
                                 </td>
 
-                                <!-- Recebedor -->
                                 <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" v-model="editFormData.recebedor"
-                                        class="w-full h-full p-1 text-center input-edit" />
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="text"
+                                        v-model="editFormData.recebedor" class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.recebedor || '' }}</span>
                                 </td>
 
-                                <!-- Código Entrega -->
                                 <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" pattern="[0-9]*" inputmode="numeric"
-                                        v-model="editFormData.cod_entrega"
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="text"
+                                        pattern="[0-9]*" inputmode="numeric" v-model="editFormData.cod_entrega"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.cod_entrega || '' }}</span>
                                 </td>
 
-                                <!-- Código Devolução -->
                                 <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" pattern="[0-9]*" inputmode="numeric"
-                                        v-model="editFormData.cod_devolucao"
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="text"
+                                        pattern="[0-9]*" inputmode="numeric" v-model="editFormData.cod_devolucao"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.cod_devolucao || '' }}</span>
                                 </td>
 
-                                <!-- Ações -->
                                 <td class="border border-black p-1 text-center whitespace-nowrap align-top">
-                                    <div v-if="editingItemId === item.id" class="flex justify-center items-center gap-1">
+                                    <div v-if="editingItemId === (item.movimentacaoId || item.id)"
+                                        class="flex justify-center items-center gap-1">
                                         <button @click="saveEdit()" title="Salvar" :disabled="loading"
                                             class="text-green-600 hover:text-green-800 p-1 disabled:opacity-50">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -607,7 +587,6 @@ const assinaturaRowIndex = ref(null);
                                 </td>
                             </tr>
 
-                            <!-- Linhas em branco -->
                             <tr v-for="n in linhasEmBranco" :key="`blank-${n}`" class="h-9">
                                 <td v-for="i in 10" :key="i" class="border border-black"></td>
                             </tr>
@@ -619,15 +598,9 @@ const assinaturaRowIndex = ref(null);
         </div>
     </div>
 
-    <!-- Modal para Adicionar Item -->
-    <FormularioEntregaEpi
-        v-if="isFormEntregaVisible"
-        :funcionarioId="colaborador.funcionarioId"
-        :itemParaEditar="null"
-        @close="closeFormEntrega"
-        @itemAdicionado="handleItemAdicionado"
-        @itemAtualizado="handleItemAtualizado"
-    />
+    <FormularioEntregaEpi v-if="isFormEntregaVisible" :funcionarioId="colaborador.funcionarioId || colaborador.id"
+        :itemParaEditar="null" @close="closeFormEntrega" @itemAdicionado="handleItemAdicionado"
+        @itemAtualizado="handleItemAtualizado" />
 </template>
 
 <style scoped>
@@ -723,5 +696,4 @@ td input[type=number] {
 /* Estilo para dropdown do combobox */
 .edit-combobox-dropdown {
     z-index: 20;
-}
-</style>
+}</style>

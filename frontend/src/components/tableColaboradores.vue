@@ -132,35 +132,44 @@ const colaboradores = ref([]); // Mantém o ref para os dados originais
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${backUrl}/api/funcionarios/`);
-    if (!response.ok) throw new Error('Erro ao buscar colaboradores');
-    const data = await response.json();
-    colaboradores.value = data; // Armazena os dados buscados
+    // 1. Recupera o token salvo (Verifique se o nome é 'token' mesmo no seu localStorage)
+    const token = localStorage.getItem('token');
 
-    // Espera o DOM ser atualizado E a referência dtRef estar disponível
+    // 2. Faz a chamada com o cabeçalho de autorização
+    const response = await fetch(`${backUrl}/api/funcionarios/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // <--- ADICIONADO
+      }
+    });
+
+    if (!response.ok) {
+      // Dica: Se der 401 aqui, o token pode estar expirado
+      throw new Error(`Erro ao buscar colaboradores: ${response.status}`);
+    }
+
+    const data = await response.json();
+    colaboradores.value = data;
+
     await nextTick();
 
-    // #############################################################
-    // ALTERAÇÃO AQUI: Usar API do DataTables para popular
-    // #############################################################
     if (dtRef.value && dtRef.value.dt) {
       const dtInstance = dtRef.value.dt;
-      dtInstance.clear(); // Limpa dados existentes na tabela DT
-      dtInstance.rows.add(colaboradores.value); // Adiciona os novos dados
-      dtInstance.draw(); // Redesenha a tabela com os novos dados
+      dtInstance.clear();
+      dtInstance.rows.add(colaboradores.value);
+      dtInstance.draw();
 
-      // Aplica a busca inicial se houver
       if (globalSearch.value) {
         dtInstance.search(globalSearch.value).draw();
       }
     } else {
-      console.warn("Referência do DataTable (dtRef.value.dt) não encontrada após nextTick.");
+      console.warn("Referência do DataTable não encontrada após nextTick.");
     }
 
   } catch (error) {
     console.error("Erro no onMounted:", error);
-    colaboradores.value = []; // Garante que seja um array vazio em caso de erro
-    // Tenta limpar a tabela se ela já existia
+    colaboradores.value = [];
     if (dtRef.value && dtRef.value.dt) {
       dtRef.value.dt.clear().draw();
     }
@@ -245,21 +254,29 @@ const handleDelete = (colaborador) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
+        // 1. Recupera o token novamente para esta ação
+        const token = localStorage.getItem('token');
+
+        // 2. Faz a chamada DELETE com o token
         const response = await fetch(`${backUrl}/api/funcionarios/${colaborador.id}`, {
           method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // <--- ADICIONADO
+          }
         });
 
         if (!response.ok) {
           throw new Error('Falha ao excluir colaborador');
         }
 
-        // Remove do array local E da tabela DataTables
+        // Remove do array local
         colaboradores.value = colaboradores.value.filter(c => c.id !== colaborador.id);
+
+        // Remove da tabela DataTables visualmente
         if (dtRef.value && dtRef.value.dt) {
-          // Encontra a linha na tabela DT e remove
           dtRef.value.dt.rows((idx, data, node) => data.id === colaborador.id).remove().draw();
         }
-
 
         Swal.fire(
           'Excluído!',
@@ -271,7 +288,7 @@ const handleDelete = (colaborador) => {
         console.error('Erro ao excluir:', error);
         Swal.fire(
           'Erro!',
-          'Não foi possível excluir o colaborador. Tente novamente.',
+          'Não foi possível excluir o colaborador. Verifique sua conexão ou permissões.',
           'error'
         );
       }

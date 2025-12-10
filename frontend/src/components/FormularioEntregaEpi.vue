@@ -1,31 +1,24 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
 // --- Props e Emits ---
 const props = defineProps({
-    funcionarioId: {
-        type: [Number, String],
-        required: true
-    },
-    itemParaEditar: {
-        type: Object,
-        default: null
-    }
+    funcionarioId: { type: [Number, String], required: true },
+    itemParaEditar: { type: Object, default: null }
 });
 const emit = defineEmits(['close', 'itemAdicionado', 'itemAtualizado']);
 
 // --- Configuração ---
 const backUrl = import.meta.env.VITE_BACKEND_URL;
 const loading = ref(false);
-const epis = ref([]); // Lista completa de EPIs
+const epis = ref([]);
 const isDropdownOpen = ref(false);
-const searchQuery = ref('');
+const searchQuery = ref(''); // Texto que aparece no input
 
 const isEditMode = computed(() => !!props.itemParaEditar);
 
-// --- Estado do formulário ---
 const form = ref({
     dataEntrega: new Date().toISOString().split('T')[0],
     epiId: null,
@@ -36,10 +29,7 @@ const form = ref({
 // --- Filtro de EPIs ---
 const filteredEpis = computed(() => {
     const query = searchQuery.value.toLowerCase().trim();
-    if (!query) {
-        return epis.value;
-    }
-
+    if (!query) return epis.value;
     return epis.value.filter(epi => {
         const descricao = (epi.descricao || '').toLowerCase();
         const ca = (epi.codigoAutenticacao?.toString() || '').toLowerCase();
@@ -47,92 +37,101 @@ const filteredEpis = computed(() => {
     });
 });
 
-// --- Valor exibido no input (controle do combobox) ---
-const displayValue = computed({
-    get() {
-        if (isDropdownOpen.value) {
-            return searchQuery.value;
-        }
-        if (form.value.epiId) {
-            const epi = epis.value.find(e => e.epiId === form.value.epiId);
-            return epi ? `${epi.descricao} (CA: ${epi.codigoAutenticacao})` : '';
-        }
-        return '';
-    },
-    set(value) {
-        searchQuery.value = value;
-        if (!value) {
-            form.value.epiId = null;
-        }
-    }
-});
-
-// --- Busca inicial de EPIs ---
-onMounted(() => {
-    fetchEpis();
+// --- Inicialização ---
+onMounted(async () => {
+    await fetchEpis(); // Espera carregar os EPIs primeiro
 
     if (isEditMode.value) {
         const item = props.itemParaEditar;
 
-        // Formatação da data (robusta)
+        // Formatar Data
         let dataFormatada = item.dataEntrega;
         try {
-            const date = new Date(item.dataEntrega);
-            if (!isNaN(date.getTime())) {
-                dataFormatada = date.toISOString().split('T')[0];
-            } else if (typeof item.dataEntrega === 'string' && item.dataEntrega.includes('/')) {
-                const [dia, mes, ano] = item.dataEntrega.split('/');
-                dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-            }
-        } catch (e) {
-            console.warn('Falha ao formatar data:', e);
+            if (item.dataEntrega.includes('T')) dataFormatada = item.dataEntrega.split('T')[0];
+        } catch (e) { }
+
+        // Recuperar ID do EPI
+        const currentEpiId = item.epi?.epiId || item.epi?.id || null;
+
+        // Tenta achar o nome do EPI na lista carregada para preencher o input
+        const epiEncontrado = epis.value.find(e => (e.epiId || e.id) == currentEpiId);
+
+        if (epiEncontrado) {
+            searchQuery.value = `${epiEncontrado.descricao} (CA: ${epiEncontrado.codigoAutenticacao})`;
+        } else if (item.epi?.descricao) {
+            // Fallback se não achou na lista mas tem descrição
+            searchQuery.value = item.epi.descricao;
         }
 
-        // ✅ CORREÇÃO PRINCIPAL: usa item.epi.epiId, não .id
         form.value = {
             dataEntrega: dataFormatada,
-            epiId: item.epi?.epiId ?? null,
+            epiId: currentEpiId,
             funcionarioId: props.funcionarioId,
             status: item.status || 'ASSINADO'
         };
     }
 });
 
-// --- Carregar lista de EPIs ---
+// --- API ---
 async function fetchEpis() {
     try {
-        const response = await axios.get(`${backUrl}/api/epis/`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backUrl}/api/epis/`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
         epis.value = response.data;
     } catch (error) {
-        console.error("Erro ao buscar EPIs:", error);
-        Swal.fire('Erro', 'Não foi possível carregar a lista de EPIs.', 'error');
+        console.error("Erro EPIs:", error);
     }
 }
 
-// --- Seleção no dropdown ---
-function selectEpi(epi) {
-    form.value.epiId = epi.epiId;
-    isDropdownOpen.value = false;
-    searchQuery.value = '';
-}
+// --- Lógica do Combobox (CORRIGIDA) ---
 
 function openDropdown() {
     isDropdownOpen.value = true;
-    searchQuery.value = '';
+    // Se o usuário clicar para abrir e já tiver algo selecionado, 
+    // opcionalmente limpamos para ele buscar outro. 
+    // Se preferir manter o texto, comente a linha abaixo:
+    if (form.value.epiId) searchQuery.value = '';
 }
 
 function closeDropdown() {
-    setTimeout(() => {
-        isDropdownOpen.value = false;
-    }, 200);
+    // Timeout para dar tempo do clique na lista acontecer antes de fechar
+    setTimeout(() => { isDropdownOpen.value = false; }, 200);
 }
 
-// --- Salvar (criar ou atualizar) ---
+function handleInput(event) {
+    searchQuery.value = event.target.value;
+    isDropdownOpen.value = true;
+    // Se digitou, limpa o ID selecionado anteriormente para forçar nova escolha
+    form.value.epiId = null;
+}
+
+function selectEpi(epi) {
+    console.log("Selecionado:", epi); // Debug no console
+
+    // 1. Salva o ID
+    form.value.epiId = epi.epiId || epi.id;
+
+    // 2. Atualiza o texto do input visualmente
+    searchQuery.value = `${epi.descricao} (CA: ${epi.codigoAutenticacao})`;
+
+    // 3. Fecha a lista
+    isDropdownOpen.value = false;
+}
+
+// --- Salvar ---
 async function handleSave() {
     if (loading.value) return;
 
+    // Validação extra: O campo texto tem algo, mas nenhum ID foi vinculado?
+    if (searchQuery.value && !form.value.epiId) {
+        Swal.fire('Atenção', 'Você digitou um EPI mas não clicou na lista para selecionar. Por favor, selecione uma opção.', 'warning');
+        return;
+    }
+
     if (!form.value.dataEntrega || !form.value.epiId) {
-        Swal.fire('Atenção', 'Preencha a Data de Entrega e selecione um EPI.', 'warning');
+        Swal.fire('Atenção', 'Preencha a data e selecione um EPI.', 'warning');
         return;
     }
 
@@ -140,29 +139,29 @@ async function handleSave() {
 
     const payload = {
         dataEntrega: form.value.dataEntrega,
-        epi: form.value.epiId, // ✅ backend espera campo "epi" com valor do epiId
+        epi: form.value.epiId, // Envia apenas o ID
         funcionario: form.value.funcionarioId,
         status: form.value.status
     };
 
     try {
+        const token = localStorage.getItem('token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+
         if (isEditMode.value) {
-            const itemId = props.itemParaEditar.id;
-            const response = await axios.put(`${backUrl}/api/movimentacao/${itemId}`, payload);
-            Swal.fire('Salvo!', 'O item foi atualizado com sucesso.', 'success');
+            const itemId = props.itemParaEditar.movimentacaoId || props.itemParaEditar.id;
+            const response = await axios.put(`${backUrl}/api/movimentacao/${itemId}`, payload, config);
             emit('itemAtualizado', response.data);
+            Swal.fire('Sucesso', 'Atualizado!', 'success');
         } else {
-            const response = await axios.post(`${backUrl}/api/movimentacao/`, payload);
-            Swal.fire('Salvo!', 'O item foi adicionado com sucesso.', 'success');
+            const response = await axios.post(`${backUrl}/api/movimentacao/`, payload, config);
             emit('itemAdicionado', response.data);
+            Swal.fire('Sucesso', 'Adicionado!', 'success');
         }
-
         emit('close');
-
     } catch (error) {
-        console.error("Erro ao salvar:", error);
-        const errorMsg = error.response?.data?.message || 'Não foi possível salvar o item.';
-        Swal.fire('Erro!', errorMsg, 'error');
+        console.error(error);
+        Swal.fire('Erro', 'Falha ao salvar.', 'error');
     } finally {
         loading.value = false;
     }
@@ -171,95 +170,54 @@ async function handleSave() {
 
 <template>
     <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-        <div class="mx-auto w-full max-w-2xl bg-white rounded-xl shadow-lg flex flex-col">
+        <div class="mx-auto w-full max-w-2xl bg-white rounded-xl shadow-lg flex flex-col" style="min-height: 400px;">
             <div class="px-6 py-4 flex justify-between items-center border-b">
-                <h2 class="font-bold text-2xl sm:text-4xl">
+                <h2 class="font-bold text-2xl">
                     {{ isEditMode ? 'Editar Item' : 'Adicionar Item' }}
                 </h2>
-                <div @click="emit('close')" style="cursor: pointer" class="text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
+                <div @click="emit('close')" class="cursor-pointer text-gray-600 hover:text-red-500">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </div>
             </div>
 
-            <form @submit.prevent="handleSave" class="flex-grow flex flex-col justify-between">
-                <div class="p-6">
-                    <div class="w-full mx-auto space-y-6">
-                        <!-- Combobox de EPI -->
-                        <div class="relative">
-                            <label for="epiCombobox" class="block text-base font-medium text-gray-600 ml-1 mb-1">
-                                Selecione o EPI
-                            </label>
-                            <input
-                                id="epiCombobox"
-                                type="text"
-                                :value="displayValue"
-                                @input="displayValue = $event.target.value; isDropdownOpen = true"
-                                @focus="openDropdown"
-                                @blur="closeDropdown"
-                                placeholder="-- Escolha ou busque um EPI --"
-                                required
-                                class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100 focus:placeholder-gray-500"
-                            />
-                            <div
-                                v-if="isDropdownOpen"
-                                class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                            >
-                                <ul class="py-1">
-                                    <li v-if="!searchQuery" class="px-3 py-2 text-sm text-gray-500">
-                                        Mostrando os 10 primeiros. Digite para buscar...
-                                    </li>
-                                    <li
-                                        v-if="filteredEpis.length === 0 && searchQuery"
-                                        class="px-3 py-2 text-sm text-gray-500"
-                                    >
-                                        Nenhum resultado para "{{ searchQuery }}"
-                                    </li>
-                                    <li
-                                        v-for="epi in (searchQuery ? filteredEpis : filteredEpis.slice(0, 10))"
-                                        :key="epi.epiId"
-                                        @mousedown="selectEpi(epi)"
-                                        class="px-3 py-2 text-lg text-gray-800 cursor-pointer hover:bg-blue-100"
-                                    >
-                                        {{ epi.descricao }} (CA: {{ epi.codigoAutenticacao }})
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+            <form @submit.prevent="handleSave" class="flex-grow flex flex-col p-6 space-y-6">
 
-                        <!-- Data de Entrega -->
-                        <div>
-                            <label for="dataEntregaInput" class="block text-base font-medium text-gray-600 ml-1 mb-1">
-                                Data de Entrega
-                            </label>
-                            <input
-                                id="dataEntregaInput"
-                                type="date"
-                                v-model="form.dataEntrega"
-                                required
-                                class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-100 text-gray-700"
-                            />
-                        </div>
+                <div class="relative">
+                    <label class="block text-base font-medium text-gray-600 mb-1">Selecione o EPI</label>
+
+                    <input type="text" :value="searchQuery" @input="handleInput" @focus="openDropdown" @blur="closeDropdown"
+                        placeholder="Digite para buscar..."
+                        class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-50 focus:ring-blue-500 focus:bg-white"
+                        autocomplete="off" />
+
+                    <div v-if="isDropdownOpen"
+                        class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-60 overflow-y-auto">
+                        <ul class="py-1">
+                            <li v-if="filteredEpis.length === 0" class="px-3 py-2 text-gray-500">
+                                Nenhum EPI encontrado.
+                            </li>
+
+                            <li v-for="epi in filteredEpis" :key="epi.id || epi.epiId" @mousedown.prevent="selectEpi(epi)"
+                                class="px-3 py-2 text-lg text-gray-800 cursor-pointer hover:bg-blue-100 border-b border-gray-100 last:border-0">
+                                {{ epi.descricao }} <span class="text-sm text-gray-500">(CA: {{ epi.codigoAutenticacao
+                                }})</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
-                <!-- Botão de Ação -->
-                <div class="text-center p-6 border-t">
-                    <button
-                        type="submit"
-                        :disabled="loading"
-                        class="
-                            font-bold text-white text-xl
-                            px-12 sm:px-20 py-3 rounded-md 
-                            bg-gradient-to-r from-green-500 to-emerald-500
-                            transition-all duration-300 ease-out
-                            hover:-translate-y-1 hover:shadow-lg
-                        "
-                        :class="{ 'opacity-70 cursor-not-allowed': loading }"
-                    >
-                        {{ loading ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Salvar Item') }}
+                <div>
+                    <label class="block text-base font-medium text-gray-600 mb-1">Data de Entrega</label>
+                    <input type="date" v-model="form.dataEntrega" required
+                        class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 outline-none bg-gray-50 focus:ring-blue-500" />
+                </div>
+
+                <div class="mt-auto pt-4 border-t flex justify-center">
+                    <button type="submit" :disabled="loading"
+                        class="font-bold text-white text-xl px-12 py-3 rounded-md bg-green-600 hover:bg-green-700 transition shadow-lg disabled:opacity-50">
+                        {{ loading ? 'Salvando...' : 'Salvar' }}
                     </button>
                 </div>
             </form>
