@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
@@ -19,23 +20,6 @@ public class FuncaoController {
 
     @Autowired
     private FuncaoService service;
-
-  @PostMapping("/upload")
-    public ResponseEntity<String> uploadFuncoes() {
-
-        String mensagemRetorno = "Funcoes Importados com Sucesso";
-
-        try {
-            service.uploadFuncoes(UploadFiles.lerFuncoes());
-        } catch (Exception e) {
-            mensagemRetorno = "Ocorreu um erro ao importar funcoes, erro: " + e.getMessage();
-        }
-
-        return ResponseEntity.ok(mensagemRetorno);
-
-    }
-
-
 
     @GetMapping("/")
     public ResponseEntity<List<Funcao>> getAllFuncoes() {

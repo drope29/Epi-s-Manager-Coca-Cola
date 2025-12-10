@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.uniforme;
 
 import com.epis.entities.Epi;
 import com.epis.entities.Funcao;

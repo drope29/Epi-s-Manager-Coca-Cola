@@ -1,7 +1,7 @@
 package com.epis.controllers;
 
-import com.epis.dtos.UniformeCreateDto;
-import com.epis.dtos.UniformeUpdateDto;
+import com.epis.dtos.uniforme.UniformeCreateDto;
+import com.epis.dtos.uniforme.UniformeUpdateDto;
 import com.epis.entities.Uniforme;
 import com.epis.services.UniformeService;
 import org.springframework.beans.factory.annotation.Autowired;

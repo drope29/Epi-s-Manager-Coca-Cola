@@ -1,7 +1,7 @@
 package com.epis.services;
 
-import com.epis.dtos.EpiCreateDto;
-import com.epis.dtos.EpiUpdateDto;
+import com.epis.dtos.epi.EpiCreateDto;
+import com.epis.dtos.epi.EpiUpdateDto;
 import com.epis.entities.Epi;
 import com.epis.mapper.EpiMapper;
 import com.epis.services.exception.ErroBuscarDynamoException;

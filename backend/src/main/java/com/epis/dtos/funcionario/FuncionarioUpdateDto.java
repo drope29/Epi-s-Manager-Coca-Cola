@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.funcionario;
 
 import java.util.UUID;
 import java.util.Date;

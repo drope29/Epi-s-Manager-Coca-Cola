@@ -1,7 +1,5 @@
 package com.epis.entities;
 
-import java.util.UUID;
-
 public class UniformeEpi {
 
     private Epi epi;

@@ -30,7 +30,6 @@ public class FuncaoService {
             throw new ErroInserirDynamoException("Houve um erro ao inserir as funções. Erro: " + e.getMessage());
 
         }
-
     }
 
     public List<Funcao> getAll() {

@@ -19,7 +19,7 @@ public class Funcionario {
     private UUID funcionarioId;
     private String RE;
     private String nome;
-    private Funcao funcao;
+    private UUID funcaoId;
     private String unidade;
     private TurnoEnum turno;
     private GeneroEnum genero;
@@ -28,18 +28,18 @@ public class Funcionario {
 
     public Funcionario(){}
 
-    public Funcionario(String RE, String nome, Funcao funcao) {
+    public Funcionario(String RE, String nome, UUID funcaoId) {
         this.funcionarioId = UUID.randomUUID();
         this.RE = RE;
         this.nome = nome;
-        this.funcao = funcao;
+        this.funcaoId = funcaoId;
     }
 
-    public Funcionario(UUID funcionarioId, String RE, String nome, Funcao funcao, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
+    public Funcionario(UUID funcionarioId, String RE, String nome, UUID funcaoId, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
         this.funcionarioId = UUID.randomUUID();
         this.RE = RE;
         this.nome = nome;
-        this.funcao = funcao;
+        this.funcaoId = funcaoId;
         this.unidade = unidade;
         this.turno = turno;
         this.genero = genero;
@@ -73,13 +73,9 @@ public class Funcionario {
         this.nome = nome;
     }
 
-    public Funcao getFuncao() {
-        return funcao;
-    }
+    public UUID getFuncaoId() { return funcaoId; }
 
-    public void setFuncao(Funcao funcao) {
-        this.funcao = funcao;
-    }
+    public void setFuncaoId(UUID funcaoId) { this.funcaoId = funcaoId; }
 
     public String getUnidade() {
         return unidade;
@@ -121,7 +117,7 @@ public class Funcionario {
                 "funcionarioId=" + funcionarioId +
                 ", RE='" + RE + '\'' +
                 ", nome='" + nome + '\'' +
-                ", funcao='" + funcao + '\'' +
+                ", funcao='" + funcaoId + '\'' +
                 ", unidade='" + unidade + '\'' +
                 ", turno='" + turno + '\'' +
                 ", genero='" + genero + '\'' +
