@@ -21,7 +21,7 @@ public class FuncaoController {
     @Autowired
     private FuncaoService service;
 
-    @GetMapping("/getAllFuncoes")
+    @GetMapping("/")
     public ResponseEntity<List<Funcao>> getAllFuncoes() {
 
         List<Funcao> funcoes = service.getAll();

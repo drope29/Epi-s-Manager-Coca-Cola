@@ -20,7 +20,7 @@ public class UsuarioController {
     @Autowired
     private UsuarioService service;
 
-    @GetMapping("/getAllUsuarios")
+    @GetMapping("/")
     public ResponseEntity<List<Usuario>> getAllUsuarios() {
 
         List<Usuario> usuarios = service.getAll();
@@ -29,7 +29,7 @@ public class UsuarioController {
 
     }
 
-    @GetMapping("/getUsuario/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Usuario> getUsuarioById(@PathVariable UUID id) {
 
         Usuario usuarios = service.getById(id);
@@ -38,7 +38,7 @@ public class UsuarioController {
 
     }
 
-    @PostMapping("/createUser")
+    @PostMapping("/")
     public ResponseEntity<Usuario> insertUsuario(@Valid @RequestBody UsuarioCreateDto dto) {
 
         Usuario usuario = service.insert(dto);
@@ -47,7 +47,7 @@ public class UsuarioController {
 
     }
 
-    @PutMapping("/updateUsuario/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Usuario> updateUsuario(@PathVariable UUID id, @RequestBody UsuarioUpdateDto dto) {
 
         Usuario usuarioUpd = service.update(id, dto);
@@ -56,7 +56,7 @@ public class UsuarioController {
 
     }
 
-    @DeleteMapping("/deleteUsuario/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUsuario(@PathVariable UUID id) {
 
         service.delete(id);
