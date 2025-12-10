@@ -4,6 +4,8 @@ import axios from 'axios';
 import FormularioEntregaEpi from './FormularioEntregaEpi.vue'; // Certifique-se que o caminho está correto
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import VueSignaturePad from 'vue-signature-pad';
+
 
 // --- Props e Emits ---
 const props = defineProps({
@@ -357,6 +359,13 @@ function closeEditDropdown() {
         }
     }, 150);
 }
+
+// --- Vue-pad ---
+
+const showSignatureModal = ref(false);
+const assinaturaAtual = ref(null);
+const assinaturaRowIndex = ref(null);
+
 </script>
 
 <template>
@@ -393,7 +402,8 @@ function closeEditDropdown() {
                         }}</div>
                     </div>
                     <div class="flex flex-wrap space-x-4">
-                        <div class="flex-1 min-w-[300px]"><strong>Função:</strong> {{ colaborador.funcao || 'N/A' }}</div>
+                        <div class="flex-1 min-w-[300px]"><strong>Função:</strong> {{ colaborador.funcao.nome || 'N/A' }}
+                        </div>
                         <div class="flex-1 min-w-[200px]"><strong>Setor:</strong> {{ colaborador.setor || 'N/A' }}</div>
                     </div>
                     <div class="flex flex-wrap space-x-4 mt-1">
@@ -515,10 +525,16 @@ function closeEditDropdown() {
                                 </td>
 
                                 <!-- Assinatura (Status) -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" v-model="editFormData.status"
-                                        class="w-full h-full p-1 text-center input-edit" />
-                                    <span v-else class="p-1 block">{{ item.status || '' }}</span>
+                                <td class="text-center align-middle">
+                                    <template v-if="row.assinatura">
+                                        <img :src="row.assinatura" class="h-10 mx-auto" />
+                                    </template>
+
+                                    <template v-else>
+                                        <button class="bg-green-600 text-white px-3 py-1 rounded" @click="abrirPad(index)">
+                                            Assinar
+                                        </button>
+                                    </template>
                                 </td>
 
                                 <!-- Data Devolução -->
