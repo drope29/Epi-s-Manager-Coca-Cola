@@ -22,7 +22,6 @@ public class DynamoConfig {
     @Bean
     public DynamoDbClient dynamoDbClient() {
         return DynamoDbClient.builder()
-                .endpointOverride(URI.create("http://localhost:4566")) // Localstack
                 .region(Region.SA_EAST_1)
                 .credentialsProvider(
                         StaticCredentialsProvider.create(
