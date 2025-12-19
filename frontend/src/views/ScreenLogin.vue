@@ -49,14 +49,12 @@ const password = ref("");
 
 async function login() {
     try {
-        // Limpa qualquer token antigo para evitar conflitos
-        localStorage.removeItem('token');
+        // 1. Limpeza total antes de começar
+        localStorage.clear();
 
         const response = await fetch(`${backUrl}/auth/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username: loginField.value,
                 password: password.value
@@ -64,28 +62,47 @@ async function login() {
         });
 
         if (!response.ok) {
-            throw new Error('Usuário ou senha incorretos!');
+            if (response.status === 401) throw new Error('Usuário ou senha incorretos!');
+            throw new Error(`Erro no servidor: ${response.status}`);
         }
 
         const data = await response.json();
 
-        // LÓGICA CORRIGIDA: Verifica se o token está aninhado ou direto
         let tokenReal = null;
 
-        if (data.token && typeof data.token === 'string') {
-            tokenReal = data.token;
-        } else if (data.token && data.token.token) {
-            tokenReal = data.token.token; // O caso do seu backend
-        } else if (data.access_token) {
-            tokenReal = data.access_token;
+        // 2. Lógica "Sherlock Holmes" para encontrar o token
+        if (data && typeof data === 'string') {
+            // Caso raro: o backend retorna só a string do token
+            tokenReal = data;
+        } else if (data.token) {
+            // Caso comum: { token: "..." } ou { token: { token: "..." } }
+            if (typeof data.token === 'string') {
+                tokenReal = data.token;
+            } else if (data.token.token) {
+                tokenReal = data.token.token;
+            } else if (data.token.accessToken) {
+                tokenReal = data.token.accessToken;
+            }
+        } else if (data.accessToken) {
+            // Outro padrão comum: { accessToken: "..." }
+            tokenReal = data.accessToken;
+        } else if (data.Authorization) {
+            tokenReal = data.Authorization;
         }
 
-        if (tokenReal) {
+
+        // 3. Verificação e Salvamento
+        if (tokenReal && typeof tokenReal === 'string' && tokenReal.length > 10) {
+            // Remove "Bearer " se o backend mandou junto (para não duplicar depois)
+            if (tokenReal.startsWith("Bearer ")) {
+                tokenReal = tokenReal.replace("Bearer ", "");
+            }
+
             localStorage.setItem('token', tokenReal);
+
             router.push({ name: "Home" });
         } else {
-            console.error("Erro: Token não encontrado na resposta", data);
-            alert("Erro ao autenticar: Token inválido.");
+            alert("Erro de sistema: Token de autenticação inválido.");
         }
 
     } catch (error) {

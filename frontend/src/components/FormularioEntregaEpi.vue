@@ -108,8 +108,6 @@ function handleInput(event) {
 }
 
 function selectEpi(epi) {
-    console.log("Selecionado:", epi); // Debug no console
-
     // 1. Salva o ID
     form.value.epiId = epi.epiId || epi.id;
 

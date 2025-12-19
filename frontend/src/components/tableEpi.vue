@@ -10,6 +10,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
 import ButtonAdd from './buttonAdd.vue';
+import ButtonVoltar from './ButtonVoltar.vue';
 
 const backUrl = import.meta.env.VITE_BACKEND_URL;
 const emit = defineEmits(['open-epi-modal', 'open-edit-epi-modal']);
@@ -184,6 +185,9 @@ const applySearch = () => {
 <template>
   <div>
     <header class="bg-gray-800 text-white p-4 flex items-center space-x-4">
+
+      <ButtonVoltar />
+
       <div class="relative w-full">
         <input type="text" placeholder="Procurar por CA ou Descrição..."
           class="bg-gray-700 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"

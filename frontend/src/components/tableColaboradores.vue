@@ -1,7 +1,5 @@
-tableColaboradores
-
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'; // Adicionado watch
+import { ref, onMounted, nextTick, watch } from 'vue';
 import DataTable from 'datatables.net-vue3';
 import DataTablesCore from 'datatables.net-dt';
 import Responsive from 'datatables.net-responsive-dt';
@@ -12,6 +10,7 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net-responsive-dt/css/responsive.dataTables.min.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import ButtonAdd from './buttonAdd.vue';
+import ButtonVoltar from './ButtonVoltar.vue';
 
 const backUrl = import.meta.env.VITE_BACKEND_URL;
 const emit = defineEmits(['open-add-modal', 'open-edit-modal', 'open-movimentacoes-modal']);
@@ -21,7 +20,7 @@ DataTable.use(Responsive);
 DataTable.use(Buttons);
 
 const globalSearch = ref('');
-const dtRef = ref(null); // Referência para a instância do DataTable
+const dtRef = ref(null);
 
 const columns = [
   { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
@@ -29,67 +28,40 @@ const columns = [
   { data: 'funcao', title: 'Cargo', className: 'text-center', render: (data) => data?.nome ?? "Não Informado" },
 
   {
-    data: 'setor', // data: 'setor' é seguro se o render lida com undefined
+    data: 'setor',
     title: 'Setor',
     className: 'text-center',
     render: (_d, _t, row) => row.setor || "Não Informado"
   },
 
-  // #############################################################
-  // CORREÇÃO AQUI (Lógica de Data Mais Robusta)
-  // #############################################################
   {
-    data: null, // <-- Não peça 'data_admissao' diretamente
+    data: null,
     title: 'Admissão',
     className: 'text-center',
-    render: (_data, _type, row) => { // <-- Vamos usar o 'row'
-
+    render: (_data, _type, row) => {
       const dataStr = row.data_admissao || row.dataAdmissao;
       if (!dataStr) return "Não Informado";
 
       let date;
-
       try {
-        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
         if (dataStr.includes('-')) {
-          const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
-          // Date.UTC(year, monthIndex, day)
-          date = new Date(Date.UTC(
-            parseInt(dateParts[0]), // YYYY
-            parseInt(dateParts[1]) - 1, // MM (0-indexed)
-            parseInt(dateParts[2])  // DD
-          ));
-
-          // Caso 2: Formato Brasileiro (DD/MM/YYYY)
+          const dateParts = dataStr.split('T')[0].split('-');
+          date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
         } else if (dataStr.includes('/')) {
-          const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
-          // Date.UTC(year, monthIndex, day)
-          date = new Date(Date.UTC(
-            parseInt(dateParts[2]), // YYYY
-            parseInt(dateParts[1]) - 1, // MM (0-indexed)
-            parseInt(dateParts[0])  // DD
-          ));
-
-          // Caso 3: Tentar a sorte com o construtor padrão
+          const dateParts = dataStr.split('/');
+          date = new Date(Date.UTC(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0])));
         } else {
           date = new Date(dataStr);
         }
 
-        // Verificar se a data é válida
-        if (isNaN(date.getTime())) {
-          return dataStr; // Retorna o original se for "Invalid Date"
-        }
-
-        // Formatar a data válida
-        // toLocaleDateString com UTC garante que não haja "off-by-one" do fuso
+        if (isNaN(date.getTime())) return dataStr;
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
       } catch (e) {
-        return dataStr; // Retorna o dado original se qualquer parsing falhar
+        return dataStr;
       }
     }
   },
-  // #############################################################
 
   { data: 'unidade', title: 'Unidade', className: 'text-center', render: (_d, _t, row) => row.unidade || "Não Informado" },
   { data: 'genero', title: 'Gênero', className: 'text-center', render: (_d, _t, row) => row.genero || "Não Informado" },
@@ -101,8 +73,11 @@ const columns = [
     searchable: false,
     className: 'text-center',
     render: (_d, _t, row) => {
-      const editBtn = `<button data-action="edit" data-id="${row.id}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Editar">Editar</button>`;
-      const deleteBtn = `<button data-action="delete" data-id="${row.id}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Excluir">Excluir</button>`;
+      // --- CORREÇÃO DE ID NA CRIAÇÃO DOS BOTÕES ---
+      const idReal = row.funcionarioId || row.id;
+
+      const editBtn = `<button data-action="edit" data-id="${idReal}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Editar">Editar</button>`;
+      const deleteBtn = `<button data-action="delete" data-id="${idReal}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Excluir">Excluir</button>`;
       return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
     }
   }
@@ -111,13 +86,13 @@ const columns = [
 const options = {
   responsive: true,
   autoWidth: false,
-  searching: true, // Mantém a busca interna do DataTables habilitada
+  searching: true,
   paging: true,
   info: true,
   lengthChange: true,
   pageLength: 10,
-  dom: '<"datatable-header"l>rt<"datatable-footer"ip>', // 'f' removido para usar busca customizada
-  language: { /* ... traduções ... */
+  dom: '<"datatable-header"l>rt<"datatable-footer"ip>',
+  language: {
     lengthMenu: "Mostrar _MENU_ entradas",
     zeroRecords: "Nenhum colaborador encontrado.",
     info: "Mostrando de _START_ até _END_ de _TOTAL_ registros",
@@ -128,24 +103,33 @@ const options = {
   },
 };
 
-const colaboradores = ref([]); // Mantém o ref para os dados originais
+const colaboradores = ref([]);
 
 onMounted(async () => {
   try {
-    // 1. Recupera o token salvo (Verifique se o nome é 'token' mesmo no seu localStorage)
     const token = localStorage.getItem('token');
 
-    // 2. Faz a chamada com o cabeçalho de autorização
+    if (!token) {
+      console.warn("Sem token encontrado. Redirecionando para login...");
+      window.location.href = '/';
+      return;
+    }
+
     const response = await fetch(`${backUrl}/api/funcionarios/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // <--- ADICIONADO
+        'Authorization': `Bearer ${token}`
       }
     });
 
     if (!response.ok) {
-      // Dica: Se der 401 aqui, o token pode estar expirado
+      if (response.status === 401) {
+        console.warn("Token expirado ou inválido (401). Redirecionando...");
+        localStorage.removeItem('token');
+        window.location.href = '/';
+        return;
+      }
       throw new Error(`Erro ao buscar colaboradores: ${response.status}`);
     }
 
@@ -176,15 +160,12 @@ onMounted(async () => {
   }
 });
 
-// Aplica a busca externa (do input) na instância do DataTables
 const applySearch = () => {
   if (dtRef.value && dtRef.value.dt) {
     dtRef.value.dt.search(globalSearch.value).draw();
   }
 }
 
-// Watcher para re-aplicar busca se globalSearch mudar DEPOIS da montagem inicial
-// Isso é mais uma garantia
 watch(globalSearch, (newValue) => {
   applySearch();
 });
@@ -193,21 +174,26 @@ const handleTableClick = (event) => {
   const target = event.target;
   const button = target.closest('button[data-action]');
 
-  if (button && dtRef.value && dtRef.value.dt) { // Garante que dtRef.value.dt existe
+  if (button && dtRef.value && dtRef.value.dt) {
     const action = button.dataset.action;
     const id = button.dataset.id;
 
-    // Tenta obter os dados da linha via API do DataTables ANTES de filtrar o array local
+    // Tenta obter os dados da linha via API do DataTables
     const rowNode = button.closest('tr');
     let colaborador = null;
     try {
       colaborador = dtRef.value.dt.row(rowNode).data();
     } catch (e) {
       console.warn("Não foi possível obter dados da linha via DT API, tentando fallback...", e)
-      // Fallback para o array local se a API do DT falhar
-      colaborador = colaboradores.value.find(c => c.id.toString() === id);
     }
 
+    // Fallback: Se o DataTables não retornou, procura no array local pelo ID
+    if (!colaborador) {
+      colaborador = colaboradores.value.find(c => {
+        const cId = c.funcionarioId || c.id;
+        return cId && cId.toString() === id;
+      });
+    }
 
     if (!colaborador) {
       console.error("Colaborador não encontrado para o ID:", id);
@@ -222,9 +208,9 @@ const handleTableClick = (event) => {
     return;
   }
 
-  // Lógica de clique na linha (mantida)
+  // Lógica de clique na linha (Movimentações)
   const row = target.closest('tbody tr');
-  if (row && !button && dtRef.value && dtRef.value.dt) { // Garante que não foi clique em botão
+  if (row && !button && dtRef.value && dtRef.value.dt) {
     try {
       const rowData = dtRef.value.dt.row(row).data();
       if (rowData) {
@@ -237,11 +223,13 @@ const handleTableClick = (event) => {
 };
 
 const handleEdit = (colaborador) => {
-  console.log('EDITAR:', colaborador);
   emit('open-edit-modal', colaborador);
 };
 
 const handleDelete = (colaborador) => {
+  // --- SEGURANÇA DE ID ---
+  const idParaDeletar = colaborador.funcionarioId || colaborador.id;
+
   Swal.fire({
     title: 'Você tem certeza?',
     text: `Deseja realmente excluir ${colaborador.nome} (RE: ${colaborador.re})? Esta ação não pode ser desfeita.`,
@@ -254,28 +242,34 @@ const handleDelete = (colaborador) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        // 1. Recupera o token novamente para esta ação
         const token = localStorage.getItem('token');
 
-        // 2. Faz a chamada DELETE com o token
-        const response = await fetch(`${backUrl}/api/funcionarios/${colaborador.id}`, {
+        // --- URL CORRIGIDA COM ID ---
+        const response = await fetch(`${backUrl}/api/funcionarios/${idParaDeletar}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // <--- ADICIONADO
+            'Authorization': `Bearer ${token}`
           }
         });
 
         if (!response.ok) {
+          if (response.status === 401) throw new Error("Não autorizado (401)");
           throw new Error('Falha ao excluir colaborador');
         }
 
-        // Remove do array local
-        colaboradores.value = colaboradores.value.filter(c => c.id !== colaborador.id);
+        // Remove do array local usando o ID correto
+        colaboradores.value = colaboradores.value.filter(c => {
+          const cId = c.funcionarioId || c.id;
+          return cId !== idParaDeletar;
+        });
 
         // Remove da tabela DataTables visualmente
         if (dtRef.value && dtRef.value.dt) {
-          dtRef.value.dt.rows((idx, data, node) => data.id === colaborador.id).remove().draw();
+          dtRef.value.dt.rows((idx, data, node) => {
+            const dId = data.funcionarioId || data.id;
+            return dId === idParaDeletar;
+          }).remove().draw();
         }
 
         Swal.fire(
@@ -286,11 +280,11 @@ const handleDelete = (colaborador) => {
 
       } catch (error) {
         console.error('Erro ao excluir:', error);
-        Swal.fire(
-          'Erro!',
-          'Não foi possível excluir o colaborador. Verifique sua conexão ou permissões.',
-          'error'
-        );
+
+        let msg = 'Não foi possível excluir o colaborador.';
+        if (error.message.includes('401')) msg = 'Sessão expirada ou sem permissão.';
+
+        Swal.fire('Erro!', msg, 'error');
       }
     }
   });
@@ -300,6 +294,9 @@ const handleDelete = (colaborador) => {
 <template>
   <div>
     <header class="bg-gray-800 text-white p-4 flex items-center space-x-4">
+
+      <ButtonVoltar />
+
       <div class="relative w-full">
         <input type="text" placeholder="Procurar por nome, RE, cargo..."
           class="bg-gray-700 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
@@ -315,7 +312,6 @@ const handleDelete = (colaborador) => {
 
     <main class="p-4 sm:p-8">
       <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white" @click="handleTableClick">
-        <!-- Passa 'colaboradores' como prop inicial, mas a manipulação será feita via API -->
         <DataTable :columns="columns" :data="colaboradores" :options="options" ref="dtRef"
           class="w-full text-sm text-gray-700" />
       </div>
@@ -331,7 +327,6 @@ const handleDelete = (colaborador) => {
 
 :deep(.dataTables_filter) {
   display: none;
-  /* Esconde a busca padrão do DataTables */
 }
 
 :deep(.datatable-header),
@@ -368,15 +363,12 @@ const handleDelete = (colaborador) => {
 
 :deep(table.dataTable tbody tr:hover) {
   background-color: rgb(219, 234, 254) !important;
-  /* Azul mais forte */
   cursor: pointer;
 }
 
 :deep(table.dataTable tbody tr button) {
   cursor: pointer;
-  /* Garante cursor de ponteiro nos botões */
 }
-
 
 :deep(div.dataTables_wrapper div.dataTables_paginate .paginate_button) {
   display: inline-flex;
@@ -417,12 +409,7 @@ const handleDelete = (colaborador) => {
   cursor: pointer;
 }
 
-:deep(div.dataTables_wrapper div.dataTables_paginate .first,
-  div.dataTables_wrapper div.dataTables_paginate .last,
-  div.dataTables_wrapper div.dataTables_paginate .previous,
-  div.dataTables_wrapper div.dataTables_paginate .next) {
+:deep(div.dataTables_wrapper div.dataTables_paginate .first, div.dataTables_wrapper div.dataTables_paginate .last, div.dataTables_wrapper div.dataTables_paginate .previous, div.dataTables_wrapper div.dataTables_paginate .next) {
   font-weight: 500;
   cursor: pointer;
-}
-</style>
-
+}</style>
