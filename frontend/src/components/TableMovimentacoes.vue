@@ -5,6 +5,7 @@ import { VueSignaturePad } from 'vue-signature-pad';
 import FormularioEntregaEpi from './FormularioEntregaEpi.vue';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 // --- Props e Emits ---
 const props = defineProps({
@@ -31,6 +32,17 @@ const isFormEntregaVisible = ref(false);
 const isSignatureModalOpen = ref(false);
 const itemToSign = ref(null);
 const signaturePadRef = ref(null);
+
+const s3Client = new S3Client({
+    region: "us-east-1",
+    endpoint: "http://localhost:4566",
+    credentials: {
+        accessKeyId: "test",
+        secretAccessKey: "test"
+    },
+    forcePathStyle: true 
+});
+const BUCKET_NAME = "assinaturas-bucket";
 
 // --- Carregamento Inicial ---
 onMounted(async () => {
@@ -372,10 +384,21 @@ function limparAssinatura() {
     }
 }
 
+const dataURLtoUint8Array = (dataURL) => {
+    const arr = dataURL.split(',');
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return u8arr;
+};
+
 async function salvarAssinatura() {
     if (!signaturePadRef.value) return;
 
-    // Salva em PNG com fundo transparente
+    // 1. Pega assinatura em PNG (Base64)
     const { isEmpty, data } = signaturePadRef.value.saveSignature("image/png");
 
     if (isEmpty) {
@@ -388,21 +411,43 @@ async function salvarAssinatura() {
     loading.value = true;
     const idItem = itemToSign.value.movimentacaoId || itemToSign.value.id;
 
-    const payload = {
-        dataEntrega: itemToSign.value.dataEntrega,
-        epiId: itemToSign.value.epi?.id || itemToSign.value.epi?.epiId,
-        funcionarioId: props.colaborador.funcionarioId || props.colaborador.id,
-        status: itemToSign.value.status,
-        quantidade: itemToSign.value.quantidade,
-        dataProximaEntrega: itemToSign.value.dataProximaEntrega,
-        recebedor: itemToSign.value.recebedor,
-        cod_entrega: itemToSign.value.cod_entrega,
-        cod_devolucao: itemToSign.value.cod_devolucao,
-        assinatura: data
-    };
-
     try {
+        // --- 2. UPLOAD DIRETO PRO S3 (LOCALSTACK) ---
+        const fileName = `assinatura_${idItem}_${Date.now()}.png`;
+
+        // CONVERSÃO CORRIGIDA: Usa Uint8Array em vez de Blob
+        const fileBuffer = dataURLtoUint8Array(data);
+
+        const command = new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: fileName,
+            Body: fileBuffer, // Enviando bytes puros
+            ContentType: "image/png",
+            ACL: 'public-read'
+        });
+
+        await s3Client.send(command);
+
+        // --- 3. GERA URL DO ARQUIVO ---
+        const imageUrl = `http://localhost:4566/${BUCKET_NAME}/${fileName}`;
+        console.log("Upload S3 Sucesso! URL:", imageUrl);
+
+        // --- 4. ENVIA APENAS A URL PARA O BACKEND ---
         const token = localStorage.getItem('token');
+
+        const payload = {
+            dataEntrega: itemToSign.value.dataEntrega,
+            epiId: itemToSign.value.epi?.id || itemToSign.value.epi?.epiId,
+            funcionarioId: props.colaborador.funcionarioId || props.colaborador.id,
+            status: itemToSign.value.status,
+            quantidade: itemToSign.value.quantidade,
+            dataProximaEntrega: itemToSign.value.dataProximaEntrega,
+            recebedor: itemToSign.value.recebedor,
+            cod_entrega: itemToSign.value.cod_entrega,
+            cod_devolucao: itemToSign.value.cod_devolucao,
+            assinatura: imageUrl // Enviando o link
+        };
+
         const response = await axios.put(`${backUrl}/api/movimentacao/${idItem}`, payload, {
             headers: {
                 'Content-Type': 'application/json',
@@ -413,17 +458,19 @@ async function salvarAssinatura() {
         if (response.status >= 200 && response.status < 300) {
             const index = movimentacoes.value.findIndex(m => (m.movimentacaoId || m.id) === idItem);
             if (index !== -1) {
-                movimentacoes.value[index].assinatura = data;
+                movimentacoes.value[index].assinatura = imageUrl;
             }
             Swal.fire('Sucesso', 'Assinatura salva com sucesso!', 'success');
             closeSignatureModal();
         } else {
-            throw new Error('Falha ao salvar assinatura');
+            throw new Error('Falha ao salvar link da assinatura no banco');
         }
 
     } catch (error) {
-        console.error("Erro ao salvar assinatura:", error);
-        Swal.fire('Erro', 'Não foi possível salvar a assinatura.', 'error');
+        console.error("Erro no processo de assinatura:", error);
+        // Mostra o erro real se for do S3
+        const msg = error.message || 'Não foi possível salvar a assinatura.';
+        Swal.fire('Erro', msg, 'error');
     } finally {
         loading.value = false;
     }
