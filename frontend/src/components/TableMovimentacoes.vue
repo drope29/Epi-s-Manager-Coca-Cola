@@ -34,15 +34,16 @@ const itemToSign = ref(null);
 const signaturePadRef = ref(null);
 
 const s3Client = new S3Client({
-    region: "us-east-1",
-    endpoint: "http://localhost:4566",
+    region: import.meta.env.VITE_AWS_REGION, // Lê do arquivo .env
+    endpoint: import.meta.env.VITE_AWS_ENDPOINT,
     credentials: {
-        accessKeyId: "test",
-        secretAccessKey: "test"
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
     },
     forcePathStyle: true 
 });
-const BUCKET_NAME = "assinaturas-bucket";
+
+const BUCKET_NAME = import.meta.env.VITE_AWS_BUCKET_NAME;
 
 // --- Carregamento Inicial ---
 onMounted(async () => {
