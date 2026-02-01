@@ -32,6 +32,8 @@ public class Funcao {
         this.id = id;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "funcao-nome-index")
+    @DynamoDbAttribute("nome")
     public String getNome() {
         return nome;
     }

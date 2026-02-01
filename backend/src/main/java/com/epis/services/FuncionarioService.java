@@ -8,10 +8,14 @@ import com.epis.services.exception.*;
 import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @Service
 public class FuncionarioService {
@@ -21,6 +25,9 @@ public class FuncionarioService {
 
     @Autowired
     private DynamoDbTemplate dynamoDbTemplate;
+
+    @Autowired
+    private DynamoDbEnhancedClient enhancedClient;
 
     public void uploadFuncionarios(List<Funcionario> funcionarios){
 
@@ -145,5 +152,26 @@ public class FuncionarioService {
         }
 
     }
+
+    public Optional<Funcionario> findFuncionarioByNome(String nome) {
+
+        DynamoDbTable<Funcionario> table = enhancedClient.table("funcionario",
+                TableSchema.fromBean(Funcionario.class));
+
+        DynamoDbIndex<Funcionario> index = table.index("funcionario-nome-index");
+
+        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(
+                        Key.builder().partitionValue(nome).build()
+                ))
+                .limit(1)
+                .build();
+
+        return StreamSupport.stream(index.query(request).spliterator(), false)
+                .flatMap(page -> StreamSupport.stream(page.items().spliterator(), false))
+                .findFirst();
+
+    }
+
 
 }

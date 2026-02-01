@@ -3,10 +3,7 @@ package com.epis.entities;
 import com.epis.enums.GeneroEnum;
 import com.epis.enums.TurnoEnum;
 import com.epis.utils.DateAttributeConverter;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.UUID;
@@ -65,6 +62,8 @@ public class Funcionario {
         this.RE = RE;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "funcionario-nome-index")
+    @DynamoDbAttribute("nome")
     public String getNome() {
         return nome;
     }

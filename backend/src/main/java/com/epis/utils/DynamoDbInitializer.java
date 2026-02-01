@@ -17,35 +17,79 @@ public class DynamoDbInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        createTableIfNotExists("funcionario", "funcionarioId");
-        createTableIfNotExists("funcao", "funcaoId");
-        createTableIfNotExists("epi", "epiId");
-        createTableIfNotExists("uniforme", "uniformeId");
-        createTableIfNotExists("movimentacao", "movimentacaoId");
-        createTableIfNotExists("usuario", "usuarioId");
+        createTableIfNotExists("funcionario", "funcionarioId", "funcionario-nome-index", "nome");
+        createTableIfNotExists("funcao", "funcaoId", "funcao-nome-index", "nome");
+        createTableIfNotExists("epi", "epiId", null, null);
+        createTableIfNotExists("uniforme", "uniformeId", null, null);
+        createTableIfNotExists("movimentacao", "movimentacaoId", null, null);
+        createTableIfNotExists("usuario", "usuarioId", "username-index", "username");
     }
 
-    private void createTableIfNotExists(String tableName, String partitionKey) {
+    private void createTableIfNotExists(
+            String tableName,
+            String partitionKey,
+            String gsiName,
+            String gsiPartitionKey
+    ) {
+
         try {
             dynamoDbClient.describeTable(DescribeTableRequest.builder()
                     .tableName(tableName)
                     .build());
+
             System.out.println("Tabela " + tableName + " já existe.");
-        } catch (ResourceNotFoundException e) {
+            return;
+
+        } catch (ResourceNotFoundException ignored) {
             System.out.println("Criando tabela: " + tableName);
-            dynamoDbClient.createTable(CreateTableRequest.builder()
-                    .tableName(tableName)
-                    .attributeDefinitions(AttributeDefinition.builder()
+        }
+
+        CreateTableRequest.Builder builder = CreateTableRequest.builder()
+                .tableName(tableName)
+                .billingMode(BillingMode.PAY_PER_REQUEST)
+                .keySchema(KeySchemaElement.builder()
+                        .attributeName(partitionKey)
+                        .keyType(KeyType.HASH)
+                        .build());
+
+        // Sempre adiciona a PK
+        builder.attributeDefinitions(
+                AttributeDefinition.builder()
+                        .attributeName(partitionKey)
+                        .attributeType(ScalarAttributeType.S)
+                        .build()
+        );
+
+        // 🔹 Só adiciona GSI se não for nulo
+        if (gsiName != null && gsiPartitionKey != null) {
+
+            builder.attributeDefinitions(
+                    AttributeDefinition.builder()
                             .attributeName(partitionKey)
                             .attributeType(ScalarAttributeType.S)
-                            .build())
-                    .keySchema(KeySchemaElement.builder()
-                            .attributeName(partitionKey)
-                            .keyType(KeyType.HASH)
-                            .build())
-                    .billingMode(BillingMode.PAY_PER_REQUEST)
-                    .build());
+                            .build(),
+                    AttributeDefinition.builder()
+                            .attributeName(gsiPartitionKey)
+                            .attributeType(ScalarAttributeType.S)
+                            .build()
+            );
+
+            builder.globalSecondaryIndexes(
+                    GlobalSecondaryIndex.builder()
+                            .indexName(gsiName)
+                            .keySchema(KeySchemaElement.builder()
+                                    .attributeName(gsiPartitionKey)
+                                    .keyType(KeyType.HASH)
+                                    .build())
+                            .projection(Projection.builder()
+                                    .projectionType(ProjectionType.ALL)
+                                    .build())
+                            .build()
+            );
         }
+
+        dynamoDbClient.createTable(builder.build());
     }
+
 
 }

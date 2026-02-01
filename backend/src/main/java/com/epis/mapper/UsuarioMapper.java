@@ -1,6 +1,7 @@
 package com.epis.mapper;
 
 import com.epis.dtos.usuario.UsuarioCreateDto;
+import com.epis.entities.Funcionario;
 import com.epis.entities.Usuario;
 import com.epis.services.FuncionarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,13 @@ public class UsuarioMapper {
 
     public Usuario toUsuario(UsuarioCreateDto dto) {
 
+        Funcionario funcionario = funcionarioService.getById(dto.getFuncionarioId());
+
         return new Usuario(
                 UUID.randomUUID(),
                 dto.getUsername(),
                 encoder.encode(dto.getPassword()),
-                dto.getFuncionarioId()
+                funcionario.getFuncionarioId()
         );
     }
 

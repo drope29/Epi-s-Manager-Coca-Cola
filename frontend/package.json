@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.971.0",
     "@types/vue": "^1.0.31",
     "axios": "^1.12.2",
     "datatables.net": "^2.3.4",
