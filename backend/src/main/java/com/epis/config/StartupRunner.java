@@ -11,11 +11,13 @@ import com.epis.services.UsuarioService;
 import com.epis.utils.UploadFiles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Component
+@Order(2)
 public class StartupRunner implements CommandLineRunner {
 
     @Autowired
@@ -81,7 +83,18 @@ public class StartupRunner implements CommandLineRunner {
                 )
         );
 
+        startupFuncionariosFuncoesEpis();
+
         System.out.println("Usuário admin criado com sucesso!");
+    }
+
+    private void startupFuncionariosFuncoesEpis() {
+
+        funcionarioService.uploadFuncionarios(uploadFiles.lerFuncionarios());
+        epiService.uploadEpis(uploadFiles.lerEpis());
+
+        System.out.println("Funcionarios, Funcoes e Epi's importados da planilha.");
+
     }
 
 }

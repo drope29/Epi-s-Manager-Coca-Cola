@@ -1,12 +1,13 @@
 package com.epis.utils;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 @Component
+@Order(1)
 public class DynamoDbInitializer implements CommandLineRunner {
 
     private final DynamoDbClient dynamoDbClient;
@@ -52,7 +53,6 @@ public class DynamoDbInitializer implements CommandLineRunner {
                         .keyType(KeyType.HASH)
                         .build());
 
-        // Sempre adiciona a PK
         builder.attributeDefinitions(
                 AttributeDefinition.builder()
                         .attributeName(partitionKey)
@@ -60,7 +60,6 @@ public class DynamoDbInitializer implements CommandLineRunner {
                         .build()
         );
 
-        // 🔹 Só adiciona GSI se não for nulo
         if (gsiName != null && gsiPartitionKey != null) {
 
             builder.attributeDefinitions(
