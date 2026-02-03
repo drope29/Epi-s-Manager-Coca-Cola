@@ -4,6 +4,7 @@ import com.epis.dtos.funcionario.FuncionarioCreateDto;
 import com.epis.dtos.funcionario.FuncionarioResponseDto;
 import com.epis.dtos.funcionario.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
+import com.epis.interfaces.AuditAction;
 import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.FuncionarioService;
 import com.epis.utils.UploadFiles;
@@ -71,6 +72,7 @@ public class FuncionarioController {
 
     }
 
+    @AuditAction(action = "UPDATE", entity = "FUNCIONARIO")
     @PutMapping("/{id}")
     public ResponseEntity<FuncionarioResponseDto> updateFuncionario(@PathVariable UUID id, @RequestBody FuncionarioUpdateDto dto) {
 
@@ -80,6 +82,7 @@ public class FuncionarioController {
 
     }
 
+    @AuditAction(action = "DELETE", entity = "FUNCIONARIO")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFuncionario(@PathVariable UUID id) {
 

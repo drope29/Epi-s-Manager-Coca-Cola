@@ -4,6 +4,7 @@ import com.epis.dtos.movimentacao.MovimentacaoCreateDto;
 import com.epis.dtos.movimentacao.MovimentacaoResponseDto;
 import com.epis.dtos.movimentacao.MovimentacaoUpdateDto;
 import com.epis.entities.Movimentacao;
+import com.epis.interfaces.AuditAction;
 import com.epis.mapper.MovimentacaoMapper;
 import com.epis.services.MovimentacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,7 @@ public class MovimentacaoController {
 
     }
 
+    @AuditAction(action = "UPDATE", entity = "MOVIMENTACAO")
     @PutMapping("/{id}")
     public ResponseEntity<MovimentacaoResponseDto> updateMovimentacao(@PathVariable UUID id, @RequestBody MovimentacaoUpdateDto dto) {
 
@@ -61,6 +63,7 @@ public class MovimentacaoController {
 
     }
 
+    @AuditAction(action = "DELETE", entity = "MOVIMENTACAO")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMovimentacao(@PathVariable UUID id) {
 

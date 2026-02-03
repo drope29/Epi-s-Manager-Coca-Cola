@@ -3,6 +3,7 @@ package com.epis.controllers;
 import com.epis.dtos.epi.EpiCreateDto;
 import com.epis.dtos.epi.EpiUpdateDto;
 import com.epis.entities.Epi;
+import com.epis.interfaces.AuditAction;
 import com.epis.services.EpiService;
 import com.epis.utils.UploadFiles;
 import jakarta.validation.Valid;
@@ -66,6 +67,7 @@ public class EpiController {
 
     }
 
+    @AuditAction(action = "UPDATE", entity = "EPI")
     @PutMapping("/{id}")
     public ResponseEntity<Epi> updateEpi(@PathVariable UUID id, @RequestBody EpiUpdateDto dto) {
 
@@ -75,6 +77,7 @@ public class EpiController {
 
     }
 
+    @AuditAction(action = "DELETE", entity = "EPI")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteEpi(@PathVariable UUID id) {
 

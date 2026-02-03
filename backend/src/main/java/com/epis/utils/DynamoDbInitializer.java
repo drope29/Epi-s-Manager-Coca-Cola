@@ -24,6 +24,7 @@ public class DynamoDbInitializer implements CommandLineRunner {
         createTableIfNotExists("uniforme", "uniformeId", null, null);
         createTableIfNotExists("movimentacao", "movimentacaoId", null, null);
         createTableIfNotExists("usuario", "usuarioId", "username-index", "username");
+        createTableIfNotExists("log", "logId", null, null);
     }
 
     private void createTableIfNotExists(
