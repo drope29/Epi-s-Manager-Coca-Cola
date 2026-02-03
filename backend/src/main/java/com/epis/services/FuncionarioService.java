@@ -127,7 +127,9 @@ public class FuncionarioService {
 
             Funcionario funcionario = getById(id);
 
-            dynamoDbTemplate.delete(funcionario);
+            funcionario.setCadastroAtivo(false);
+
+            dynamoDbTemplate.update(funcionario);
 
         } catch (Exception e) {
 

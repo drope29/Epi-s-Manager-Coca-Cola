@@ -24,6 +24,8 @@ public class Movimentacao {
     @Enumerated(EnumType.STRING)
     private StatusEnum status;
 
+    public Boolean cadastroAtivo;
+
     public Movimentacao(){}
 
     public Movimentacao(UUID movimentacaoId, UUID funcionarioId, UUID epiId, Date dataEntrega, Date dataProximaEntrega, StatusEnum status) {
@@ -33,6 +35,7 @@ public class Movimentacao {
         this.dataEntrega = dataEntrega;
         this.dataProximaEntrega = dataProximaEntrega;
         this.status = status;
+        this.cadastroAtivo = true;
     }
 
     @DynamoDbPartitionKey
@@ -79,6 +82,14 @@ public class Movimentacao {
 
     public void setStatus(StatusEnum status) {
         this.status = status;
+    }
+
+    public Boolean getCadastroAtivo() {
+        return cadastroAtivo;
+    }
+
+    public void setCadastroAtivo(Boolean cadastroAtivo) {
+        this.cadastroAtivo = cadastroAtivo;
     }
 
     @Override

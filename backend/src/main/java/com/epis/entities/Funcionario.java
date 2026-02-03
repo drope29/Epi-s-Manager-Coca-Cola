@@ -23,6 +23,8 @@ public class Funcionario {
     private Date dataAdmissao;
     private String setor;
 
+    public Boolean cadastroAtivo;
+
     public Funcionario(){}
 
     public Funcionario(String RE, String nome, UUID funcaoId) {
@@ -30,6 +32,7 @@ public class Funcionario {
         this.RE = RE;
         this.nome = nome;
         this.funcaoId = funcaoId;
+        this.cadastroAtivo = true;
     }
 
     public Funcionario(UUID funcionarioId, String RE, String nome, UUID funcaoId, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
@@ -42,6 +45,7 @@ public class Funcionario {
         this.genero = genero;
         this.dataAdmissao = dataAdmissao;
         this.setor = setor;
+        this.cadastroAtivo = true;
     }
 
     @DynamoDbPartitionKey
@@ -109,6 +113,14 @@ public class Funcionario {
     public String getSetor() { return setor; }
 
     public void setSetor(String setor) { this.setor = setor; }
+
+    public Boolean getCadastroAtivo() {
+        return cadastroAtivo;
+    }
+
+    public void setCadastroAtivo(Boolean cadastroAtivo) {
+        this.cadastroAtivo = cadastroAtivo;
+    }
 
     @Override
     public String toString() {

@@ -19,12 +19,15 @@ public class Epi {
     private String descricao;
     private Date dataValidade;
 
+    private Boolean cadastroAtivo;
+
     public Epi(){}
 
     public Epi(String codigoCompra, String descricao) {
         this.epiId = UUID.randomUUID();
         this.codigoCompra = codigoCompra;
         this.descricao = descricao;
+        this.cadastroAtivo = true;
     }
 
     public Epi(String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
@@ -33,6 +36,7 @@ public class Epi {
         this.codigoAutenticacao = codigoAutenticacao;
         this.descricao = descricao;
         this.dataValidade = dataValidade;
+        this.cadastroAtivo = true;
     }
 
     @DynamoDbPartitionKey
@@ -77,6 +81,14 @@ public class Epi {
 
     public void setDataValidade(Date dataValidade) {
         this.dataValidade = dataValidade;
+    }
+
+    public Boolean getCadastroAtivo() {
+        return cadastroAtivo;
+    }
+
+    public void setCadastroAtivo(Boolean cadastroAtivo) {
+        this.cadastroAtivo = cadastroAtivo;
     }
 
     @Override

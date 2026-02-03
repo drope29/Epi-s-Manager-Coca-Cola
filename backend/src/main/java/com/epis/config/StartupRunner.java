@@ -90,6 +90,8 @@ public class StartupRunner implements CommandLineRunner {
 
     private void startupFuncionariosFuncoesEpis() {
 
+        System.out.println("Importando informacoes da planilha");
+
         funcionarioService.uploadFuncionarios(uploadFiles.lerFuncionarios());
         epiService.uploadEpis(uploadFiles.lerEpis());
 

@@ -109,6 +109,8 @@ public class MovimentacaoService {
 
             Movimentacao movimentacao = getById(id);
 
+            movimentacao.setCadastroAtivo(false);
+
             dynamoDbTemplate.delete(movimentacao);
 
         } catch (Exception e) {

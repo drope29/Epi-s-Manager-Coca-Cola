@@ -124,6 +124,8 @@ public class EpiService {
 
             Epi epi = getById(id);
 
+            epi.setCadastroAtivo(false);
+
             dynamoDbTemplate.delete(epi);
 
         } catch (Exception e) {
