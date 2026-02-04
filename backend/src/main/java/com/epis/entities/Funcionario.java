@@ -23,7 +23,7 @@ public class Funcionario {
     private Date dataAdmissao;
     private String setor;
 
-    public Boolean cadastroAtivo;
+    public String cadastroAtivo;
 
     public Funcionario(){}
 
@@ -32,7 +32,7 @@ public class Funcionario {
         this.RE = RE;
         this.nome = nome;
         this.funcaoId = funcaoId;
-        this.cadastroAtivo = true;
+        this.cadastroAtivo = "1";
     }
 
     public Funcionario(UUID funcionarioId, String RE, String nome, UUID funcaoId, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
@@ -45,7 +45,7 @@ public class Funcionario {
         this.genero = genero;
         this.dataAdmissao = dataAdmissao;
         this.setor = setor;
-        this.cadastroAtivo = true;
+        this.cadastroAtivo = "1";
     }
 
     @DynamoDbPartitionKey
@@ -114,11 +114,13 @@ public class Funcionario {
 
     public void setSetor(String setor) { this.setor = setor; }
 
-    public Boolean getCadastroAtivo() {
+    @DynamoDbSecondaryPartitionKey(indexNames = "funcionario-ativo-index")
+    @DynamoDbAttribute("cadastroAtivo")
+    public String getCadastroAtivo() {
         return cadastroAtivo;
     }
 
-    public void setCadastroAtivo(Boolean cadastroAtivo) {
+    public void setCadastroAtivo(String cadastroAtivo) {
         this.cadastroAtivo = cadastroAtivo;
     }
 

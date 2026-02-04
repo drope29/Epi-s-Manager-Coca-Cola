@@ -1,10 +1,16 @@
 package com.epis.utils;
 
+import com.epis.entities.GsiDefinition;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Component
 @Order(1)
@@ -18,20 +24,32 @@ public class DynamoDbInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        createTableIfNotExists("funcionario", "funcionarioId", "funcionario-nome-index", "nome");
-        createTableIfNotExists("funcao", "funcaoId", "funcao-nome-index", "nome");
-        createTableIfNotExists("epi", "epiId", null, null);
-        createTableIfNotExists("uniforme", "uniformeId", null, null);
-        createTableIfNotExists("movimentacao", "movimentacaoId", null, null);
-        createTableIfNotExists("usuario", "usuarioId", "username-index", "username");
-        createTableIfNotExists("log", "logId", null, null);
+
+        createTableIfNotExists("funcionario", "funcionarioId",
+                List.of(new GsiDefinition("funcionario-nome-index", "nome"),
+                        new GsiDefinition("funcionario-ativo-index", "cadastroAtivo")));
+
+        createTableIfNotExists("funcao", "funcaoId",
+                List.of(new GsiDefinition("funcao-nome-index", "nome")));
+
+        createTableIfNotExists("epi", "epiId",
+                List.of(new GsiDefinition("epi-ativo-index", "cadastroAtivo")));
+
+        createTableIfNotExists("movimentacao", "movimentacaoId",
+                List.of(new GsiDefinition("movimentacao-ativo-index", "cadastroAtivo")));
+
+        createTableIfNotExists("usuario", "usuarioId",
+                List.of(new GsiDefinition("username-index", "username")));
+
+        createTableIfNotExists("log", "logId", null);
+        createTableIfNotExists("uniforme", "uniformeId", null);
+
     }
 
     private void createTableIfNotExists(
             String tableName,
             String partitionKey,
-            String gsiName,
-            String gsiPartitionKey
+            List<GsiDefinition> gsis
     ) {
 
         try {
@@ -54,42 +72,48 @@ public class DynamoDbInitializer implements CommandLineRunner {
                         .keyType(KeyType.HASH)
                         .build());
 
-        builder.attributeDefinitions(
+        Set<AttributeDefinition> attributeDefinitions = new HashSet<>();
+
+        attributeDefinitions.add(
                 AttributeDefinition.builder()
                         .attributeName(partitionKey)
                         .attributeType(ScalarAttributeType.S)
                         .build()
         );
 
-        if (gsiName != null && gsiPartitionKey != null) {
+        if (gsis != null && !gsis.isEmpty()) {
 
-            builder.attributeDefinitions(
-                    AttributeDefinition.builder()
-                            .attributeName(partitionKey)
-                            .attributeType(ScalarAttributeType.S)
-                            .build(),
-                    AttributeDefinition.builder()
-                            .attributeName(gsiPartitionKey)
-                            .attributeType(ScalarAttributeType.S)
-                            .build()
-            );
+            List<GlobalSecondaryIndex> globalSecondaryIndexes = new ArrayList<>();
 
-            builder.globalSecondaryIndexes(
-                    GlobalSecondaryIndex.builder()
-                            .indexName(gsiName)
-                            .keySchema(KeySchemaElement.builder()
-                                    .attributeName(gsiPartitionKey)
-                                    .keyType(KeyType.HASH)
-                                    .build())
-                            .projection(Projection.builder()
-                                    .projectionType(ProjectionType.ALL)
-                                    .build())
-                            .build()
-            );
+            for (GsiDefinition gsi : gsis) {
+
+                attributeDefinitions.add(
+                        AttributeDefinition.builder()
+                                .attributeName(gsi.getPartitionKey())
+                                .attributeType(ScalarAttributeType.S)
+                                .build()
+                );
+
+                globalSecondaryIndexes.add(
+                        GlobalSecondaryIndex.builder()
+                                .indexName(gsi.getIndexName())
+                                .keySchema(KeySchemaElement.builder()
+                                        .attributeName(gsi.getPartitionKey())
+                                        .keyType(KeyType.HASH)
+                                        .build())
+                                .projection(Projection.builder()
+                                        .projectionType(ProjectionType.ALL)
+                                        .build())
+                                .build()
+                );
+            }
+
+            builder.globalSecondaryIndexes(globalSecondaryIndexes);
         }
+
+        builder.attributeDefinitions(attributeDefinitions);
 
         dynamoDbClient.createTable(builder.build());
     }
-
 
 }

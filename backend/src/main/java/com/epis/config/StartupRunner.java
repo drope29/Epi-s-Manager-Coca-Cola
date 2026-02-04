@@ -75,6 +75,8 @@ public class StartupRunner implements CommandLineRunner {
                 )
         );
 
+        System.out.println("Criando usuário admin...");
+
         usuarioService.insert(
                 new UsuarioCreateDto(
                         "admin",
@@ -85,17 +87,16 @@ public class StartupRunner implements CommandLineRunner {
 
         startupFuncionariosFuncoesEpis();
 
-        System.out.println("Usuário admin criado com sucesso!");
+        System.out.println("Sistema iniciado com sucesso!");
+
     }
 
     private void startupFuncionariosFuncoesEpis() {
 
-        System.out.println("Importando informacoes da planilha");
+        System.out.println("Importando Funcionarios, Funcoes e Epi's da planilha...");
 
         funcionarioService.uploadFuncionarios(uploadFiles.lerFuncionarios());
         epiService.uploadEpis(uploadFiles.lerEpis());
-
-        System.out.println("Funcionarios, Funcoes e Epi's importados da planilha.");
 
     }
 

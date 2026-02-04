@@ -2,6 +2,7 @@ package com.epis.services;
 
 import com.epis.dtos.funcionario.FuncionarioCreateDto;
 import com.epis.dtos.funcionario.FuncionarioUpdateDto;
+import com.epis.entities.Funcao;
 import com.epis.entities.Funcionario;
 import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.exception.*;
@@ -13,6 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
@@ -47,10 +49,22 @@ public class FuncionarioService {
 
         try {
 
-            return dynamoDbTemplate
-                    .scanAll(Funcionario.class)
-                    .items()
+            DynamoDbTable<Funcionario> table = enhancedClient.table("funcionario",
+                    TableSchema.fromBean(Funcionario.class));
+
+            DynamoDbIndex<Funcionario> index =
+                    table.index("funcionario-ativo-index");
+
+            QueryConditional conditional =
+                    QueryConditional.keyEqualTo(
+                            Key.builder()
+                                    .partitionValue("1")
+                                    .build()
+                    );
+
+            return index.query(r -> r.queryConditional(conditional))
                     .stream()
+                    .flatMap(page -> page.items().stream())
                     .toList();
 
         } catch (Exception e) {
@@ -69,7 +83,7 @@ public class FuncionarioService {
 
             Funcionario funcionario = dynamoDbTemplate.load(key, Funcionario.class);
 
-            if (funcionario == null)
+            if (funcionario == null || Objects.equals(funcionario.getCadastroAtivo(), "0"))
                 throw new FuncionarioNaoEncontradoException("Funcionario não encontrado com o id: " + id);
 
             return funcionario;
@@ -127,7 +141,7 @@ public class FuncionarioService {
 
             Funcionario funcionario = getById(id);
 
-            funcionario.setCadastroAtivo(false);
+            funcionario.setCadastroAtivo("0");
 
             dynamoDbTemplate.update(funcionario);
 
