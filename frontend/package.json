@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.971.0",
     "@types/vue": "^1.0.31",
     "axios": "^1.12.2",
     "datatables.net": "^2.3.4",
@@ -19,7 +20,8 @@
     "jquery": "^3.7.1",
     "sweetalert2": "^11.26.3",
     "vue": "^3.5.22",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "vue-signature-pad": "^3.0.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",

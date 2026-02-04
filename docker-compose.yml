@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  localstack:
+    container_name: localstack_epi
+    image: localstack/localstack
+    ports:
+      - "4566:4566"            # Porta do S3
+    environment:
+      - SERVICES=s3            # Apenas S3 ativado
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - AWS_DEFAULT_REGION=us-east-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./volume:/var/lib/localstack"

@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.uniforme;
 
 import jakarta.validation.constraints.NotNull;
 

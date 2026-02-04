@@ -1,40 +1,22 @@
-package com.epis.dtos;
+package com.epis.dtos.funcionario;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
-import java.util.Date;
 import java.util.UUID;
+import java.util.Date;
 
-public class FuncionarioCreateDto {
+public class FuncionarioUpdateDto {
 
-    @NotBlank(message = "O campo RE é obrigatorio")
     private String RE;
-
-    @NotBlank(message = "O campo nome é obrigatorio")
     private String nome;
-
-    @NotBlank(message = "O campo funcao é obrigatorio")
     private UUID funcao;
-
-    @NotBlank(message = "O campo unidade é obrigatorio")
     private String unidade;
-
-    @NotBlank(message = "O campo turno é obrigatorio")
     private String turno;
-
-    @NotBlank(message = "O campo genero é obrigatorio")
     private String genero;
-
-    @NotNull(message = "O campo data admissão é obrigatorio")
     private Date dataAdmissao;
-
-    @NotBlank(message = "O campo setor é obrigatorio")
     private String setor;
 
-    public FuncionarioCreateDto(){}
+    public FuncionarioUpdateDto(){}
 
-    public FuncionarioCreateDto(String RE, String nome, UUID funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
+    public FuncionarioUpdateDto(String RE, String nome, UUID funcao, String unidade, String turno, String genero, Date dataAdmissao, String setor) {
         this.RE = RE;
         this.nome = nome;
         this.funcao = funcao;
@@ -103,7 +85,7 @@ public class FuncionarioCreateDto {
 
     @Override
     public String toString() {
-        return "FuncionarioCreateDto{" +
+        return "FuncionarioUpdateDto{" +
                 "RE='" + RE + '\'' +
                 ", nome='" + nome + '\'' +
                 ", funcao='" + funcao + '\'' +

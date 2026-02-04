@@ -7,17 +7,24 @@ import com.epis.services.exception.FuncaoNaoEncontradaException;
 import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @Service
 public class FuncaoService {
 
     @Autowired
     private DynamoDbTemplate dynamoDbTemplate;
+
+    @Autowired
+    private DynamoDbEnhancedClient enhancedClient;
+
 
     public void uploadFuncoes(List<Funcao> funcoes) {
 
@@ -30,7 +37,6 @@ public class FuncaoService {
             throw new ErroInserirDynamoException("Houve um erro ao inserir as funções. Erro: " + e.getMessage());
 
         }
-
     }
 
     public List<Funcao> getAll() {
@@ -76,7 +82,7 @@ public class FuncaoService {
 
     }
 
-    public void insert(Funcao funcao) {
+    public Funcao insert(Funcao funcao) {
 
         try {
 
@@ -90,6 +96,7 @@ public class FuncaoService {
 
         }
 
+        return funcao;
     }
 
     public Funcao update(UUID id, Funcao funcao) {
@@ -124,5 +131,25 @@ public class FuncaoService {
         }
 
     }
-    
+
+    public Optional<Funcao> findFuncaoByNome(String nome) {
+
+        DynamoDbTable<Funcao> table = enhancedClient.table("funcao",
+                TableSchema.fromBean(Funcao.class));
+
+        DynamoDbIndex<Funcao> index = table.index("funcao-nome-index");
+
+        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(
+                        Key.builder().partitionValue(nome).build()
+                ))
+                .limit(1)
+                .build();
+
+        return StreamSupport.stream(index.query(request).spliterator(), false)
+                .flatMap(page -> StreamSupport.stream(page.items().spliterator(), false))
+                .findFirst();
+
+    }
+
 }

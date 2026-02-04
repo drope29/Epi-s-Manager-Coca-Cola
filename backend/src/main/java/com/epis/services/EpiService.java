@@ -1,8 +1,9 @@
 package com.epis.services;
 
-import com.epis.dtos.EpiCreateDto;
-import com.epis.dtos.EpiUpdateDto;
+import com.epis.dtos.epi.EpiCreateDto;
+import com.epis.dtos.epi.EpiUpdateDto;
 import com.epis.entities.Epi;
+import com.epis.entities.Funcionario;
 import com.epis.mapper.EpiMapper;
 import com.epis.services.exception.ErroBuscarDynamoException;
 import com.epis.services.exception.ErroDeletarDynamoException;
@@ -11,9 +12,11 @@ import com.epis.services.exception.EpiNaoEncontradoException;
 import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -24,6 +27,9 @@ public class EpiService {
 
     @Autowired
     private DynamoDbTemplate dynamoDbTemplate;
+
+    @Autowired
+    private DynamoDbEnhancedClient enhancedClient;
 
     public void uploadEpis(List<Epi> epis){
 
@@ -43,10 +49,22 @@ public class EpiService {
 
         try {
 
-            return dynamoDbTemplate
-                    .scanAll(Epi.class)
-                    .items()
+            DynamoDbTable<Epi> table = enhancedClient.table("epi",
+                    TableSchema.fromBean(Epi.class));
+
+            DynamoDbIndex<Epi> index =
+                    table.index("epi-ativo-index");
+
+            QueryConditional conditional =
+                    QueryConditional.keyEqualTo(
+                            Key.builder()
+                                    .partitionValue("1")
+                                    .build()
+                    );
+
+            return index.query(r -> r.queryConditional(conditional))
                     .stream()
+                    .flatMap(page -> page.items().stream())
                     .toList();
 
         } catch (Exception e) {
@@ -65,7 +83,7 @@ public class EpiService {
 
             Epi epi = dynamoDbTemplate.load(key, Epi.class);
 
-            if (epi == null)
+            if (epi == null || Objects.equals(epi.getCadastroAtivo(), "0"))
                 throw new EpiNaoEncontradoException("Epi não encontrada com o id: " + id);
 
             return epi;
@@ -123,6 +141,8 @@ public class EpiService {
         try {
 
             Epi epi = getById(id);
+
+            epi.setCadastroAtivo("0");
 
             dynamoDbTemplate.delete(epi);
 

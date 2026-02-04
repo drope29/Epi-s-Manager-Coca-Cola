@@ -1,8 +1,11 @@
 package com.epis.controllers;
 
-import com.epis.dtos.FuncionarioCreateDto;
-import com.epis.dtos.FuncionarioUpdateDto;
+import com.epis.dtos.funcionario.FuncionarioCreateDto;
+import com.epis.dtos.funcionario.FuncionarioResponseDto;
+import com.epis.dtos.funcionario.FuncionarioUpdateDto;
 import com.epis.entities.Funcionario;
+import com.epis.interfaces.AuditAction;
+import com.epis.mapper.FuncionarioMapper;
 import com.epis.services.FuncionarioService;
 import com.epis.utils.UploadFiles;
 import jakarta.validation.Valid;
@@ -19,7 +22,13 @@ import java.util.UUID;
 public class FuncionarioController {
 
     @Autowired
+    private UploadFiles uploadFiles;
+
+    @Autowired
     private FuncionarioService service;
+
+    @Autowired
+    private FuncionarioMapper mapper;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFuncionarios() {
@@ -27,7 +36,7 @@ public class FuncionarioController {
         String mensagemRetorno = "Funcionários Importados com Sucesso";
 
         try {
-            service.uploadFuncionarios(UploadFiles.lerFuncionarios());
+            service.uploadFuncionarios(uploadFiles.lerFuncionarios());
         } catch (Exception e) {
             mensagemRetorno = "Ocorreu um erro ao importar usuários, erro: " + e.getMessage();
         }
@@ -37,41 +46,43 @@ public class FuncionarioController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<Funcionario>> getAllFuncionarios() {
+    public ResponseEntity<List<FuncionarioResponseDto>> getAllFuncionarios() {
 
         List<Funcionario> funcionarios = service.getAll();
 
-        return ResponseEntity.ok(funcionarios);
+        return ResponseEntity.ok(mapper.toFuncionarioResponseDtoList(funcionarios));
 
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getFuncionarioById(@PathVariable UUID id) {
+    public ResponseEntity<FuncionarioResponseDto> getFuncionarioById(@PathVariable UUID id) {
 
         Funcionario funcionario = service.getById(id);
 
-        return ResponseEntity.ok(funcionario);
+        return ResponseEntity.ok(mapper.toFuncionarioResponseDto(funcionario));
 
     }
 
     @PostMapping("/")
-    public ResponseEntity<Funcionario> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
+    public ResponseEntity<FuncionarioResponseDto> insertFuncionario(@Valid @RequestBody FuncionarioCreateDto dto) {
 
         Funcionario funcionario = service.insert(dto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toFuncionarioResponseDto(funcionario));
 
     }
 
+    @AuditAction(action = "UPDATE", entity = "FUNCIONARIO")
     @PutMapping("/{id}")
-    public ResponseEntity<Funcionario> updateFuncionario(@PathVariable UUID id, @RequestBody FuncionarioUpdateDto dto) {
+    public ResponseEntity<FuncionarioResponseDto> updateFuncionario(@PathVariable UUID id, @RequestBody FuncionarioUpdateDto dto) {
 
         Funcionario funcionarioUpd = service.update(id, dto);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(funcionarioUpd);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(mapper.toFuncionarioResponseDto(funcionarioUpd));
 
     }
 
+    @AuditAction(action = "DELETE", entity = "FUNCIONARIO")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFuncionario(@PathVariable UUID id) {
 

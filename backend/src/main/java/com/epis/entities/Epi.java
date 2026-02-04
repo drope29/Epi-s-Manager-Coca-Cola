@@ -2,10 +2,7 @@ package com.epis.entities;
 
 import com.epis.utils.DateAttributeConverter;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.util.Date;
 import java.util.UUID;
@@ -19,12 +16,15 @@ public class Epi {
     private String descricao;
     private Date dataValidade;
 
+    private String cadastroAtivo;
+
     public Epi(){}
 
     public Epi(String codigoCompra, String descricao) {
         this.epiId = UUID.randomUUID();
         this.codigoCompra = codigoCompra;
         this.descricao = descricao;
+        this.cadastroAtivo = "1";
     }
 
     public Epi(String codigoCompra, String codigoAutenticacao, String descricao, Date dataValidade) {
@@ -33,6 +33,7 @@ public class Epi {
         this.codigoAutenticacao = codigoAutenticacao;
         this.descricao = descricao;
         this.dataValidade = dataValidade;
+        this.cadastroAtivo = "1";
     }
 
     @DynamoDbPartitionKey
@@ -77,6 +78,16 @@ public class Epi {
 
     public void setDataValidade(Date dataValidade) {
         this.dataValidade = dataValidade;
+    }
+
+    @DynamoDbSecondaryPartitionKey(indexNames = "epi-ativo-index")
+    @DynamoDbAttribute("cadastroAtivo")
+    public String getCadastroAtivo() {
+        return cadastroAtivo;
+    }
+
+    public void setCadastroAtivo(String cadastroAtivo) {
+        this.cadastroAtivo = cadastroAtivo;
     }
 
     @Override

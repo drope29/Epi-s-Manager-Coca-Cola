@@ -1,7 +1,8 @@
 package com.epis.mapper;
 
-import com.epis.dtos.FuncionarioCreateDto;
-import com.epis.dtos.FuncionarioUpdateDto;
+import com.epis.dtos.funcionario.FuncionarioCreateDto;
+import com.epis.dtos.funcionario.FuncionarioResponseDto;
+import com.epis.dtos.funcionario.FuncionarioUpdateDto;
 import com.epis.entities.Funcao;
 import com.epis.entities.Funcionario;
 import com.epis.enums.GeneroEnum;
@@ -10,6 +11,8 @@ import com.epis.services.FuncaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -26,7 +29,7 @@ public class FuncionarioMapper {
 
         funcionario.setFuncionarioId(UUID.randomUUID());
         funcionario.setNome(dto.getNome());
-        funcionario.setFuncao(funcao);
+        funcionario.setFuncaoId(funcao.getId());
         funcionario.setRE(dto.getRE());
         funcionario.setUnidade(dto.getUnidade());
         funcionario.setTurno(TurnoEnum.valueOf(dto.getTurno().toUpperCase()));
@@ -48,7 +51,7 @@ public class FuncionarioMapper {
 
             Funcao funcao = funcaoService.getById(dto.getFuncao());
 
-            funcionario.setFuncao(funcao);
+            funcionario.setFuncaoId(funcao.getId());
         }
 
         if (dto.getRE() != null) {
@@ -74,6 +77,38 @@ public class FuncionarioMapper {
         if (dto.getSetor() != null) {
             funcionario.setSetor(dto.getSetor());
         }
+
+    }
+
+    public FuncionarioResponseDto toFuncionarioResponseDto(Funcionario funcionario) {
+
+        FuncionarioResponseDto funcionarioResponseDto = new FuncionarioResponseDto(funcionario);
+
+        Funcao funcao = funcaoService.getById(funcionario.getFuncaoId());
+
+        funcionarioResponseDto.setFuncao(funcao);
+
+        return funcionarioResponseDto;
+
+    }
+
+    public List<FuncionarioResponseDto> toFuncionarioResponseDtoList(List<Funcionario> funcionarios) {
+
+        List<FuncionarioResponseDto> funcionarioResponseDtoList = new ArrayList<>();
+
+        for (Funcionario funcionario : funcionarios) {
+
+            FuncionarioResponseDto funcionarioResponseDto = new FuncionarioResponseDto(funcionario);
+
+            Funcao funcao = funcaoService.getById(funcionario.getFuncaoId());
+
+            funcionarioResponseDto.setFuncao(funcao);
+
+            funcionarioResponseDtoList.add(funcionarioResponseDto);
+
+        }
+
+        return funcionarioResponseDtoList;
 
     }
 

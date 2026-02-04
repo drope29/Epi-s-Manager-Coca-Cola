@@ -1,4 +1,4 @@
-package com.epis.dtos;
+package com.epis.dtos.uniforme;
 
 import java.util.List;
 import java.util.UUID;

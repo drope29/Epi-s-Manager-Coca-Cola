@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import axios from 'axios';
-import FormularioEntregaEpi from './FormularioEntregaEpi.vue'; // Certifique-se que o caminho está correto
+import { VueSignaturePad } from 'vue-signature-pad';
+import FormularioEntregaEpi from './FormularioEntregaEpi.vue';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 // --- Props e Emits ---
 const props = defineProps({
@@ -26,6 +28,23 @@ const editSearchQuery = ref('');
 // --- Estados do Modal ---
 const isFormEntregaVisible = ref(false);
 
+// --- ESTADOS DA ASSINATURA ---
+const isSignatureModalOpen = ref(false);
+const itemToSign = ref(null);
+const signaturePadRef = ref(null);
+
+const s3Client = new S3Client({
+    region: import.meta.env.VITE_AWS_REGION, // Lê do arquivo .env
+    endpoint: import.meta.env.VITE_AWS_ENDPOINT,
+    credentials: {
+        accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+        secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
+    },
+    forcePathStyle: true 
+});
+
+const BUCKET_NAME = import.meta.env.VITE_AWS_BUCKET_NAME;
+
 // --- Carregamento Inicial ---
 onMounted(async () => {
     await fetchMovimentacoes();
@@ -36,18 +55,39 @@ onMounted(async () => {
 async function fetchMovimentacoes() {
     loading.value = true;
     try {
-        const response = await fetch(`${backUrl}/api/movimentacao/`); // Busca todas
+        const token = localStorage.getItem('token');
+        if (!token) {
+            Swal.fire('Erro', 'Token não encontrado. Faça login novamente.', 'error');
+            return;
+        }
+
+        const response = await fetch(`${backUrl}/api/movimentacao/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
         if (!response.ok) {
-            console.warn(`API ${response.url} não encontrada ou falhou: ${response.status}`);
+            if (response.status === 401) {
+                Swal.fire('Sessão Expirada', 'Faça login novamente.', 'warning');
+            }
+            console.warn(`Erro na API: ${response.status}`);
             movimentacoes.value = [];
         } else {
             const allData = await response.json();
-            // Filtra pelo ID do colaborador (assumindo item.funcionario.id)
-            const filteredData = allData.filter(item => item.funcionario && item.funcionario.id === props.colaborador.id);
+            const idColab = props.colaborador.funcionarioId || props.colaborador.id;
+
+            const filteredData = allData.filter(item => {
+                const itemFuncId = item.funcionario?.id || item.funcionario?.funcionarioId;
+                return itemFuncId === idColab;
+            });
+
             movimentacoes.value = filteredData.map(item => ({ ...item, epi: item.epi || {} }));
         }
     } catch (error) {
-        console.error('Erro ao carregar e filtrar movimentações:', error);
+        console.error('Erro ao carregar movimentações:', error);
         movimentacoes.value = [];
         Swal.fire('Erro', 'Não foi possível carregar as movimentações.', 'error');
     } finally {
@@ -57,49 +97,32 @@ async function fetchMovimentacoes() {
 
 async function fetchEpis() {
     try {
-        const response = await axios.get(`${backUrl}/api/epis/`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backUrl}/api/epis/`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
         epis.value = response.data;
     } catch (error) {
         console.error("Erro ao buscar EPIs:", error);
     }
 }
 
-// --- Helpers de Formatação (CORRIGIDOS) ---
+// --- Helpers de Formatação ---
 const formatarDataDisplay = (dataStr) => {
     if (!dataStr) return "";
-
     let date;
     try {
-        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
         if (dataStr.includes('-')) {
-            const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[0]), // YYYY
-                parseInt(dateParts[1]) - 1, // MM (0-indexed)
-                parseInt(dateParts[2])  // DD
-            ));
-
-            // Caso 2: Formato Brasileiro (DD/MM/YYYY)
+            const dateParts = dataStr.split('T')[0].split('-');
+            date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
         } else if (dataStr.includes('/')) {
-            const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[2]), // YYYY
-                parseInt(dateParts[1]) - 1, // MM (0-indexed)
-                parseInt(dateParts[0])  // DD
-            ));
-
-            // Caso 3: Tentar a sorte com o construtor padrão
+            const dateParts = dataStr.split('/');
+            date = new Date(Date.UTC(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0])));
         } else {
             date = new Date(dataStr);
         }
-
-        if (isNaN(date.getTime())) {
-            return dataStr; // Retorna o original se for "Invalid Date"
-        }
-
-        // Formata para DD/MM/YYYY
+        if (isNaN(date.getTime())) return dataStr;
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-
     } catch (e) {
         return dataStr;
     }
@@ -107,40 +130,22 @@ const formatarDataDisplay = (dataStr) => {
 
 const formatarDataInput = (dataStr) => {
     if (!dataStr) return "";
-
     let date;
     try {
-        // Caso 1: Formato ISO (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
         if (dataStr.includes('-')) {
-            const dateParts = dataStr.split('T')[0].split('-'); // ["YYYY", "MM", "DD"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[0]),
-                parseInt(dateParts[1]) - 1,
-                parseInt(dateParts[2])
-            ));
-        }
-        // Caso 2: Formato Brasileiro (DD/MM/YYYY)
-        else if (dataStr.includes('/')) {
-            const dateParts = dataStr.split('/'); // ["DD", "MM", "YYYY"]
-            date = new Date(Date.UTC(
-                parseInt(dateParts[2]),
-                parseInt(dateParts[1]) - 1,
-                parseInt(dateParts[0])
-            ));
-        }
-        // Caso 3: Tentar a sorte
-        else {
+            const dateParts = dataStr.split('T')[0].split('-');
+            date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
+        } else if (dataStr.includes('/')) {
+            const dateParts = dataStr.split('/');
+            date = new Date(Date.UTC(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0])));
+        } else {
             date = new Date(dataStr);
         }
-
         if (isNaN(date.getTime())) return '';
-
-        // Formata para YYYY-MM-DD
         const year = date.getUTCFullYear();
         const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
         const day = date.getUTCDate().toString().padStart(2, '0');
         return `${year}-${month}-${day}`;
-
     } catch (e) {
         return '';
     }
@@ -151,11 +156,10 @@ const linhasEmBranco = computed(() => {
     return Math.max(0, totalLinhasVisuais - movimentacoes.value.length);
 });
 
-// Filtro para o combobox de edição inline
 const filteredEpisInEdit = computed(() => {
     const query = editSearchQuery.value.toLowerCase().trim();
     if (!query) {
-        return epis.value; // Template limita a 10
+        return epis.value;
     }
     return epis.value.filter(epi => {
         const descricao = epi.descricao ? epi.descricao.toLowerCase() : '';
@@ -164,67 +168,60 @@ const filteredEpisInEdit = computed(() => {
     });
 });
 
-// Texto exibido no input do combobox de edição
-const editDisplayValue = computed({
-    get() {
-        if (isEditDropdownOpen.value) {
-            return editSearchQuery.value;
-        }
-        if (editFormData.value.epiId) {
-            const epi = epis.value.find(e => e.id === editFormData.value.epiId);
-            return epi ? `${epi.descricao} (CA: ${epi.codigoAutenticacao})` : '';
-        }
-        return '';
-    },
-    set(value) {
-        editSearchQuery.value = value;
-        // Não limpa epiId aqui automaticamente ao digitar
-    }
-});
-
-
-// Computed para o CA na edição
 const editedCaDisplay = computed(() => {
     if (!editingItemId.value || !editFormData.value.epiId) return '';
-    const selectedEpi = epis.value.find(e => e.id === editFormData.value.epiId);
+    const selectedEpi = epis.value.find(e => (e.id || e.epiId) == editFormData.value.epiId);
     return selectedEpi?.codigoAutenticacao || '';
 });
 
 
 // --- Funções de Edição Inline ---
 function startEdit(item) {
-    editingItemId.value = item.id;
+    const idCorreto = item.movimentacaoId || item.id;
+    editingItemId.value = idCorreto;
+
+    const epiIdInicial = item.epi?.id || item.epi?.epiId || null;
+
     editFormData.value = {
-        id: item.id,
+        id: idCorreto,
         dataEntrega: formatarDataInput(item.dataEntrega),
-        epiId: item.epi?.id || null,
+        epiId: epiIdInicial,
         status: item.status || '',
         dataProximaEntrega: formatarDataInput(item.dataProximaEntrega),
         quantidade: item.quantidade || 1,
         recebedor: item.recebedor || '',
         cod_entrega: item.cod_entrega || '',
         cod_devolucao: item.cod_devolucao || '',
-        funcionarioId: item.funcionario?.id || props.colaborador.id,
-        caDisplay: item.epi?.codigoAutenticacao || ''
+        funcionarioId: item.funcionario?.id || props.colaborador.funcionarioId || props.colaborador.id,
+        caDisplay: item.epi?.codigoAutenticacao || '',
+        assinatura: item.assinatura || null
     };
-    editSearchQuery.value = '';
+
+    if (item.epi && item.epi.descricao) {
+        editSearchQuery.value = `${item.epi.descricao} (CA: ${item.epi.codigoAutenticacao || 'N/A'})`;
+    } else {
+        editSearchQuery.value = '';
+    }
+
     isEditDropdownOpen.value = false;
     if (epis.value.length === 0) fetchEpis();
 }
 
+function selectEpiInEdit(epi) {
+    const idDoEpi = epi.id || epi.epiId;
+    editFormData.value.epiId = idDoEpi;
+    editSearchQuery.value = `${epi.descricao} (CA: ${epi.codigoAutenticacao})`;
+    isEditDropdownOpen.value = false;
+}
+
 async function saveEdit() {
-    // Validações...
-    if (!editFormData.value.epiId) { Swal.fire('Atenção', 'Selecione um EPI.', 'warning'); return; }
+    if (!editFormData.value.epiId) { Swal.fire('Atenção', 'Selecione um EPI da lista.', 'warning'); return; }
+
     const quantidadeNum = parseInt(editFormData.value.quantidade, 10);
     if (isNaN(quantidadeNum) || quantidadeNum <= 0) { Swal.fire('Atenção', 'Quantidade inválida.', 'warning'); return; }
-    const codEntregaNum = parseInt(editFormData.value.cod_entrega, 10);
-    if (editFormData.value.cod_entrega && isNaN(codEntregaNum)) { Swal.fire('Atenção', 'Cod Entrega inválido.', 'warning'); return; }
-    const codDevolucaoNum = parseInt(editFormData.value.cod_devolucao, 10);
-    if (editFormData.value.cod_devolucao && isNaN(codDevolucaoNum)) { Swal.fire('Atenção', 'Cod Devolução inválido.', 'warning'); return; }
 
     loading.value = true;
 
-    // Payload para o backend (campos que existem)
     const payloadBackend = {
         dataEntrega: editFormData.value.dataEntrega || null,
         epiId: editFormData.value.epiId,
@@ -232,27 +229,35 @@ async function saveEdit() {
         status: editFormData.value.status || null,
         quantidade: quantidadeNum,
         dataProximaEntrega: editFormData.value.dataProximaEntrega || null,
+        assinatura: editFormData.value.assinatura
     };
 
     try {
+        const token = localStorage.getItem('token');
         const response = await axios.put(`${backUrl}/api/movimentacao/${editingItemId.value}`, payloadBackend, {
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
         });
 
         if (response.status >= 200 && response.status < 300) {
             const updatedItemFromServer = response.data || {};
+            const index = movimentacoes.value.findIndex(m => (m.movimentacaoId || m.id) === editingItemId.value);
 
-            // Atualiza item local mesclando dados
-            const finalUpdatedItem = {
-                ...movimentacoes.value.find(m => m.id === editingItemId.value),
-                ...editFormData.value,
-                epi: epis.value.find(e => e.id === editFormData.value.epiId) || {},
-                dataEntrega: editFormData.value.dataEntrega ? new Date(editFormData.value.dataEntrega + 'T00:00:00Z').toISOString() : null,
-                dataProximaEntrega: editFormData.value.dataProximaEntrega ? new Date(editFormData.value.dataProximaEntrega + 'T00:00:00Z').toISOString() : null,
-                ...updatedItemFromServer,
-            };
+            if (index !== -1) {
+                const itemAtual = movimentacoes.value[index];
+                const epiAtualizado = epis.value.find(e => (e.id || e.epiId) == editFormData.value.epiId) || {};
 
-            handleItemAtualizado(finalUpdatedItem);
+                movimentacoes.value[index] = {
+                    ...itemAtual,
+                    ...editFormData.value,
+                    epi: epiAtualizado,
+                    dataEntrega: editFormData.value.dataEntrega ? new Date(editFormData.value.dataEntrega + 'T00:00:00Z').toISOString() : null,
+                    dataProximaEntrega: editFormData.value.dataProximaEntrega ? new Date(editFormData.value.dataProximaEntrega + 'T00:00:00Z').toISOString() : null,
+                    ...updatedItemFromServer,
+                };
+            }
             Swal.fire('Salvo!', 'Alterações salvas.', 'success');
             cancelEdit();
         } else {
@@ -267,7 +272,6 @@ async function saveEdit() {
     }
 }
 
-
 function cancelEdit() {
     editingItemId.value = null;
     editFormData.value = {};
@@ -275,17 +279,22 @@ function cancelEdit() {
     isEditDropdownOpen.value = false;
 }
 
-// Watcher para CA
 watch(() => editFormData.value.epiId, (newEpiId) => {
     if (editingItemId.value) {
-        const selectedEpi = epis.value.find(e => e.id === newEpiId);
+        const selectedEpi = epis.value.find(e => (e.id || e.epiId) == newEpiId);
         editFormData.value.caDisplay = selectedEpi?.codigoAutenticacao || '';
     }
 });
 
-// --- Função Excluir ---
 function handleDeleteEpi(item) {
     const nomeEpi = item.epi?.descricao || 'Item Desconhecido';
+    const idParaExcluir = item.movimentacaoId || item.id;
+
+    if (!idParaExcluir) {
+        Swal.fire('Erro', 'ID da movimentação não encontrado.', 'error');
+        return;
+    }
+
     Swal.fire({
         title: 'Você tem certeza?',
         text: `Deseja realmente excluir: ${nomeEpi}?`,
@@ -299,12 +308,18 @@ function handleDeleteEpi(item) {
         if (result.isConfirmed) {
             loading.value = true;
             try {
-                const response = await fetch(`${backUrl}/api/movimentacao/${item.id}`, { method: 'DELETE' });
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${backUrl}/api/movimentacao/${idParaExcluir}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
                 if (!response.ok) {
+                    if (response.status === 401) throw new Error('Sessão Expirada (401)');
                     const errorData = await response.text();
                     throw new Error(`Falha ao excluir: ${response.status} ${errorData}`);
                 }
-                movimentacoes.value = movimentacoes.value.filter(m => m.id !== item.id);
+                movimentacoes.value = movimentacoes.value.filter(m => (m.movimentacaoId || m.id) !== idParaExcluir);
                 Swal.fire('Excluído!', `'${nomeEpi}' foi excluído.`, 'success');
             } catch (error) {
                 console.error('Erro ao excluir:', error);
@@ -316,12 +331,12 @@ function handleDeleteEpi(item) {
     });
 }
 
-// --- Funções do Modal ---
 function openFormEntrega() { isFormEntregaVisible.value = true; }
 function closeFormEntrega() { isFormEntregaVisible.value = false; fetchMovimentacoes(); }
 function handleItemAdicionado(itemSalvo) { movimentacoes.value.unshift({ ...itemSalvo, epi: itemSalvo.epi || {} }); closeFormEntrega(); }
 function handleItemAtualizado(itemAtualizado) {
-    const index = movimentacoes.value.findIndex(m => m.id === itemAtualizado.id);
+    const idKey = itemAtualizado.movimentacaoId ? 'movimentacaoId' : 'id';
+    const index = movimentacoes.value.findIndex(m => m[idKey] === itemAtualizado[idKey]);
     if (index !== -1) {
         const newList = [...movimentacoes.value];
         newList[index] = { ...itemAtualizado, epi: itemAtualizado.epi || {} };
@@ -329,26 +344,12 @@ function handleItemAtualizado(itemAtualizado) {
     }
 }
 
-// --- Função Auxiliar ---
 const getNomeUnidade = (unidade) => {
     if (unidade && unidade.toLowerCase().includes('coca-cola')) return "Coca-Cola FEMSA Brasil";
     return unidade || "Não Informado";
 };
 
-// --- Handlers do Combobox de Edição ---
-function selectEpiInEdit(epi) {
-    editFormData.value.epiId = epi.id;
-    isEditDropdownOpen.value = false;
-    editSearchQuery.value = '';
-    const currentDisplay = editDisplayValue.value; // Força re-render do display
-}
-
-
-function openEditDropdown() {
-    isEditDropdownOpen.value = true;
-    editSearchQuery.value = '';
-}
-
+function openEditDropdown() { isEditDropdownOpen.value = true; }
 function closeEditDropdown() {
     setTimeout(() => {
         const focusedElement = document.activeElement;
@@ -357,6 +358,125 @@ function closeEditDropdown() {
         }
     }, 150);
 }
+
+// =========================================================
+// === LÓGICA DE ASSINATURA =================================
+// =========================================================
+
+function abrirPad(item) {
+    itemToSign.value = item;
+    isSignatureModalOpen.value = true;
+
+    setTimeout(() => {
+        if (signaturePadRef.value) {
+            signaturePadRef.value.resizeCanvas();
+        }
+    }, 50);
+}
+
+function closeSignatureModal() {
+    isSignatureModalOpen.value = false;
+    itemToSign.value = null;
+}
+
+function limparAssinatura() {
+    if (signaturePadRef.value) {
+        signaturePadRef.value.clearSignature();
+    }
+}
+
+const dataURLtoUint8Array = (dataURL) => {
+    const arr = dataURL.split(',');
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return u8arr;
+};
+
+async function salvarAssinatura() {
+    if (!signaturePadRef.value) return;
+
+    // 1. Pega assinatura em PNG (Base64)
+    const { isEmpty, data } = signaturePadRef.value.saveSignature("image/png");
+
+    if (isEmpty) {
+        Swal.fire('Atenção', 'Por favor, assine antes de salvar.', 'warning');
+        return;
+    }
+
+    if (!itemToSign.value) return;
+
+    loading.value = true;
+    const idItem = itemToSign.value.movimentacaoId || itemToSign.value.id;
+
+    try {
+        // --- 2. UPLOAD DIRETO PRO S3 (LOCALSTACK) ---
+        const fileName = `assinatura_${idItem}_${Date.now()}.png`;
+
+        // CONVERSÃO CORRIGIDA: Usa Uint8Array em vez de Blob
+        const fileBuffer = dataURLtoUint8Array(data);
+
+        const command = new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: fileName,
+            Body: fileBuffer, // Enviando bytes puros
+            ContentType: "image/png",
+            ACL: 'public-read'
+        });
+
+        await s3Client.send(command);
+
+        // --- 3. GERA URL DO ARQUIVO ---
+        const imageUrl = `http://localhost:4566/${BUCKET_NAME}/${fileName}`;
+        console.log("Upload S3 Sucesso! URL:", imageUrl);
+
+        // --- 4. ENVIA APENAS A URL PARA O BACKEND ---
+        const token = localStorage.getItem('token');
+
+        const payload = {
+            dataEntrega: itemToSign.value.dataEntrega,
+            epiId: itemToSign.value.epi?.id || itemToSign.value.epi?.epiId,
+            funcionarioId: props.colaborador.funcionarioId || props.colaborador.id,
+            status: itemToSign.value.status,
+            quantidade: itemToSign.value.quantidade,
+            dataProximaEntrega: itemToSign.value.dataProximaEntrega,
+            recebedor: itemToSign.value.recebedor,
+            cod_entrega: itemToSign.value.cod_entrega,
+            cod_devolucao: itemToSign.value.cod_devolucao,
+            assinatura: imageUrl // Enviando o link
+        };
+
+        const response = await axios.put(`${backUrl}/api/movimentacao/${idItem}`, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.status >= 200 && response.status < 300) {
+            const index = movimentacoes.value.findIndex(m => (m.movimentacaoId || m.id) === idItem);
+            if (index !== -1) {
+                movimentacoes.value[index].assinatura = imageUrl;
+            }
+            Swal.fire('Sucesso', 'Assinatura salva com sucesso!', 'success');
+            closeSignatureModal();
+        } else {
+            throw new Error('Falha ao salvar link da assinatura no banco');
+        }
+
+    } catch (error) {
+        console.error("Erro no processo de assinatura:", error);
+        // Mostra o erro real se for do S3
+        const msg = error.message || 'Não foi possível salvar a assinatura.';
+        Swal.fire('Erro', msg, 'error');
+    } finally {
+        loading.value = false;
+    }
+}
+
 </script>
 
 <template>
@@ -364,7 +484,6 @@ function closeEditDropdown() {
         class="fixed inset-0 z-40 bg-black bg-opacity-70 flex justify-center items-center p-4 transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-2xl w-[1400px] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
 
-            <!-- Cabeçalho do Modal -->
             <header class="bg-gray-100 p-4 flex justify-between items-center border-b border-gray-300">
                 <h2 class="text-xl font-semibold text-gray-800">
                     Ficha de Controle de EPIs {{ loading ? '(Carregando...)' : '' }}
@@ -378,7 +497,6 @@ function closeEditDropdown() {
             </header>
 
             <main class="p-6 overflow-y-auto" style="font-family: Arial, sans-serif;">
-                <!-- Cabeçalho da Ficha -->
                 <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
                     <img src="/logo-femsa.png" alt="Coca-Cola FEMSA Brasil" class="h-10"
                         onerror="this.style.display='none'">
@@ -389,28 +507,23 @@ function closeEditDropdown() {
                 <div class="border-b-2 border-black pb-1 mb-2 text-sm">
                     <div class="flex flex-wrap space-x-4 mb-1">
                         <div class="flex-1 min-w-[300px]"><strong>Nome:</strong> {{ colaborador.nome || 'N/A' }}</div>
-                        <div class="flex-1 min-w-[200px]"><strong>Unidade:</strong> {{ getNomeUnidade(colaborador.unidade)
-                        }}</div>
+                        <div class="flex-1 min-w-[200px]"><strong>Unidade:</strong> {{
+                            getNomeUnidade(colaborador.unidade) }}</div>
                     </div>
                     <div class="flex flex-wrap space-x-4">
-                        <div class="flex-1 min-w-[300px]"><strong>Função:</strong> {{ colaborador.funcao || 'N/A' }}</div>
+                        <div class="flex-1 min-w-[300px]"><strong>Função:</strong> {{ colaborador.funcao.nome || 'N/A'
+                        }}</div>
                         <div class="flex-1 min-w-[200px]"><strong>Setor:</strong> {{ colaborador.setor || 'N/A' }}</div>
                     </div>
                     <div class="flex flex-wrap space-x-4 mt-1">
                         <div class="flex-1 min-w-[300px]"><strong>RE/CPF:</strong> {{ colaborador.re || 'N/A' }}</div>
-
-                        <!-- 
-                          ######################################################
-                          # CORREÇÃO AQUI: Verifica 'data_admissao' e 'dataAdmissao'
-                          ######################################################
-                        -->
-                        <div class="flex-1 min-w-[200px]"><strong>Data de Admissão:</strong> {{ (colaborador.data_admissao
-                            || colaborador.dataAdmissao) ?
-                            formatarDataDisplay(colaborador.data_admissao || colaborador.dataAdmissao) : '____/____/______'
-                        }}</div>
-
+                        <div class="flex-1 min-w-[200px]"><strong>Data de Admissão:</strong> {{
+                            (colaborador.data_admissao || colaborador.dataAdmissao) ?
+                            formatarDataDisplay(colaborador.data_admissao || colaborador.dataAdmissao) :
+                            '____/____/______' }}</div>
                     </div>
                 </div>
+
                 <div class="text-sm space-y-1 my-3">
                     <p>DECLARO que recebi os EPI's/Uniforme ABAIXO RELACIONADO(S)...</p>
                     <p>COMPROMETO-ME ainda a apresentar para troca todo equipamento...</p>
@@ -435,23 +548,15 @@ function closeEditDropdown() {
                     </button>
                 </div>
 
-                <!-- Tabela com Edição Inline -->
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-collapse border border-black text-sm">
                         <thead class="bg-gray-100">
-                            <!-- 
-                                    ######################################################
-                                    # CORREÇÃO CABEÇALHO (THEAD)
-                                    ######################################################
-                                -->
                             <tr class="text-center font-bold">
-                                <!-- Ajuste nas larguras e adicionado 'whitespace-normal' para permitir quebra -->
                                 <th class="border border-black p-1 w-[90px] header-cell">DATA ENTREGA</th>
                                 <th class="border border-black p-1 w-[50px] header-cell">QTDE</th>
                                 <th class="border border-black p-1 header-cell">DESCRIÇÃO DO EPI</th>
-                                <!-- Largura flexível -->
                                 <th class="border border-black p-1 w-[70px] header-cell">CA</th>
-                                <th class="border border-black p-1 w-[100px] header-cell">ASSINATURA</th>
+                                <th class="border border-black p-1 w-[160px] header-cell">ASSINATURA</th>
                                 <th class="border border-black p-1 w-[100px] header-cell">DATA DEVOLUÇÃO</th>
                                 <th class="border border-black p-1 w-[100px] header-cell">RECEBEDOR</th>
                                 <th class="border border-black p-1 w-[100px] header-cell">COD ENTREGA</th>
@@ -460,32 +565,31 @@ function closeEditDropdown() {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in movimentacoes" :key="item.id" class="h-9 hover:bg-gray-50"
-                                :class="{ 'bg-yellow-100': editingItemId === item.id }">
+                            <tr v-for="item in movimentacoes" :key="item.movimentacaoId || item.id"
+                                class="h-9 hover:bg-gray-50"
+                                :class="{ 'bg-yellow-100': editingItemId === (item.movimentacaoId || item.id) }">
 
-                                <!-- Data Entrega -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="date" v-model="editFormData.dataEntrega"
+                                <td class="border border-black p-0 text-center align-middle">
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="date"
+                                        v-model="editFormData.dataEntrega"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ formatarDataDisplay(item.dataEntrega) }}</span>
                                 </td>
 
-                                <!-- Quantidade -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="number" min="1"
+                                <td class="border border-black p-0 text-center align-middle">
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="number" min="1"
                                         v-model.number="editFormData.quantidade"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.quantidade || 1 }}</span>
                                 </td>
 
-                                <!-- Descrição (Combobox EPI) -->
-                                <td class="border border-black p-0 relative align-top">
-                                    <div v-if="editingItemId === item.id" class="relative w-full h-full">
-                                        <input type="text" :value="editDisplayValue"
-                                            @input="editDisplayValue = $event.target.value; isEditDropdownOpen = true"
-                                            @focus="openEditDropdown" @blur="closeEditDropdown"
-                                            placeholder="Buscar ou Selecionar EPI..."
+                                <td class="border border-black p-0 relative align-middle">
+                                    <div v-if="editingItemId === (item.movimentacaoId || item.id)"
+                                        class="relative w-full h-full">
+                                        <input type="text" v-model="editSearchQuery" @focus="openEditDropdown"
+                                            @blur="closeEditDropdown" placeholder="Buscar ou Selecionar EPI..."
                                             class="w-full h-full p-1 input-edit bg-white" />
+
                                         <div v-if="isEditDropdownOpen"
                                             class="absolute left-0 right-0 z-20 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto edit-combobox-dropdown">
                                             <ul class="py-1">
@@ -497,7 +601,7 @@ function closeEditDropdown() {
                                                     Nenhum resultado para "{{ editSearchQuery }}"
                                                 </li>
                                                 <li v-for="epi in (editSearchQuery ? filteredEpisInEdit : filteredEpisInEdit.slice(0, 10))"
-                                                    :key="epi.id" @mousedown.prevent="selectEpiInEdit(epi)"
+                                                    :key="epi.id || epi.epiId" @mousedown.prevent="selectEpiInEdit(epi)"
                                                     class="px-3 py-1 text-sm text-gray-800 cursor-pointer hover:bg-blue-100">
                                                     {{ epi.descricao }} (CA: {{ epi.codigoAutenticacao }})
                                                 </li>
@@ -507,54 +611,59 @@ function closeEditDropdown() {
                                     <span v-else class="p-1 block">{{ item.epi?.descricao || 'N/A' }}</span>
                                 </td>
 
-
-                                <!-- CA (Automático) -->
-                                <td class="border border-black p-1 text-center align-top">
-                                    <span v-if="editingItemId === item.id">{{ editedCaDisplay }}</span>
+                                <td class="border border-black p-1 text-center align-middle">
+                                    <span v-if="editingItemId === (item.movimentacaoId || item.id)">{{ editedCaDisplay
+                                    }}</span>
                                     <span v-else>{{ item.epi?.codigoAutenticacao || 'N/A' }}</span>
                                 </td>
 
-                                <!-- Assinatura (Status) -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" v-model="editFormData.status"
-                                        class="w-full h-full p-1 text-center input-edit" />
-                                    <span v-else class="p-1 block">{{ item.status || '' }}</span>
+                                <td class="text-center align-middle border border-black p-2 bg-gray-50">
+                                    <template v-if="item.assinatura">
+                                        <div class="flex flex-col items-center justify-center w-full h-full">
+                                            <img :src="item.assinatura"
+                                                class="h-16 w-auto max-w-full object-contain bg-white rounded-md border border-gray-300 p-1"
+                                                alt="Assinatura" />
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <button
+                                            class="bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-2 px-6 rounded shadow uppercase tracking-wide transition-all hover:scale-105"
+                                            @click="abrirPad(item)">
+                                            ASSINAR
+                                        </button>
+                                    </template>
                                 </td>
-
-                                <!-- Data Devolução -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="date"
+                                <td class="border border-black p-0 text-center align-middle">
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="date"
                                         v-model="editFormData.dataProximaEntrega"
                                         class="w-full h-full p-1 text-center input-edit" />
-                                    <span v-else class="p-1 block">{{ formatarDataDisplay(item.dataProximaEntrega) }}</span>
+                                    <span v-else class="p-1 block">{{ formatarDataDisplay(item.dataProximaEntrega)
+                                    }}</span>
                                 </td>
 
-                                <!-- Recebedor -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" v-model="editFormData.recebedor"
-                                        class="w-full h-full p-1 text-center input-edit" />
+                                <td class="border border-black p-0 text-center align-middle">
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="text"
+                                        v-model="editFormData.recebedor" class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.recebedor || '' }}</span>
                                 </td>
 
-                                <!-- Código Entrega -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" pattern="[0-9]*" inputmode="numeric"
-                                        v-model="editFormData.cod_entrega"
+                                <td class="border border-black p-0 text-center align-middle">
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="text"
+                                        pattern="[0-9]*" inputmode="numeric" v-model="editFormData.cod_entrega"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.cod_entrega || '' }}</span>
                                 </td>
 
-                                <!-- Código Devolução -->
-                                <td class="border border-black p-0 text-center align-top">
-                                    <input v-if="editingItemId === item.id" type="text" pattern="[0-9]*" inputmode="numeric"
-                                        v-model="editFormData.cod_devolucao"
+                                <td class="border border-black p-0 text-center align-middle">
+                                    <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="text"
+                                        pattern="[0-9]*" inputmode="numeric" v-model="editFormData.cod_devolucao"
                                         class="w-full h-full p-1 text-center input-edit" />
                                     <span v-else class="p-1 block">{{ item.cod_devolucao || '' }}</span>
                                 </td>
 
-                                <!-- Ações -->
-                                <td class="border border-black p-1 text-center whitespace-nowrap align-top">
-                                    <div v-if="editingItemId === item.id" class="flex justify-center items-center gap-1">
+                                <td class="border border-black p-1 text-center whitespace-nowrap align-middle">
+                                    <div v-if="editingItemId === (item.movimentacaoId || item.id)"
+                                        class="flex justify-center items-center gap-1">
                                         <button @click="saveEdit()" title="Salvar" :disabled="loading"
                                             class="text-green-600 hover:text-green-800 p-1 disabled:opacity-50">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -591,7 +700,6 @@ function closeEditDropdown() {
                                 </td>
                             </tr>
 
-                            <!-- Linhas em branco -->
                             <tr v-for="n in linhasEmBranco" :key="`blank-${n}`" class="h-9">
                                 <td v-for="i in 10" :key="i" class="border border-black"></td>
                             </tr>
@@ -599,23 +707,56 @@ function closeEditDropdown() {
                     </table>
                 </div>
             </main>
-
         </div>
     </div>
 
-    <!-- Modal para Adicionar Item -->
-    <FormularioEntregaEpi
-        v-if="isFormEntregaVisible"
-        :funcionarioId="colaborador.funcionarioId"
-        :itemParaEditar="null"
-        @close="closeFormEntrega"
-        @itemAdicionado="handleItemAdicionado"
-        @itemAtualizado="handleItemAtualizado"
-    />
+    <FormularioEntregaEpi v-if="isFormEntregaVisible" :funcionarioId="colaborador.funcionarioId || colaborador.id"
+        :itemParaEditar="null" @close="closeFormEntrega" @itemAdicionado="handleItemAdicionado"
+        @itemAtualizado="handleItemAtualizado" />
+
+    <div v-if="isSignatureModalOpen" class="fixed inset-0 z-50 bg-black bg-opacity-80 flex justify-center items-center p-4">
+
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-100 rounded-t-lg">
+                <h3 class="text-2xl font-bold text-gray-800">Assinatura Digital</h3>
+                <button @click="closeSignatureModal" class="text-gray-500 hover:text-red-500">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 flex flex-col items-center justify-center bg-white">
+                <p class="text-lg text-gray-600 mb-2 font-medium">Assine no quadro abaixo:</p>
+                <div
+                    class="border-2 border-dashed border-gray-400 rounded w-full h-96 bg-gray-50 cursor-crosshair shadow-inner">
+                    <VueSignaturePad width="100%" height="100%" ref="signaturePadRef"
+                        :options="{ penColor: 'black', minWidth: 2, maxWidth: 4 }" />
+                </div>
+            </div>
+
+            <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-lg">
+                <button @click="limparAssinatura"
+                    class="px-6 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 text-base font-semibold transition-colors">
+                    Limpar
+                </button>
+                <div class="flex gap-4">
+                    <button @click="closeSignatureModal"
+                        class="px-6 py-3 bg-red-100 text-red-600 rounded-md hover:bg-red-200 text-base font-semibold transition-colors">
+                        Cancelar
+                    </button>
+                    <button @click="salvarAssinatura" :disabled="loading"
+                        class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-md hover:opacity-90 text-lg font-bold shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{ loading ? 'Salvando...' : 'Salvar Assinatura' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
-/* Estilos existentes */
 @keyframes fade-in {
     from {
         opacity: 0;
@@ -637,28 +778,19 @@ table {
     table-layout: fixed;
 }
 
-/* Ajuste no TD: Permitir quebra, mas evitar overflow se nowrap for forçado em outro lugar */
 td {
     white-space: normal;
     vertical-align: top;
     word-wrap: break-word;
 }
 
-/* Permite quebra */
-/* Ajuste no TH (cabeçalho) */
 th.header-cell {
     white-space: normal;
-    /* Permite quebra de linha no cabeçalho */
     word-wrap: break-word;
-    /* Força quebra se necessário */
     vertical-align: middle;
-    /* Centraliza verticalmente o texto */
     text-align: center;
-    /* Centraliza horizontalmente */
 }
 
-
-/* Classe comum para inputs de edição */
 .input-edit {
     box-sizing: border-box;
     border: 1px solid #93c5fd;
@@ -669,12 +801,9 @@ th.header-cell {
     display: block;
     width: 100%;
     height: 2.25rem;
-    /* ~h-9 */
     line-height: normal;
     font-size: 0.875rem;
-    /* text-sm */
     padding: 0.25rem 0.5rem;
-    /* p-1 px-2 */
 }
 
 .input-edit:focus {
@@ -682,7 +811,6 @@ th.header-cell {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
 }
 
-/* Ajustes específicos para inputs na tabela */
 td select.input-edit {
     padding-right: 1.5rem;
 }
@@ -692,8 +820,6 @@ td input[type="date"].input-edit {
     vertical-align: middle;
 }
 
-
-/* Remove setas do input number */
 td input[type=number]::-webkit-inner-spin-button,
 td input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -704,8 +830,6 @@ td input[type=number] {
     -moz-appearance: textfield;
 }
 
-/* Estilo para dropdown do combobox */
 .edit-combobox-dropdown {
     z-index: 20;
-}
-</style>
+}</style>
