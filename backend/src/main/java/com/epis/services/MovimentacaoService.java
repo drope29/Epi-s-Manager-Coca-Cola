@@ -2,6 +2,7 @@ package com.epis.services;
 
 import com.epis.dtos.movimentacao.MovimentacaoCreateDto;
 import com.epis.dtos.movimentacao.MovimentacaoUpdateDto;
+import com.epis.entities.Epi;
 import com.epis.entities.Movimentacao;
 import com.epis.mapper.MovimentacaoMapper;
 import com.epis.services.exception.ErroBuscarDynamoException;
@@ -11,9 +12,11 @@ import com.epis.services.exception.MovimentacaoNaoEncontradaException;
 import io.awspring.cloud.dynamodb.DynamoDbTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -25,14 +28,29 @@ public class MovimentacaoService {
     @Autowired
     private DynamoDbTemplate dynamoDbTemplate;
 
+    @Autowired
+    private DynamoDbEnhancedClient enhancedClient;
+
     public List<Movimentacao> getAll() {
 
         try {
 
-            return dynamoDbTemplate
-                    .scanAll(Movimentacao.class)
-                    .items()
+            DynamoDbTable<Movimentacao> table = enhancedClient.table("movimentacao",
+                    TableSchema.fromBean(Movimentacao.class));
+
+            DynamoDbIndex<Movimentacao> index =
+                    table.index("movimentacao-ativo-index");
+
+            QueryConditional conditional =
+                    QueryConditional.keyEqualTo(
+                            Key.builder()
+                                    .partitionValue("1")
+                                    .build()
+                    );
+
+            return index.query(r -> r.queryConditional(conditional))
                     .stream()
+                    .flatMap(page -> page.items().stream())
                     .toList();
 
         } catch (Exception e) {
@@ -51,7 +69,7 @@ public class MovimentacaoService {
 
             Movimentacao movimentacao = dynamoDbTemplate.load(key, Movimentacao.class);
 
-            if (movimentacao == null)
+            if (movimentacao == null || Objects.equals(movimentacao.getCadastroAtivo(), "0"))
                 throw new MovimentacaoNaoEncontradaException("Movimentacao não encontrada com o id: " + id);
 
             return movimentacao;
@@ -108,6 +126,8 @@ public class MovimentacaoService {
         try {
 
             Movimentacao movimentacao = getById(id);
+
+            movimentacao.setCadastroAtivo("0");
 
             dynamoDbTemplate.delete(movimentacao);
 

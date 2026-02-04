@@ -3,10 +3,7 @@ package com.epis.entities;
 import com.epis.enums.GeneroEnum;
 import com.epis.enums.TurnoEnum;
 import com.epis.utils.DateAttributeConverter;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.UUID;
@@ -26,6 +23,8 @@ public class Funcionario {
     private Date dataAdmissao;
     private String setor;
 
+    public String cadastroAtivo;
+
     public Funcionario(){}
 
     public Funcionario(String RE, String nome, UUID funcaoId) {
@@ -33,6 +32,7 @@ public class Funcionario {
         this.RE = RE;
         this.nome = nome;
         this.funcaoId = funcaoId;
+        this.cadastroAtivo = "1";
     }
 
     public Funcionario(UUID funcionarioId, String RE, String nome, UUID funcaoId, String unidade, TurnoEnum turno, GeneroEnum genero, Date dataAdmissao, String setor) {
@@ -45,6 +45,7 @@ public class Funcionario {
         this.genero = genero;
         this.dataAdmissao = dataAdmissao;
         this.setor = setor;
+        this.cadastroAtivo = "1";
     }
 
     @DynamoDbPartitionKey
@@ -65,6 +66,8 @@ public class Funcionario {
         this.RE = RE;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "funcionario-nome-index")
+    @DynamoDbAttribute("nome")
     public String getNome() {
         return nome;
     }
@@ -110,6 +113,16 @@ public class Funcionario {
     public String getSetor() { return setor; }
 
     public void setSetor(String setor) { this.setor = setor; }
+
+    @DynamoDbSecondaryPartitionKey(indexNames = "funcionario-ativo-index")
+    @DynamoDbAttribute("cadastroAtivo")
+    public String getCadastroAtivo() {
+        return cadastroAtivo;
+    }
+
+    public void setCadastroAtivo(String cadastroAtivo) {
+        this.cadastroAtivo = cadastroAtivo;
+    }
 
     @Override
     public String toString() {

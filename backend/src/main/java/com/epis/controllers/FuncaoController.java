@@ -1,6 +1,7 @@
 package com.epis.controllers;
 
 import com.epis.entities.Funcao;
+import com.epis.interfaces.AuditAction;
 import com.epis.services.FuncaoService;
 import com.epis.utils.UploadFiles;
 import jakarta.validation.Valid;
@@ -48,6 +49,7 @@ public class FuncaoController {
 
     }
 
+    @AuditAction(action = "UPDATE", entity = "FUNCAO")
     @PutMapping("/{id}")
     public ResponseEntity<Funcao> updateFuncao(@PathVariable UUID id, @RequestBody Funcao funcaoBody) {
 
@@ -57,6 +59,7 @@ public class FuncaoController {
 
     }
 
+    @AuditAction(action = "DELETE", entity = "FUNCAO")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteFuncao(@PathVariable UUID id) {
 

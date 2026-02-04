@@ -155,4 +155,31 @@ public class UsuarioService {
 
     }
 
+    public boolean verifyByLogin(String username) {
+
+        DynamoDbTable<Usuario> table = enhancedClient.table("usuario",
+                TableSchema.fromBean(Usuario.class));
+
+        DynamoDbIndex<Usuario> index = table.index("username-index");
+
+        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(
+                        Key.builder().partitionValue(username).build()
+                ))
+                .limit(1)
+                .build();
+
+        SdkIterable<Page<Usuario>> results = index.query(request);
+
+        Usuario usuario = StreamSupport.stream(results.spliterator(), false)
+                .flatMap(page -> StreamSupport.stream(page.items().spliterator(), false))
+                .findFirst()
+                .orElse(null);
+
+        return usuario != null;
+
+
+
+    }
+
 }

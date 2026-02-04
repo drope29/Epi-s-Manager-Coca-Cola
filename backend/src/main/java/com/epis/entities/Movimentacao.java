@@ -5,10 +5,7 @@ import com.epis.enums.StatusEnum;
 import com.epis.utils.DateAttributeConverter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.util.Date;
 import java.util.UUID;
@@ -24,6 +21,8 @@ public class Movimentacao {
     @Enumerated(EnumType.STRING)
     private StatusEnum status;
 
+    public String cadastroAtivo;
+
     public Movimentacao(){}
 
     public Movimentacao(UUID movimentacaoId, UUID funcionarioId, UUID epiId, Date dataEntrega, Date dataProximaEntrega, StatusEnum status) {
@@ -33,6 +32,7 @@ public class Movimentacao {
         this.dataEntrega = dataEntrega;
         this.dataProximaEntrega = dataProximaEntrega;
         this.status = status;
+        this.cadastroAtivo = "1";
     }
 
     @DynamoDbPartitionKey
@@ -79,6 +79,16 @@ public class Movimentacao {
 
     public void setStatus(StatusEnum status) {
         this.status = status;
+    }
+
+    @DynamoDbSecondaryPartitionKey(indexNames = "movimentacao-ativo-index")
+    @DynamoDbAttribute("cadastroAtivo")
+    public String getCadastroAtivo() {
+        return cadastroAtivo;
+    }
+
+    public void setCadastroAtivo(String cadastroAtivo) {
+        this.cadastroAtivo = cadastroAtivo;
     }
 
     @Override
