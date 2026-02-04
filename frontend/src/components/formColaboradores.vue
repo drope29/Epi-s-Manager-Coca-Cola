@@ -3,6 +3,7 @@ import { reactive, computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import { useRouter } from 'vue-router'; // <--- IMPORTANTE: Importar o router
 
 const props = defineProps({
   colaborador: {
@@ -13,11 +14,36 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'colaboradorAdicionado', 'colaboradorAtualizado']);
 const backUrl = import.meta.env.VITE_BACKEND_URL;
+const router = useRouter(); // <--- Instância do router
 
 // --------------------------------------------
-// LISTA DE FUNÇÕES (CARGOS)
+// FUNÇÃO AUXILIAR: TRATAMENTO DE SESSÃO
+// --------------------------------------------
+function handleSessionExpired() {
+  Swal.fire({
+    title: 'Sessão Expirada',
+    text: 'Faça login novamente para continuar.',
+    icon: 'warning',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: false // Impede fechar clicando fora
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // 1. Remove o token inválido
+      localStorage.removeItem('token');
+      // 2. Redireciona para o login (rota /)
+      // Usamos window.location.href para garantir que limpe qualquer estado residual
+      window.location.href = '/';
+    }
+  });
+}
+
+// --------------------------------------------
+// LISTA DE FUNÇÕES (CARGOS) E PESQUISA
 // --------------------------------------------
 const funcoes = ref([]);
+const searchQuery = ref('');
+const showDropdown = ref(false);
 
 async function carregarFuncoes() {
   try {
@@ -28,11 +54,28 @@ async function carregarFuncoes() {
     funcoes.value = response.data;
   } catch (e) {
     console.error("Erro ao carregar funções", e);
+    // --- LÓGICA DE SESSÃO EXPIRADA ---
     if (e.response && e.response.status === 401) {
-      Swal.fire('Sessão Expirada', 'Faça login novamente.', 'warning');
+      handleSessionExpired(); // Chama a função que redireciona
+    } else {
+      funcoes.value = [];
     }
-    funcoes.value = [];
   }
+}
+
+const cargosFiltrados = computed(() => {
+  if (!funcoes.value) return [];
+  return funcoes.value
+    .filter(f => f.nome.toLowerCase() !== 'admin')
+    .filter(f => f.nome.toLowerCase().includes(searchQuery.value.toLowerCase()))
+    .slice(0, 10);
+});
+
+function selecionarCargo(cargo) {
+  form.cargo = cargo.id;
+  searchQuery.value = cargo.nome;
+  showDropdown.value = false;
+  errors.cargo = null;
 }
 
 // === ESTADO DO FORMULÁRIO ===
@@ -67,24 +110,24 @@ onMounted(async () => {
   await carregarFuncoes();
 
   if (isEditMode.value) {
-    // PREENCHER NOME E SOBRENOME
     const nomeCompleto = (props.colaborador.nome || '').split(' ');
     form.nome = nomeCompleto.shift() || '';
     form.sobrenome = nomeCompleto.join(' ') || '';
 
-    // PREENCHER CAMPOS SIMPLES
     form.re = props.colaborador.re || '';
     form.unidade = props.colaborador.unidade || '';
     form.turno = props.colaborador.turno || '';
     form.genero = props.colaborador.genero || '';
     form.setor = props.colaborador.setor || '';
 
-    // PREENCHER CARGO
     if (props.colaborador.funcao) {
       form.cargo = props.colaborador.funcao.id;
+      const cargoEncontrado = funcoes.value.find(f => f.id === form.cargo);
+      if (cargoEncontrado) {
+        searchQuery.value = cargoEncontrado.nome;
+      }
     }
 
-    // PREENCHER DATA
     if (props.colaborador.dataAdmissao) {
       try {
         if (props.colaborador.dataAdmissao.includes('T')) {
@@ -93,14 +136,12 @@ onMounted(async () => {
           form.data_admissao = props.colaborador.dataAdmissao;
         }
       } catch (e) {
-        console.warn("Erro ao formatar data:", e);
         form.data_admissao = '';
       }
     }
   }
 });
 
-// === VALIDAÇÃO ===
 function validateForm() {
   Object.keys(errors).forEach(key => errors[key] = null);
   let valid = true;
@@ -146,6 +187,13 @@ async function registrarColaborador() {
     }
   } catch (error) {
     console.error("Erro no POST:", error);
+
+    // --- LÓGICA DE SESSÃO EXPIRADA ---
+    if (error.response && error.response.status === 401) {
+      handleSessionExpired();
+      return;
+    }
+
     const msg = error.response?.data?.message || 'Falha ao registrar.';
     Swal.fire('Erro!', msg, 'error');
   }
@@ -156,7 +204,6 @@ async function atualizarColaborador() {
   try {
     const token = localStorage.getItem('token');
 
-    // --- SEGURANÇA DE ID ---
     let idCorreto = props.colaborador.funcionarioId ||
       props.colaborador.id ||
       props.colaborador.FuncionarioId;
@@ -166,12 +213,9 @@ async function atualizarColaborador() {
       return;
     }
 
-    // --- CORREÇÃO DE PAYLOAD ---
-    // Agora enviamos 'funcao' apenas como ID (form.cargo), igual ao Registrar.
-    // Antes estava enviando { id: form.cargo }, o que pode causar erro no backend.
     const payload = {
       nome: `${form.nome} ${form.sobrenome}`,
-      funcao: form.cargo, // <--- ALTERADO: Envia só o ID
+      funcao: form.cargo,
       re: form.re,
       unidade: form.unidade,
       turno: form.turno,
@@ -179,9 +223,6 @@ async function atualizarColaborador() {
       setor: form.setor,
       dataAdmissao: form.data_admissao
     };
-
-    console.log("Tentando atualizar com Token:", token?.substring(0, 15) + "...");
-    console.log("Payload PUT:", payload);
 
     const response = await axios.put(`${backUrl}/api/funcionarios/${idCorreto}`, payload, {
       headers: { Authorization: `Bearer ${token}` }
@@ -194,12 +235,13 @@ async function atualizarColaborador() {
   } catch (error) {
     console.error("Erro ao atualizar (PUT):", error);
 
+    // --- LÓGICA DE SESSÃO EXPIRADA ---
     if (error.response && error.response.status === 401) {
-      // Se der 401 mesmo com token válido, é problema de permissão no backend
-      Swal.fire('Não Autorizado', 'Você não tem permissão para editar colaboradores.', 'error');
-    } else {
-      Swal.fire('Erro!', 'Não foi possível atualizar.', 'error');
+      handleSessionExpired();
+      return;
     }
+
+    Swal.fire('Erro!', 'Não foi possível atualizar.', 'error');
   }
 }
 
@@ -266,16 +308,34 @@ async function handleSubmit() {
               <p v-if="errors.re" class="text-red-500 text-sm mt-1">{{ errors.re }}</p>
             </div>
 
-            <div>
-              <select v-model="form.cargo" class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 bg-gray-100">
-                <option disabled value="">Selecione um cargo</option>
-                <option v-for="f in funcoes" :key="f.id" :value="f.id">
+            <div class="relative">
+              <input type="text" placeholder="Pesquise ou selecione um cargo..." v-model="searchQuery"
+                @focus="showDropdown = true" @input="form.cargo = ''"
+                class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 bg-gray-100" />
+
+              <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+
+              <ul v-if="showDropdown && cargosFiltrados.length > 0"
+                class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+                <li v-for="f in cargosFiltrados" :key="f.id" @click="selecionarCargo(f)"
+                  class="px-4 py-2 hover:bg-green-100 cursor-pointer text-gray-700 border-b border-gray-100 last:border-0">
                   {{ f.nome }}
-                </option>
-              </select>
+                </li>
+              </ul>
+
+              <div v-if="showDropdown && cargosFiltrados.length === 0"
+                class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2 text-gray-500 text-sm mt-1">
+                Nenhum cargo encontrado.
+              </div>
+
+              <div v-if="showDropdown" @click="showDropdown = false" class="fixed inset-0 z-40 bg-transparent"></div>
+
               <p v-if="errors.cargo" class="text-red-500 text-sm mt-1">{{ errors.cargo }}</p>
             </div>
-
             <div>
               <input type="text" placeholder="Setor" v-model="form.setor"
                 class="w-full ring-1 ring-gray-400 rounded-md text-lg px-3 py-3 bg-gray-100" />
