@@ -1,5 +1,29 @@
 <script setup>
+import { onMounted } from 'vue';
+import axios from 'axios';
 import AnimacaoCaminhao from '../components/AnimacaoCaminhao.vue';
+
+const backUrl = import.meta.env.VITE_BACKEND_URL;
+
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token');
+
+    // --- VERIFICAÇÃO DE SEGURANÇA ---
+    // Fazemos uma chamada simples ao backend apenas para testar se o token ainda vale.
+    // Se o token estiver expirado, o servidor retorna 401.
+    // O interceptador que criamos no main.js vai capturar esse 401 e redirecionar para o Login.
+    if (token) {
+      await axios.get(`${backUrl}/api/funcoes/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    }
+  } catch (error) {
+    // Não precisamos fazer nada aqui (nem alertar).
+    // O main.js já interceptou o erro 401 e exibiu o Modal de Sessão Expirada.
+    console.log("Verificação de token silenciosa executada.");
+  }
+});
 </script>
 
 <template>
@@ -50,7 +74,7 @@ import AnimacaoCaminhao from '../components/AnimacaoCaminhao.vue';
   height: 100%;
   background-image: url('/logo-femsa.png');
   background-color: #f8f8f8;
-  background-size: 200px auto;   
+  background-size: 200px auto;
   background-repeat: no-repeat;
   background-position: left bottom;
 }

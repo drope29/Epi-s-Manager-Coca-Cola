@@ -37,15 +37,22 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-
 const backUrl = import.meta.env.VITE_BACKEND_URL;
 
 const loginField = ref("");
 const password = ref("");
+
+// --- Redireciona se já estiver logado ---
+onMounted(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        router.push({ name: "Home" });
+    }
+});
 
 async function login() {
     try {
@@ -67,15 +74,12 @@ async function login() {
         }
 
         const data = await response.json();
-
         let tokenReal = null;
 
-        // 2. Lógica "Sherlock Holmes" para encontrar o token
+        // 2. Lógica para encontrar o token
         if (data && typeof data === 'string') {
-            // Caso raro: o backend retorna só a string do token
             tokenReal = data;
         } else if (data.token) {
-            // Caso comum: { token: "..." } ou { token: { token: "..." } }
             if (typeof data.token === 'string') {
                 tokenReal = data.token;
             } else if (data.token.token) {
@@ -84,29 +88,30 @@ async function login() {
                 tokenReal = data.token.accessToken;
             }
         } else if (data.accessToken) {
-            // Outro padrão comum: { accessToken: "..." }
             tokenReal = data.accessToken;
         } else if (data.Authorization) {
             tokenReal = data.Authorization;
         }
 
-
         // 3. Verificação e Salvamento
         if (tokenReal && typeof tokenReal === 'string' && tokenReal.length > 10) {
-            // Remove "Bearer " se o backend mandou junto (para não duplicar depois)
             if (tokenReal.startsWith("Bearer ")) {
                 tokenReal = tokenReal.replace("Bearer ", "");
             }
 
             localStorage.setItem('token', tokenReal);
-
             router.push({ name: "Home" });
         } else {
+            // Aqui usamos alert pois é um erro de sistema que impede o login
             alert("Erro de sistema: Token de autenticação inválido.");
         }
 
     } catch (error) {
-        console.error("Erro no login:", error);
+        // --- ALTERAÇÃO DE SEGURANÇA ---
+        // Não logamos o objeto 'error' completo para evitar vazamento de dados no console
+        console.error("Falha na autenticação.");
+
+        // Exibimos a mensagem para o usuário saber o que houve
         alert(error.message || "Erro ao tentar fazer login.");
     }
 }
