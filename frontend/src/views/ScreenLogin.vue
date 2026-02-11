@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"; // <--- Adicionei onMounted
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -46,15 +46,13 @@ const backUrl = import.meta.env.VITE_BACKEND_URL;
 const loginField = ref("");
 const password = ref("");
 
-// --- NOVO BLOCO: Redireciona se já estiver logado ---
+// --- Redireciona se já estiver logado ---
 onMounted(() => {
     const token = localStorage.getItem('token');
     if (token) {
-        // Se já tem token, manda pra casa e não deixa ver o login
         router.push({ name: "Home" });
     }
 });
-// ----------------------------------------------------
 
 async function login() {
     try {
@@ -78,7 +76,7 @@ async function login() {
         const data = await response.json();
         let tokenReal = null;
 
-        // 2. Lógica "Sherlock Holmes" para encontrar o token
+        // 2. Lógica para encontrar o token
         if (data && typeof data === 'string') {
             tokenReal = data;
         } else if (data.token) {
@@ -104,11 +102,16 @@ async function login() {
             localStorage.setItem('token', tokenReal);
             router.push({ name: "Home" });
         } else {
+            // Aqui usamos alert pois é um erro de sistema que impede o login
             alert("Erro de sistema: Token de autenticação inválido.");
         }
 
     } catch (error) {
-        console.error("Erro no login:", error);
+        // --- ALTERAÇÃO DE SEGURANÇA ---
+        // Não logamos o objeto 'error' completo para evitar vazamento de dados no console
+        console.error("Falha na autenticação.");
+
+        // Exibimos a mensagem para o usuário saber o que houve
         alert(error.message || "Erro ao tentar fazer login.");
     }
 }

@@ -14,6 +14,25 @@ const props = defineProps({
 const emit = defineEmits(['close', 'epiAdicionado', 'epiAtualizado']);
 const backUrl = import.meta.env.VITE_BACKEND_URL;
 
+// --------------------------------------------
+// FUNÇÃO AUXILIAR: TRATAMENTO DE SESSÃO (Igual ao Colaboradores)
+// --------------------------------------------
+function handleSessionExpired() {
+  Swal.fire({
+    title: 'Sessão Expirada',
+    text: 'Faça login novamente para continuar.',
+    icon: 'warning',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: '#3085d6',
+    allowOutsideClick: false
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+  });
+}
+
 const form = reactive({
   descricao: '',
   codigoCompra: '',
@@ -58,8 +77,6 @@ function validateForm() {
 
   if (!form.descricao.trim()) { errors.descricao = "Campo Obrigatório"; formValido = false; }
   if (!form.codigoCompra) { errors.codigoCompra = "Campo Obrigatório"; formValido = false; }
-  // Data de validade geralmente não é obrigatória para EPIs simples, mas se for, descomente abaixo:
-  // if (!form.dataValidade) { errors.dataValidade = "Campo Obrigatório"; formValido = false; }
 
   return formValido;
 }
@@ -69,7 +86,6 @@ function createPayload() {
     descricao: form.descricao,
     codigoCompra: form.codigoCompra,
     codigoAutenticacao: form.codigoAutenticacao || '',
-    // IMPORTANTE: Envia null se estiver vazio, evita erro no backend
     dataValidade: form.dataValidade ? form.dataValidade : null,
   };
 }
@@ -78,9 +94,8 @@ async function registrarEPI() {
   try {
     const token = localStorage.getItem('token');
 
-    // --- TRAVA DE SEGURANÇA ---
     if (!token) {
-      Swal.fire('Erro', 'Sessão inválida. Faça login novamente.', 'error');
+      handleSessionExpired(); // Se não tiver token, já chuta pro login
       return;
     }
 
@@ -97,8 +112,9 @@ async function registrarEPI() {
   } catch (error) {
     console.error("Erro ao registrar EPI:", error);
 
+    // --- CORREÇÃO AQUI ---
     if (error.response && error.response.status === 401) {
-      Swal.fire('Sessão Expirada', 'Por favor, faça login novamente.', 'warning');
+      handleSessionExpired(); // Redireciona de verdade agora
     } else {
       const msg = error.response?.data?.message || 'Não foi possível registrar o EPI.';
       Swal.fire('Erro!', msg, 'error');
@@ -111,7 +127,7 @@ async function atualizarEPI() {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      Swal.fire('Erro', 'Sessão inválida. Faça login novamente.', 'error');
+      handleSessionExpired();
       return;
     }
 
@@ -128,8 +144,10 @@ async function atualizarEPI() {
     }
   } catch (error) {
     console.error("Erro ao atualizar EPI:", error);
+
+    // --- CORREÇÃO AQUI ---
     if (error.response && error.response.status === 401) {
-      Swal.fire('Sessão Expirada', 'Por favor, faça login novamente.', 'warning');
+      handleSessionExpired(); // Redireciona de verdade agora
     } else {
       Swal.fire('Erro!', 'Não foi possível atualizar o EPI.', 'error');
     }

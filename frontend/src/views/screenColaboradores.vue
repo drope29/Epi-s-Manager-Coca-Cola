@@ -1,22 +1,37 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue'; // <--- Adicionei onMounted
+import axios from 'axios'; // <--- Importante para o teste de segurança
 import FormularioModal from '../components/formColaboradores.vue';
 import AnimacaoCaminhao from '../components/AnimacaoCaminhao.vue';
 import TableColaboradores from '../components/tableColaboradores.vue';
-
-// 1. IMPORTAR o seu componente de movimentações
 import TableMovimentacoes from '../components/TableMovimentacoes.vue';
 
+const backUrl = import.meta.env.VITE_BACKEND_URL;
 const tableKey = ref(0);
+
+// --- TRAVA DE SEGURANÇA AO ENTRAR NA TELA ---
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Tenta buscar algo leve (ex: lista de funções) para validar o token.
+      // Se der erro 401, o interceptador do main.js assume e redireciona.
+      await axios.get(`${backUrl}/api/funcoes/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    }
+  } catch (error) {
+    // O erro é silencioso aqui, pois o main.js já vai abrir o Modal e redirecionar
+  }
+});
 
 // --- State para Modal de Adicionar/Editar ---
 const isModalVisible = ref(false);
 const colaboradorParaEditar = ref(null);
 
-// 2. ADICIONAR state para o modal de movimentações
+// --- State para o modal de movimentações ---
 const isMovimentacoesModalVisible = ref(false);
 const colaboradorParaMovimentacoes = ref(null);
-
 
 // --- Funções Modal Adicionar/Editar ---
 function openAddModal() {
@@ -34,7 +49,7 @@ function closeModal() {
   colaboradorParaEditar.value = null;
 }
 
-// 3. ADICIONAR funções para controlar o modal de movimentações
+// --- Funções para controlar o modal de movimentações ---
 function openMovimentacoesModal(colaborador) {
   colaboradorParaMovimentacoes.value = colaborador;
   isMovimentacoesModalVisible.value = true;

@@ -23,11 +23,55 @@ const globalSearch = ref('');
 const dtRef = ref(null);
 let tableInstance = null;
 
+// --- FUNÇÃO DE LIMPEZA DE DADOS (NULL -> NÃO INFORMADO) ---
+const tratarDados = (valor) => {
+  if (!valor || valor === 'null' || valor === 'undefined' || valor === '') {
+    return 'Não Informado';
+  }
+  return valor;
+};
+
+// --- COLUNAS CONFIGURADAS COM A LIMPEZA ---
 const columns = [
-  { data: 'codigoAutenticacao', title: 'CA', className: 'text-center', render: (data) => data || "Não Informado" },
-  { data: 'descricao', title: 'Descrição', className: 'text-center' },
-  { data: 'codigoCompra', title: 'Cod. Compra', className: 'text-center', render: (data) => data == 0 ? "Não Informado" : data },
-  { data: 'dataValidade', title: 'Validade', className: 'text-center', render: (data) => data == null ? "Não Informado" : data },
+  {
+    data: 'codigoAutenticacao',
+    title: 'CA',
+    className: 'text-center',
+    render: (data) => tratarDados(data)
+  },
+  {
+    data: 'descricao',
+    title: 'Descrição',
+    className: 'text-center',
+    render: (data) => tratarDados(data)
+  },
+  {
+    data: 'codigoCompra',
+    title: 'Cod. Compra',
+    className: 'text-center',
+    render: (data) => (data == 0 || data === '0') ? "Não Informado" : tratarDados(data)
+  },
+  {
+    data: 'dataValidade',
+    title: 'Validade',
+    className: 'text-center',
+    render: (data) => {
+      // 1. Limpa o valor inicial
+      const valor = tratarDados(data);
+      if (valor === 'Não Informado') return valor;
+
+      // 2. Se tiver data, tenta formatar para dia/mês/ano
+      try {
+        const date = new Date(data);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        }
+      } catch (e) {
+        return valor;
+      }
+      return valor;
+    }
+  },
   {
     data: null,
     title: 'Ações',
@@ -45,11 +89,18 @@ const columns = [
 
 const options = {
   responsive: true,
+  autoWidth: false, // Importante para scroll
   searching: true,
   paging: true,
   info: true,
   lengthChange: true,
   pageLength: 10,
+
+  // --- CONFIGURAÇÃO DE SCROLL ---
+  scrollY: '55vh',       // Altura fixa do corpo
+  scrollCollapse: true,  // Encolhe se tiver poucos dados
+  // -----------------------------
+
   dom: '<"datatable-header"l>rt<"datatable-footer"ip>',
   language: {
     lengthMenu: "Mostrar _MENU_ entradas",
@@ -82,11 +133,11 @@ const handleDelete = (epi) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+        const token = localStorage.getItem('token');
         const response = await fetch(`${backUrl}/api/epis/${epi.id ?? epi.epiId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}` // <--- ENVIA TOKEN
+            'Authorization': `Bearer ${token}`
           }
         });
 
@@ -113,7 +164,7 @@ const handleDelete = (epi) => {
 
 onMounted(async () => {
   try {
-    const token = localStorage.getItem('token'); // <--- RECUPERA TOKEN
+    const token = localStorage.getItem('token');
 
     console.log("URL do backend:", `${backUrl}/api/epis/`);
 
@@ -121,7 +172,7 @@ onMounted(async () => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // <--- ENVIA TOKEN
+        'Authorization': `Bearer ${token}`
       }
     });
 
@@ -202,7 +253,7 @@ const applySearch = () => {
     </header>
 
     <main class="p-4 sm:p-8">
-      <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white">
+      <div class="shadow-md sm:rounded-lg bg-white">
         <DataTable :columns="columns" :data="epis" :options="options" ref="dtRef" class="w-full text-sm text-gray-700">
         </DataTable>
       </div>
@@ -218,6 +269,15 @@ const applySearch = () => {
 
 :deep(.dataTables_filter) {
   display: none;
+}
+
+/* Garante que o cabeçalho e o corpo fiquem alinhados */
+:deep(.dataTables_scrollHeadInner) {
+  width: 100% !important;
+}
+
+:deep(.dataTables_scrollHeadInner table) {
+  width: 100% !important;
 }
 
 :deep(.datatable-header),
@@ -305,4 +365,5 @@ const applySearch = () => {
 :deep(div.dataTables_wrapper div.dataTables_paginate .first, div.dataTables_wrapper div.dataTables_paginate .last, div.dataTables_wrapper div.dataTables_paginate .previous, div.dataTables_wrapper div.dataTables_paginate .next) {
   font-weight: 500;
   cursor: pointer;
-}</style>
+}
+</style>

@@ -22,25 +22,46 @@ DataTable.use(Buttons);
 const globalSearch = ref('');
 const dtRef = ref(null);
 
-const columns = [
-  { data: 're', title: 'RE', className: 'text-center', render: data => data == 0 ? "Não Informado" : data },
-  { data: 'nome', title: 'Nome', className: 'text-center' },
-  { data: 'funcao', title: 'Cargo', className: 'text-center', render: (data) => data?.nome ?? "Não Informado" },
+// --- FUNÇÃO DE LIMPEZA DE DADOS ---
+const tratarDados = (valor) => {
+  if (!valor || valor === 'null' || valor === 'undefined' || valor === '') {
+    return 'Não Informado';
+  }
+  return valor;
+};
 
+const columns = [
+  {
+    data: 're',
+    title: 'RE',
+    className: 'text-center',
+    render: data => (data == 0 || data === '0') ? "Não Informado" : tratarDados(data)
+  },
+  {
+    data: 'nome',
+    title: 'Nome',
+    className: 'text-center',
+    render: data => tratarDados(data)
+  },
+  {
+    data: 'funcao',
+    title: 'Cargo',
+    className: 'text-center',
+    render: (data) => tratarDados(data?.nome)
+  },
   {
     data: 'setor',
     title: 'Setor',
     className: 'text-center',
-    render: (_d, _t, row) => row.setor || "Não Informado"
+    render: (data) => tratarDados(data)
   },
-
   {
     data: null,
     title: 'Admissão',
     className: 'text-center',
     render: (_data, _type, row) => {
       const dataStr = row.data_admissao || row.dataAdmissao;
-      if (!dataStr) return "Não Informado";
+      if (tratarDados(dataStr) === 'Não Informado') return "Não Informado";
 
       let date;
       try {
@@ -54,18 +75,32 @@ const columns = [
           date = new Date(dataStr);
         }
 
-        if (isNaN(date.getTime())) return dataStr;
+        if (isNaN(date.getTime())) return tratarDados(dataStr);
         return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
       } catch (e) {
-        return dataStr;
+        return tratarDados(dataStr);
       }
     }
   },
-
-  { data: 'unidade', title: 'Unidade', className: 'text-center', render: (_d, _t, row) => row.unidade || "Não Informado" },
-  { data: 'genero', title: 'Gênero', className: 'text-center', render: (_d, _t, row) => row.genero || "Não Informado" },
-  { data: null, title: 'Turno', className: 'text-center', render: (_d, _t, row) => row.turno || "Não Informado" },
+  {
+    data: 'unidade',
+    title: 'Unidade',
+    className: 'text-center',
+    render: (data) => tratarDados(data)
+  },
+  {
+    data: 'genero',
+    title: 'Gênero',
+    className: 'text-center',
+    render: (data) => tratarDados(data)
+  },
+  {
+    data: null,
+    title: 'Turno',
+    className: 'text-center',
+    render: (_d, _t, row) => tratarDados(row.turno)
+  },
   {
     data: null,
     title: 'Ações',
@@ -73,9 +108,7 @@ const columns = [
     searchable: false,
     className: 'text-center',
     render: (_d, _t, row) => {
-      // --- CORREÇÃO DE ID NA CRIAÇÃO DOS BOTÕES ---
       const idReal = row.funcionarioId || row.id;
-
       const editBtn = `<button data-action="edit" data-id="${idReal}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Editar">Editar</button>`;
       const deleteBtn = `<button data-action="delete" data-id="${idReal}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200" title="Excluir">Excluir</button>`;
       return `<div class="flex justify-center gap-2">${editBtn} ${deleteBtn}</div>`;
@@ -85,12 +118,18 @@ const columns = [
 
 const options = {
   responsive: true,
-  autoWidth: false,
+  autoWidth: false, // Importante para o scrollY funcionar bem
   searching: true,
   paging: true,
   info: true,
   lengthChange: true,
   pageLength: 10,
+
+  // --- CONFIGURAÇÃO DE SCROLL (ALTURA FIXA) ---
+  scrollY: '55vh',       // Define a altura fixa do corpo (55% da tela)
+  scrollCollapse: true,  // Encolhe se tiver poucos dados
+  // --------------------------------------------
+
   dom: '<"datatable-header"l>rt<"datatable-footer"ip>',
   language: {
     lengthMenu: "Mostrar _MENU_ entradas",
@@ -178,7 +217,6 @@ const handleTableClick = (event) => {
     const action = button.dataset.action;
     const id = button.dataset.id;
 
-    // Tenta obter os dados da linha via API do DataTables
     const rowNode = button.closest('tr');
     let colaborador = null;
     try {
@@ -187,7 +225,6 @@ const handleTableClick = (event) => {
       console.warn("Não foi possível obter dados da linha via DT API, tentando fallback...", e)
     }
 
-    // Fallback: Se o DataTables não retornou, procura no array local pelo ID
     if (!colaborador) {
       colaborador = colaboradores.value.find(c => {
         const cId = c.funcionarioId || c.id;
@@ -208,7 +245,6 @@ const handleTableClick = (event) => {
     return;
   }
 
-  // Lógica de clique na linha (Movimentações)
   const row = target.closest('tbody tr');
   if (row && !button && dtRef.value && dtRef.value.dt) {
     try {
@@ -227,7 +263,6 @@ const handleEdit = (colaborador) => {
 };
 
 const handleDelete = (colaborador) => {
-  // --- SEGURANÇA DE ID ---
   const idParaDeletar = colaborador.funcionarioId || colaborador.id;
 
   Swal.fire({
@@ -243,8 +278,6 @@ const handleDelete = (colaborador) => {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('token');
-
-        // --- URL CORRIGIDA COM ID ---
         const response = await fetch(`${backUrl}/api/funcionarios/${idParaDeletar}`, {
           method: 'DELETE',
           headers: {
@@ -258,13 +291,11 @@ const handleDelete = (colaborador) => {
           throw new Error('Falha ao excluir colaborador');
         }
 
-        // Remove do array local usando o ID correto
         colaboradores.value = colaboradores.value.filter(c => {
           const cId = c.funcionarioId || c.id;
           return cId !== idParaDeletar;
         });
 
-        // Remove da tabela DataTables visualmente
         if (dtRef.value && dtRef.value.dt) {
           dtRef.value.dt.rows((idx, data, node) => {
             const dId = data.funcionarioId || data.id;
@@ -280,10 +311,8 @@ const handleDelete = (colaborador) => {
 
       } catch (error) {
         console.error('Erro ao excluir:', error);
-
         let msg = 'Não foi possível excluir o colaborador.';
         if (error.message.includes('401')) msg = 'Sessão expirada ou sem permissão.';
-
         Swal.fire('Erro!', msg, 'error');
       }
     }
@@ -294,9 +323,7 @@ const handleDelete = (colaborador) => {
 <template>
   <div>
     <header class="bg-gray-800 text-white p-4 flex items-center space-x-4">
-
       <ButtonVoltar />
-
       <div class="relative w-full">
         <input type="text" placeholder="Procurar por nome, RE, cargo..."
           class="bg-gray-700 text-white rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
@@ -311,7 +338,7 @@ const handleDelete = (colaborador) => {
     </header>
 
     <main class="p-4 sm:p-8">
-      <div class="overflow-x-auto relative shadow-md sm:rounded-lg bg-white" @click="handleTableClick">
+      <div class="shadow-md sm:rounded-lg bg-white" @click="handleTableClick">
         <DataTable :columns="columns" :data="colaboradores" :options="options" ref="dtRef"
           class="w-full text-sm text-gray-700" />
       </div>
@@ -327,6 +354,15 @@ const handleDelete = (colaborador) => {
 
 :deep(.dataTables_filter) {
   display: none;
+}
+
+/* Garante que o cabeçalho e o corpo fiquem alinhados */
+:deep(.dataTables_scrollHeadInner) {
+  width: 100% !important;
+}
+
+:deep(.dataTables_scrollHeadInner table) {
+  width: 100% !important;
 }
 
 :deep(.datatable-header),
@@ -412,4 +448,5 @@ const handleDelete = (colaborador) => {
 :deep(div.dataTables_wrapper div.dataTables_paginate .first, div.dataTables_wrapper div.dataTables_paginate .last, div.dataTables_wrapper div.dataTables_paginate .previous, div.dataTables_wrapper div.dataTables_paginate .next) {
   font-weight: 500;
   cursor: pointer;
-}</style>
+}
+</style>
