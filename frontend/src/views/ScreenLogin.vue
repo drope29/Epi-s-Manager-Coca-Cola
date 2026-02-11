@@ -37,15 +37,24 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue"; // <--- Adicionei onMounted
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-
 const backUrl = import.meta.env.VITE_BACKEND_URL;
 
 const loginField = ref("");
 const password = ref("");
+
+// --- NOVO BLOCO: Redireciona se já estiver logado ---
+onMounted(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        // Se já tem token, manda pra casa e não deixa ver o login
+        router.push({ name: "Home" });
+    }
+});
+// ----------------------------------------------------
 
 async function login() {
     try {
@@ -67,15 +76,12 @@ async function login() {
         }
 
         const data = await response.json();
-
         let tokenReal = null;
 
         // 2. Lógica "Sherlock Holmes" para encontrar o token
         if (data && typeof data === 'string') {
-            // Caso raro: o backend retorna só a string do token
             tokenReal = data;
         } else if (data.token) {
-            // Caso comum: { token: "..." } ou { token: { token: "..." } }
             if (typeof data.token === 'string') {
                 tokenReal = data.token;
             } else if (data.token.token) {
@@ -84,22 +90,18 @@ async function login() {
                 tokenReal = data.token.accessToken;
             }
         } else if (data.accessToken) {
-            // Outro padrão comum: { accessToken: "..." }
             tokenReal = data.accessToken;
         } else if (data.Authorization) {
             tokenReal = data.Authorization;
         }
 
-
         // 3. Verificação e Salvamento
         if (tokenReal && typeof tokenReal === 'string' && tokenReal.length > 10) {
-            // Remove "Bearer " se o backend mandou junto (para não duplicar depois)
             if (tokenReal.startsWith("Bearer ")) {
                 tokenReal = tokenReal.replace("Bearer ", "");
             }
 
             localStorage.setItem('token', tokenReal);
-
             router.push({ name: "Home" });
         } else {
             alert("Erro de sistema: Token de autenticação inválido.");
