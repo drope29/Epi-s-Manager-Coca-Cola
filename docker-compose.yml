@@ -5,9 +5,9 @@ services:
     container_name: localstack_epi
     image: localstack/localstack
     ports:
-      - "4566:4566"            # Porta do S3
+      - "4566:4566"
     environment:
-      - SERVICES=s3            # Apenas S3 ativado
+      - SERVICES=s3,dynamodb
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
       - AWS_DEFAULT_REGION=us-east-1
