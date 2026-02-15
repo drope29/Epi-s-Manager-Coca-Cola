@@ -19,6 +19,7 @@ public class EpiMapper {
         epi.setCodigoCompra(dto.getCodigoCompra());
         epi.setDescricao(dto.getDescricao());
         epi.setDataValidade(dto.getDataValidade());
+        epi.setCadastroAtivo("1");
 
         return epi;
 

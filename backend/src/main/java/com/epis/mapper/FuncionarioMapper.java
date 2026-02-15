@@ -36,6 +36,7 @@ public class FuncionarioMapper {
         funcionario.setGenero(GeneroEnum.valueOf(dto.getGenero().toUpperCase()));
         funcionario.setDataAdmissao(dto.getDataAdmissao());
         funcionario.setSetor(dto.getSetor());
+        funcionario.setCadastroAtivo("1");
 
         return funcionario;
 
