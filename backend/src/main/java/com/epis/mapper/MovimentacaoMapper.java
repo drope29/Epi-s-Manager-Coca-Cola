@@ -39,6 +39,7 @@ public class MovimentacaoMapper {
         movimentacao.setDataEntrega(dto.getDataEntrega());
         movimentacao.setDataProximaEntrega(dto.getDataProximaEntrega());
         movimentacao.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
+        movimentacao.setCadastroAtivo("1");
 
         return movimentacao;
 
