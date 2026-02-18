@@ -34,16 +34,31 @@ const itemToSign = ref(null);
 const signaturePadRef = ref(null);
 
 const s3Client = new S3Client({
-    region: import.meta.env.VITE_AWS_REGION, // Lê do arquivo .env
+    region: import.meta.env.VITE_AWS_REGION,
     endpoint: import.meta.env.VITE_AWS_ENDPOINT,
     credentials: {
         accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
         secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY
     },
-    forcePathStyle: true 
+    forcePathStyle: true
 });
 
 const BUCKET_NAME = import.meta.env.VITE_AWS_BUCKET_NAME;
+
+// --- FUNÇÃO PARA REDIRECIONAR AO LOGIN ---
+const handleSessionExpired = () => {
+    Swal.fire({
+        title: 'Sessão Expirada',
+        text: 'Faça login novamente para continuar.',
+        icon: 'warning',
+        confirmButtonText: 'OK',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    }).then(() => {
+        localStorage.removeItem('token'); // Limpa o token
+        window.location.href = '/'; // Força o redirecionamento para a tela de login
+    });
+};
 
 // --- Carregamento Inicial ---
 onMounted(async () => {
@@ -57,7 +72,7 @@ async function fetchMovimentacoes() {
     try {
         const token = localStorage.getItem('token');
         if (!token) {
-            Swal.fire('Erro', 'Token não encontrado. Faça login novamente.', 'error');
+            handleSessionExpired(); // Redireciona se não tiver token
             return;
         }
 
@@ -71,7 +86,8 @@ async function fetchMovimentacoes() {
 
         if (!response.ok) {
             if (response.status === 401) {
-                Swal.fire('Sessão Expirada', 'Faça login novamente.', 'warning');
+                handleSessionExpired(); // Redireciona se der 401
+                return;
             }
             console.warn(`Erro na API: ${response.status}`);
             movimentacoes.value = [];
@@ -103,6 +119,10 @@ async function fetchEpis() {
         });
         epis.value = response.data;
     } catch (error) {
+        if (error.response && error.response.status === 401) {
+            handleSessionExpired(); // Redireciona se der 401 no Axios
+            return;
+        }
         console.error("Erro ao buscar EPIs:", error);
     }
 }
@@ -264,6 +284,10 @@ async function saveEdit() {
             throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
     } catch (error) {
+        if (error.response && error.response.status === 401) {
+            handleSessionExpired(); // Redireciona se der 401 no Axios
+            return;
+        }
         console.error('Erro ao salvar edição:', error);
         const errorMsg = error.response?.data?.message || error.message || 'Não foi possível salvar.';
         Swal.fire('Erro!', errorMsg, 'error');
@@ -315,7 +339,10 @@ function handleDeleteEpi(item) {
                 });
 
                 if (!response.ok) {
-                    if (response.status === 401) throw new Error('Sessão Expirada (401)');
+                    if (response.status === 401) {
+                        handleSessionExpired(); // Redireciona se der 401
+                        return;
+                    }
                     const errorData = await response.text();
                     throw new Error(`Falha ao excluir: ${response.status} ${errorData}`);
                 }
@@ -468,6 +495,10 @@ async function salvarAssinatura() {
         }
 
     } catch (error) {
+        if (error.response && error.response.status === 401) {
+            handleSessionExpired(); // Redireciona se der 401 no Axios
+            return;
+        }
         console.error("Erro no processo de assinatura:", error);
         // Mostra o erro real se for do S3
         const msg = error.message || 'Não foi possível salvar a assinatura.';
@@ -633,6 +664,7 @@ async function salvarAssinatura() {
                                         </button>
                                     </template>
                                 </td>
+
                                 <td class="border border-black p-0 text-center align-middle">
                                     <input v-if="editingItemId === (item.movimentacaoId || item.id)" type="date"
                                         v-model="editFormData.dataProximaEntrega"
@@ -832,4 +864,5 @@ td input[type=number] {
 
 .edit-combobox-dropdown {
     z-index: 20;
-}</style>
+}
+</style>
